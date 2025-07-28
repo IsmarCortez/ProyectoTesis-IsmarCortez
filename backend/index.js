@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const path = require('path');  // <-- Importamos path para rutas
 const nodemailer = require('nodemailer'); // <-- Importar nodemailer
-const multer = require('multer'); // <-- Importar multer para manejo de archivos
+const multer = require('multer'); //s <-- Importar multer para manejo de archivos
 
 const app = express();
 app.use(cors());
@@ -269,6 +269,196 @@ app.delete('/api/clientes/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error al eliminar el cliente.' });
+  }
+});
+
+// ==================== ENDPOINTS PARA VEHÍCULOS ====================
+
+// Endpoint para obtener todos los vehículos con información del cliente
+app.get('/api/vehiculos', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT v.*, c.nombre_cliente, c.apellido_cliente, c.dpi_cliente 
+      FROM tbl_vehiculos v 
+      INNER JOIN tbl_clientes c ON v.fk_id_cliente = c.PK_id_cliente
+      ORDER BY v.pk_id_vehiculo DESC
+    `);
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener los vehículos.' });
+  }
+});
+
+// Endpoint para buscar cliente por DPI para asociar vehículo
+app.get('/api/vehiculos/buscar-cliente/:dpi', async (req, res) => {
+  const { dpi } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      'SELECT PK_id_cliente, nombre_cliente, apellido_cliente, dpi_cliente FROM tbl_clientes WHERE dpi_cliente = ?', 
+      [dpi]
+    );
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'No existe un cliente con ese DPI.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al buscar el cliente.' });
+  }
+});
+
+// Endpoint para registrar un nuevo vehículo
+app.post('/api/vehiculos', upload.fields([
+  { name: 'imagen_1', maxCount: 1 },
+  { name: 'imagen_2', maxCount: 1 },
+  { name: 'imagen_3', maxCount: 1 },
+  { name: 'imagen_4', maxCount: 1 },
+  { name: 'video', maxCount: 1 }
+]), async (req, res) => {
+  const { 
+    fk_id_cliente, 
+    placa_vehiculo, 
+    marca_vehiculo, 
+    modelo_vehiculo, 
+    anio_vehiculo, 
+    color_vehiculo 
+  } = req.body;
+
+  if (!fk_id_cliente || !placa_vehiculo || !marca_vehiculo || !modelo_vehiculo) {
+    return res.status(400).json({ message: 'Cliente, placa, marca y modelo son requeridos.' });
+  }
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Procesar archivos subidos
+    const imagen_1 = req.files['imagen_1'] ? req.files['imagen_1'][0].filename : 'sin_imagen.jpg';
+    const imagen_2 = req.files['imagen_2'] ? req.files['imagen_2'][0].filename : 'sin_imagen.jpg';
+    const imagen_3 = req.files['imagen_3'] ? req.files['imagen_3'][0].filename : 'sin_imagen.jpg';
+    const imagen_4 = req.files['imagen_4'] ? req.files['imagen_4'][0].filename : 'sin_imagen.jpg';
+    const video = req.files['video'] ? req.files['video'][0].filename : 'sin_video.mp4';
+
+    // Insertar vehículo
+    await connection.execute(
+      `INSERT INTO tbl_vehiculos (fk_id_cliente, placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo, color_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [fk_id_cliente, placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo, color_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video]
+    );
+    await connection.end();
+    res.json({ message: 'Vehículo registrado exitosamente.' });
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      res.status(409).json({ message: 'La placa ya está registrada.' });
+    } else {
+      console.error(error);
+      res.status(500).json({ message: 'Error al registrar el vehículo.' });
+    }
+  }
+});
+
+// Endpoint para obtener un vehículo específico
+app.get('/api/vehiculos/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT v.*, c.nombre_cliente, c.apellido_cliente, c.dpi_cliente 
+      FROM tbl_vehiculos v 
+      INNER JOIN tbl_clientes c ON v.fk_id_cliente = c.PK_id_cliente
+      WHERE v.pk_id_vehiculo = ?
+    `, [id]);
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Vehículo no encontrado.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener el vehículo.' });
+  }
+});
+
+// Endpoint para actualizar un vehículo
+app.put('/api/vehiculos/:id', upload.fields([
+  { name: 'imagen_1', maxCount: 1 },
+  { name: 'imagen_2', maxCount: 1 },
+  { name: 'imagen_3', maxCount: 1 },
+  { name: 'imagen_4', maxCount: 1 },
+  { name: 'video', maxCount: 1 }
+]), async (req, res) => {
+  const { id } = req.params;
+  const { 
+    fk_id_cliente, 
+    placa_vehiculo, 
+    marca_vehiculo, 
+    modelo_vehiculo, 
+    anio_vehiculo, 
+    color_vehiculo 
+  } = req.body;
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Obtener vehículo actual para preservar imágenes no actualizadas
+    const [currentVehicle] = await connection.execute(
+      'SELECT imagen_1, imagen_2, imagen_3, imagen_4, video FROM tbl_vehiculos WHERE pk_id_vehiculo = ?',
+      [id]
+    );
+
+    if (currentVehicle.length === 0) {
+      await connection.end();
+      return res.status(404).json({ message: 'Vehículo no encontrado.' });
+    }
+
+    const current = currentVehicle[0];
+    
+    // Procesar archivos subidos (mantener existentes si no se suben nuevos)
+    const imagen_1 = req.files['imagen_1'] ? req.files['imagen_1'][0].filename : current.imagen_1;
+    const imagen_2 = req.files['imagen_2'] ? req.files['imagen_2'][0].filename : current.imagen_2;
+    const imagen_3 = req.files['imagen_3'] ? req.files['imagen_3'][0].filename : current.imagen_3;
+    const imagen_4 = req.files['imagen_4'] ? req.files['imagen_4'][0].filename : current.imagen_4;
+    const video = req.files['video'] ? req.files['video'][0].filename : current.video;
+
+    // Actualizar vehículo
+    const [result] = await connection.execute(
+      `UPDATE tbl_vehiculos SET fk_id_cliente = ?, placa_vehiculo = ?, marca_vehiculo = ?, modelo_vehiculo = ?, anio_vehiculo = ?, color_vehiculo = ?, imagen_1 = ?, imagen_2 = ?, imagen_3 = ?, imagen_4 = ?, video = ? WHERE pk_id_vehiculo = ?`,
+      [fk_id_cliente, placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo, color_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video, id]
+    );
+    await connection.end();
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Vehículo no encontrado.' });
+    }
+    res.json({ message: 'Vehículo actualizado correctamente.' });
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      res.status(409).json({ message: 'La placa ya está registrada.' });
+    } else {
+      console.error(error);
+      res.status(500).json({ message: 'Error al actualizar el vehículo.' });
+    }
+  }
+});
+
+// Endpoint para eliminar un vehículo
+app.delete('/api/vehiculos/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute('DELETE FROM tbl_vehiculos WHERE pk_id_vehiculo = ?', [id]);
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Vehículo no encontrado.' });
+    }
+    res.json({ message: 'Vehículo eliminado correctamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al eliminar el vehículo.' });
   }
 });
 

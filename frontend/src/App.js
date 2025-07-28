@@ -5,6 +5,7 @@ import Home from './Home';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import RecuperarContrasena from './RecuperarContrasena';
 import Clientes from './Clientes';
+import Vehiculos from './Vehiculos';
 
 function App() {
   const [usuario, setUsuario] = useState(() => {
@@ -28,6 +29,7 @@ function App() {
         <Route path="/" element={<Login setUsuario={handleSetUsuario} />} />
         <Route path="/home" element={usuario ? <Home usuario={usuario} onLogout={handleLogout} /> : <Navigate to="/" />} />
         <Route path="/clientes" element={usuario ? <Clientes /> : <Navigate to="/" />} />
+        <Route path="/vehiculos" element={usuario ? <Vehiculos /> : <Navigate to="/" />} />
         <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
       </Routes>
     </Router>

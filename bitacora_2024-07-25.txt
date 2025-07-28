@@ -21,4 +21,37 @@ Bitácora de cambios - 2024-07-25
 
 4. Se realizaron pruebas y depuración para asegurar el correcto funcionamiento de la edición y actualización de clientes.
 
+5. **NUEVA IMPLEMENTACIÓN - Sistema de Vehículos:**
+   - Se implementaron endpoints REST completos para vehículos en el backend:
+     * GET /api/vehiculos: Listar todos los vehículos con información del cliente.
+     * GET /api/vehiculos/buscar-cliente/:dpi: Buscar cliente por DPI para asociar vehículo.
+     * POST /api/vehiculos: Registrar nuevo vehículo con manejo de múltiples archivos.
+     * GET /api/vehiculos/:id: Obtener vehículo específico.
+     * PUT /api/vehiculos/:id: Actualizar vehículo preservando archivos existentes.
+     * DELETE /api/vehiculos/:id: Eliminar vehículo.
+   
+   - Se creó el componente Vehiculos.jsx en el frontend con:
+     * Formulario de registro/edición con validación por DPI de cliente.
+     * Búsqueda automática de cliente por DPI con autocompletado.
+     * Manejo de múltiples archivos (4 imágenes + 1 video).
+     * Tabla de vehículos registrados con información del cliente.
+     * Funcionalidad CRUD completa (crear, editar, eliminar).
+     * Validaciones de campos requeridos y cliente asociado.
+     * Interfaz moderna con Bootstrap 5.
+   
+   - Se agregó la ruta /vehiculos en App.js para acceder al módulo.
+   - Se integró el enlace "Vehículos" en el menú principal del Home.jsx.
+
+6. **MEJORAS AL SISTEMA DE VEHÍCULOS:**
+   - Se agregó botón "← Volver al Menú Principal" en la parte superior del formulario.
+   - Se implementó modal para visualizar fotos y videos de cada vehículo:
+     * Botón 📷 en la tabla para abrir el visor multimedia.
+     * Modal responsivo que muestra hasta 4 imágenes en grid 2x2.
+     * Reproductor de video integrado con controles nativos.
+     * Información completa del vehículo y cliente en el modal.
+     * Mensajes informativos cuando no hay archivos multimedia.
+     * Diseño moderno con cards para cada imagen/video.
+   - Se corrigió error de JSX (elementos adyacentes envueltos en fragmentos).
+   - Se mejoró la experiencia de usuario con navegación intuitiva.
+
 Responsable: Asistente IA 
