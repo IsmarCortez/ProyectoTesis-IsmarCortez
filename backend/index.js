@@ -174,6 +174,104 @@ app.post('/api/actualizar-usuario', upload.single('foto'), async (req, res) => {
   }
 });
 
+// Endpoint para registrar un nuevo cliente
+app.post('/api/clientes', async (req, res) => {
+  const { nombre_cliente, apellido_cliente, dpi_cliente, telefono_cliente, correo_cliente, direccion_cliente } = req.body;
+  if (!nombre_cliente) {
+    return res.status(400).json({ message: 'El nombre del cliente es requerido.' });
+  }
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    // Insertar cliente
+    await connection.execute(
+      `INSERT INTO tbl_clientes (nombre_cliente, apellido_cliente, dpi_cliente, telefono_cliente, correo_cliente, direccion_cliente)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [nombre_cliente, apellido_cliente, dpi_cliente, telefono_cliente, correo_cliente, direccion_cliente]
+    );
+    await connection.end();
+    res.json({ message: 'Cliente registrado exitosamente.' });
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      res.status(409).json({ message: 'El DPI ya está registrado.' });
+    } else {
+      console.error(error);
+      res.status(500).json({ message: 'Error al registrar el cliente.' });
+    }
+  }
+});
+
+// Endpoint para obtener todos los clientes
+app.get('/api/clientes', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT * FROM tbl_clientes');
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener los clientes.' });
+  }
+});
+
+// Endpoint para buscar/verificar cliente por DPI
+app.get('/api/clientes/dpi/:dpi', async (req, res) => {
+  const { dpi } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT * FROM tbl_clientes WHERE dpi_cliente = ?', [dpi]);
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'No existe un cliente con ese DPI.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al buscar el cliente.' });
+  }
+});
+
+// Endpoint para actualizar un cliente
+app.put('/api/clientes/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nombre_cliente, apellido_cliente, dpi_cliente, telefono_cliente, correo_cliente, direccion_cliente } = req.body;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      `UPDATE tbl_clientes SET nombre_cliente = ?, apellido_cliente = ?, dpi_cliente = ?, telefono_cliente = ?, correo_cliente = ?, direccion_cliente = ? WHERE PK_id_cliente = ?`,
+      [nombre_cliente, apellido_cliente, dpi_cliente, telefono_cliente, correo_cliente, direccion_cliente, id]
+    );
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Cliente no encontrado.' });
+    }
+    res.json({ message: 'Cliente actualizado correctamente.' });
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      res.status(409).json({ message: 'El DPI ya está registrado.' });
+    } else {
+      console.error(error);
+      res.status(500).json({ message: 'Error al actualizar el cliente.' });
+    }
+  }
+});
+
+// Endpoint para eliminar un cliente
+app.delete('/api/clientes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute('DELETE FROM tbl_clientes WHERE PK_id_cliente = ?', [id]);
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Cliente no encontrado.' });
+    }
+    res.json({ message: 'Cliente eliminado correctamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al eliminar el cliente.' });
+  }
+});
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`🟢 Servidor backend escuchando en puerto ${PORT}`);

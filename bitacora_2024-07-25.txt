@@ -1,0 +1,24 @@
+Bitácora de cambios - 2024-07-25
+================================
+
+1. Se implementaron endpoints REST en el backend para el CRUD de clientes:
+   - GET /api/clientes: Listar todos los clientes.
+   - GET /api/clientes/dpi/:dpi: Buscar/verificar cliente por DPI.
+   - POST /api/clientes: Registrar un nuevo cliente.
+   - PUT /api/clientes/:id: Actualizar cliente (usando PK_id_cliente).
+   - DELETE /api/clientes/:id: Eliminar cliente (usando PK_id_cliente).
+
+2. Se corrigieron los endpoints PUT y DELETE para usar el campo correcto PK_id_cliente en vez de id_cliente.
+
+3. En el frontend (Clientes.jsx):
+   - Se transformó el formulario en un CRUD completo: crear, editar, eliminar y mostrar clientes.
+   - Se agregó una tabla para mostrar todos los clientes y botones de acción.
+   - Se implementó la verificación de cliente por DPI antes de registrar.
+   - Se corrigió el uso del campo PK_id_cliente para edición y eliminación.
+   - Se mejoró la experiencia visual del modo edición (botón amarillo y mensaje de edición).
+   - Se agregó Bootstrap 5 al proyecto para estilos visuales.
+   - Se agregaron logs de depuración para validar el flujo de edición.
+
+4. Se realizaron pruebas y depuración para asegurar el correcto funcionamiento de la edición y actualización de clientes.
+
+Responsable: Asistente IA 
