@@ -28,6 +28,14 @@ CREATE TABLE tbl_vehiculos (
         ON DELETE CASCADE
 );
 
+ALTER TABLE tbl_vehiculos
+ADD COLUMN imagen_1 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg' AFTER color_vehiculo,
+ADD COLUMN imagen_2 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg' AFTER imagen_1,
+ADD COLUMN imagen_3 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg' AFTER imagen_2,
+ADD COLUMN imagen_4 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg' AFTER imagen_3,
+ADD COLUMN video     VARCHAR(255) NOT NULL DEFAULT 'sin_video.mp4' AFTER imagen_4;
+
+
 -- Tabla de órdenes de mantenimiento y reparación
 CREATE TABLE tbl_ordenes (
     pk_id_orden INT AUTO_INCREMENT PRIMARY KEY,
@@ -53,15 +61,15 @@ CREATE TABLE tbl_seguimiento_orden (
 );
 
 -- Tabla de imágenes del vehículo
-CREATE TABLE tbl_imagenes_vehiculo (
-    pk_id_imagen INT AUTO_INCREMENT PRIMARY KEY,
-    fk_id_orden INT,
-    ruta_imagen TEXT,
-    descripcion_imagen VARCHAR(100),
-    fecha_subida_imagen DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (fk_id_orden) REFERENCES tbl_ordenes(pk_id_orden)
-        ON DELETE CASCADE
-);
+-- CREATE TABLE tbl_imagenes_vehiculo (
+ --    pk_id_imagen INT AUTO_INCREMENT PRIMARY KEY,
+  --   fk_id_orden INT,
+  --   ruta_imagen TEXT,
+  --   descripcion_imagen VARCHAR(100),
+  --   fecha_subida_imagen DATETIME DEFAULT CURRENT_TIMESTAMP,
+  --   FOREIGN KEY (fk_id_orden) REFERENCES tbl_ordenes(pk_id_orden)
+  --      ON DELETE CASCADE
+-- );
 
 
 
