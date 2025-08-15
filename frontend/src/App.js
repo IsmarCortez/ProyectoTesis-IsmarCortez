@@ -8,6 +8,7 @@ import Clientes from './Clientes';
 import Vehiculos from './Vehiculos';
 import Servicios from './Servicios';
 import Estados from './Estados';
+import Ordenes from './Ordenes';
 
 function App() {
   const [usuario, setUsuario] = useState(() => {
@@ -34,6 +35,7 @@ function App() {
         <Route path="/vehiculos" element={usuario ? <Vehiculos /> : <Navigate to="/" />} />
         <Route path="/servicios" element={usuario ? <Servicios /> : <Navigate to="/" />} />
         <Route path="/estados" element={usuario ? <Estados /> : <Navigate to="/" />} />
+        <Route path="/ordenes" element={usuario ? <Ordenes /> : <Navigate to="/" />} />
         <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
       </Routes>
     </Router>

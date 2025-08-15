@@ -164,4 +164,51 @@ Bitácora de cambios - 2024-07-25
      * Mensajes de error más informativos.
      * Verificación de existencia de tablas antes de operaciones.
 
+12. **IMPLEMENTACIÓN COMPLETA DEL MÓDULO DE ÓRDENES:**
+   - Se implementó el módulo de órdenes completo siguiendo la estructura de la base de datos Taller_LDD.sql.
+   
+   - **Backend - Endpoints Implementados:**
+     * **GET /api/ordenes**: Obtener todas las órdenes con información relacionada (cliente, vehículo, servicio, estado).
+     * **GET /api/ordenes/buscar-cliente/:dpi**: Buscar cliente por DPI para asociar a orden.
+     * **GET /api/ordenes/buscar-vehiculo/:placa**: Buscar vehículo por placa para asociar a orden.
+     * **POST /api/ordenes**: Registrar nueva orden con manejo de múltiples archivos multimedia.
+     * **GET /api/ordenes/:id**: Obtener orden específica con toda su información.
+     * **PUT /api/ordenes/:id**: Actualizar orden preservando archivos existentes.
+     * **DELETE /api/ordenes/:id**: Eliminar orden.
+   
+   - **Frontend - Componente Ordenes.jsx:**
+     * **Búsqueda de Cliente por DPI**: Campo de entrada con validación automática y autocompletado.
+     * **Búsqueda de Vehículo por Placa**: Campo de entrada con validación automática y autocompletado.
+     * **Selección de Servicio**: Combobox que muestra servicios disponibles de la base de datos.
+     * **Selección de Estado**: Combobox que muestra estados disponibles de la base de datos.
+     * **Campos de Orden**: Comentario del cliente, nivel de combustible, odómetro, observaciones del taller.
+     * **Manejo de Archivos**: 4 campos para imágenes y 1 para video con validación de tipos.
+     * **Funcionalidad CRUD**: Crear, editar, eliminar y visualizar órdenes.
+     * **Modal Multimedia**: Visor completo de imágenes y videos con información de la orden.
+     * **Validaciones**: Campos requeridos, verificación de cliente y vehículo existentes.
+   
+   - **Características Técnicas:**
+     * **ID Automático**: El pk_id_orden se genera automáticamente en la base de datos.
+     * **Fecha Automática**: La fecha_ingreso_orden se establece automáticamente al momento de creación.
+     * **Relaciones**: Cliente por DPI, vehículo por placa, servicio y estado por combobox.
+     * **Archivos**: Manejo de múltiples archivos con multer, preservación en edición.
+     * **Interfaz**: Diseño responsivo con Bootstrap 5, validaciones visuales en tiempo real.
+   
+   - **Integración del Sistema:**
+     * Se agregó la ruta /ordenes en App.js con protección de autenticación.
+     * Se agregó el botón "Órdenes" en el menú principal del Home.jsx.
+     * Se mantiene consistencia con el resto de módulos del sistema.
+   
+   - **Script de Base de Datos:**
+     * Se creó verificar_tabla_ordenes.sql para verificar y crear la tabla si no existe.
+     * Se incluyen todas las relaciones y restricciones de integridad referencial.
+     * Se agregan datos de prueba para servicios y estados si no existen.
+   
+   - **Funcionalidades Avanzadas:**
+     * **Búsqueda Inteligente**: Autocompletado de cliente y vehículo mientras se escribe.
+     * **Validación en Tiempo Real**: Feedback visual inmediato sobre la existencia de cliente/vehículo.
+     * **Gestión de Archivos**: Subida múltiple con preservación en edición.
+     * **Modal Informativo**: Visualización completa de multimedia con contexto de la orden.
+     * **Estados Visuales**: Badges de colores para diferentes estados de la orden.
+
 Responsable: Asistente IA 

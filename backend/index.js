@@ -569,6 +569,266 @@ app.delete('/api/estados/:id', async (req, res) => {
   }
 });
 
+// ==================== ENDPOINTS PARA ÓRDENES ====================
+
+// Endpoint para obtener todas las órdenes con información relacionada
+app.get('/api/ordenes', async (req, res) => {
+  try {
+    console.log('🔍 Intentando obtener órdenes...');
+    const connection = await mysql.createConnection(dbConfig);
+    console.log('✅ Conexión a BD establecida');
+    
+    const query = `
+      SELECT 
+        o.pk_id_orden,
+        o.fecha_ingreso_orden,
+        o.comentario_cliente_orden,
+        o.nivel_combustible_orden,
+        o.odometro_auto_cliente_orden,
+        o.imagen_1,
+        o.imagen_2,
+        o.imagen_3,
+        o.imagen_4,
+        o.video,
+        o.observaciones_orden,
+        c.dpi_cliente,
+        c.nombre_cliente,
+        c.apellido_cliente,
+        v.placa_vehiculo,
+        v.marca_vehiculo,
+        v.modelo_vehiculo,
+        s.servicio,
+        e.estado_orden
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      ORDER BY o.fecha_ingreso_orden DESC
+    `;
+    
+    const [rows] = await connection.execute(query);
+    console.log('📊 Órdenes obtenidas:', rows.length);
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ Error al obtener órdenes:', error);
+    res.status(500).json({ message: 'Error al obtener las órdenes.', error: error.message });
+  }
+});
+
+// Endpoint para buscar cliente por DPI para asociar a orden
+app.get('/api/ordenes/buscar-cliente/:dpi', async (req, res) => {
+  const { dpi } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      'SELECT PK_id_cliente, dpi_cliente, nombre_cliente, apellido_cliente FROM tbl_clientes WHERE dpi_cliente = ?',
+      [dpi]
+    );
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Cliente no encontrado.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al buscar el cliente.' });
+  }
+});
+
+// Endpoint para buscar vehículo por placa para asociar a orden
+app.get('/api/ordenes/buscar-vehiculo/:placa', async (req, res) => {
+  const { placa } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      'SELECT pk_id_vehiculo, placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo FROM tbl_vehiculos WHERE placa_vehiculo = ?',
+      [placa]
+    );
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Vehículo no encontrado.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al buscar el vehículo.' });
+  }
+});
+
+// Endpoint para registrar una nueva orden
+app.post('/api/ordenes', upload.fields([
+  { name: 'imagen_1', maxCount: 1 },
+  { name: 'imagen_2', maxCount: 1 },
+  { name: 'imagen_3', maxCount: 1 },
+  { name: 'imagen_4', maxCount: 1 },
+  { name: 'video', maxCount: 1 }
+]), async (req, res) => {
+  const {
+    fk_id_cliente,
+    fk_id_vehiculo,
+    fk_id_servicio,
+    comentario_cliente_orden,
+    nivel_combustible_orden,
+    odometro_auto_cliente_orden,
+    fk_id_estado_orden,
+    observaciones_orden
+  } = req.body;
+
+  // Validaciones
+  if (!fk_id_cliente || !fk_id_vehiculo || !fk_id_servicio || !fk_id_estado_orden) {
+    return res.status(400).json({ message: 'Cliente, vehículo, servicio y estado son requeridos.' });
+  }
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Procesar archivos
+    const imagen_1 = req.files.imagen_1 ? req.files.imagen_1[0].filename : 'sin_imagen.jpg';
+    const imagen_2 = req.files.imagen_2 ? req.files.imagen_2[0].filename : 'sin_imagen.jpg';
+    const imagen_3 = req.files.imagen_3 ? req.files.imagen_3[0].filename : 'sin_imagen.jpg';
+    const imagen_4 = req.files.imagen_4 ? req.files.imagen_4[0].filename : 'sin_imagen.jpg';
+    const video = req.files.video ? req.files.video[0].filename : 'sin_video.mp4';
+
+    await connection.execute(
+      `INSERT INTO tbl_ordenes (
+        fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
+        nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
+        observaciones_orden, imagen_1, imagen_2, imagen_3, imagen_4, video
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
+        nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
+        observaciones_orden, imagen_1, imagen_2, imagen_3, imagen_4, video
+      ]
+    );
+    
+    await connection.end();
+    res.json({ message: 'Orden registrada exitosamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al registrar la orden.' });
+  }
+});
+
+// Endpoint para obtener una orden específica
+app.get('/api/ordenes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      `SELECT 
+        o.*,
+        c.dpi_cliente,
+        c.nombre_cliente,
+        c.apellido_cliente,
+        v.placa_vehiculo,
+        v.marca_vehiculo,
+        v.modelo_vehiculo,
+        s.servicio,
+        e.estado_orden
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE o.pk_id_orden = ?`,
+      [id]
+    );
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener la orden.' });
+  }
+});
+
+// Endpoint para actualizar una orden
+app.put('/api/ordenes/:id', upload.fields([
+  { name: 'imagen_1', maxCount: 1 },
+  { name: 'imagen_2', maxCount: 1 },
+  { name: 'imagen_3', maxCount: 1 },
+  { name: 'imagen_4', maxCount: 1 },
+  { name: 'video', maxCount: 1 }
+]), async (req, res) => {
+  const { id } = req.params;
+  const {
+    fk_id_cliente,
+    fk_id_vehiculo,
+    fk_id_servicio,
+    comentario_cliente_orden,
+    nivel_combustible_orden,
+    odometro_auto_cliente_orden,
+    fk_id_estado_orden,
+    observaciones_orden
+  } = req.body;
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Obtener orden actual para preservar archivos existentes
+    const [currentOrder] = await connection.execute(
+      'SELECT imagen_1, imagen_2, imagen_3, imagen_4, video FROM tbl_ordenes WHERE pk_id_orden = ?',
+      [id]
+    );
+    
+    if (currentOrder.length === 0) {
+      await connection.end();
+      return res.status(404).json({ message: 'Orden no encontrada.' });
+    }
+
+    // Procesar archivos nuevos o mantener existentes
+    const imagen_1 = req.files.imagen_1 ? req.files.imagen_1[0].filename : currentOrder[0].imagen_1;
+    const imagen_2 = req.files.imagen_2 ? req.files.imagen_2[0].filename : currentOrder[0].imagen_2;
+    const imagen_3 = req.files.imagen_3 ? req.files.imagen_3[0].filename : currentOrder[0].imagen_3;
+    const imagen_4 = req.files.imagen_4 ? req.files.imagen_4[0].filename : currentOrder[0].imagen_4;
+    const video = req.files.video ? req.files.video[0].filename : currentOrder[0].video;
+
+    const [result] = await connection.execute(
+      `UPDATE tbl_ordenes SET 
+        fk_id_cliente = ?, fk_id_vehiculo = ?, fk_id_servicio = ?, comentario_cliente_orden = ?,
+        nivel_combustible_orden = ?, odometro_auto_cliente_orden = ?, fk_id_estado_orden = ?,
+        observaciones_orden = ?, imagen_1 = ?, imagen_2 = ?, imagen_3 = ?, imagen_4 = ?, video = ?
+      WHERE pk_id_orden = ?`,
+      [
+        fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
+        nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
+        observaciones_orden, imagen_1, imagen_2, imagen_3, imagen_4, video, id
+      ]
+    );
+    
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada.' });
+    }
+    res.json({ message: 'Orden actualizada correctamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al actualizar la orden.' });
+  }
+});
+
+// Endpoint para eliminar una orden
+app.delete('/api/ordenes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute('DELETE FROM tbl_ordenes WHERE pk_id_orden = ?', [id]);
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada.' });
+    }
+    res.json({ message: 'Orden eliminada correctamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al eliminar la orden.' });
+  }
+});
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`🟢 Servidor backend escuchando en puerto ${PORT}`);

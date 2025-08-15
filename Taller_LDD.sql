@@ -46,7 +46,7 @@ CREATE TABLE tbl_orden_estado (
 );
 
 -- Tabla de órdenes de mantenimiento y reparación
-CREATE TABLE tbl_ordenes (
+CREATE TABLE IF NOT EXISTS tbl_ordenes (
     -- Encabezado -------------------------
     pk_id_orden INT AUTO_INCREMENT PRIMARY KEY,
 	fecha_ingreso_orden DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -119,8 +119,6 @@ select* from tbl_clientes;
 UPDATE tbl_usuarios
 SET foto_perfil_usuario = 'Home.jpg'
 WHERE nombre_usuario = 'admin';
-
-
 
 
 
