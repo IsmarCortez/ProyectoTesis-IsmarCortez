@@ -96,6 +96,8 @@ function Home({ usuario, onLogout }) {
           <button onClick={() => navigate('/home')} style={menuBtnStyleHeader}>Inicio</button>
           <button onClick={() => navigate('/clientes')} style={menuBtnStyleHeader}>Clientes</button>
           <button onClick={() => navigate('/vehiculos')} style={menuBtnStyleHeader}>Vehículos</button>
+          <button onClick={() => navigate('/servicios')} style={menuBtnStyleHeader}>Servicios</button>
+          <button onClick={() => navigate('/estados')} style={menuBtnStyleHeader}>Estados</button>
           <button onClick={() => navigate('/ordenes')} style={menuBtnStyleHeader}>Órdenes</button>
           <button onClick={() => navigate('/nuevo-usuario')} style={menuBtnStyleHeader}>Nuevo usuario</button>
         </nav>

@@ -8,6 +8,7 @@ function Clientes() {
     nombre_cliente: '',
     apellido_cliente: '',
     dpi_cliente: '',
+    NIT: '',
     telefono_cliente: '',
     correo_cliente: '',
     direccion_cliente: '',
@@ -57,6 +58,7 @@ function Clientes() {
         nombre_cliente: '',
         apellido_cliente: '',
         dpi_cliente: '',
+        NIT: '',
         telefono_cliente: '',
         correo_cliente: '',
         direccion_cliente: '',
@@ -79,6 +81,7 @@ function Clientes() {
       nombre_cliente: cliente.nombre_cliente,
       apellido_cliente: cliente.apellido_cliente,
       dpi_cliente: cliente.dpi_cliente,
+      NIT: cliente.NIT,
       telefono_cliente: cliente.telefono_cliente,
       correo_cliente: cliente.correo_cliente,
       direccion_cliente: cliente.direccion_cliente,
@@ -123,6 +126,7 @@ function Clientes() {
       nombre_cliente: '',
       apellido_cliente: '',
       dpi_cliente: '',
+      NIT: '',
       telefono_cliente: '',
       correo_cliente: '',
       direccion_cliente: '',
@@ -172,6 +176,10 @@ function Clientes() {
               <input type="text" className="form-control" name="dpi_cliente" value={form.dpi_cliente} onChange={handleChange} required />
             </div>
             <div className="mb-3">
+              <label className="form-label">NIT</label>
+              <input type="text" className="form-control" name="NIT" value={form.NIT} onChange={handleChange} />
+            </div>
+            <div className="mb-3">
               <label className="form-label">Teléfono</label>
               <input type="text" className="form-control" name="telefono_cliente" value={form.telefono_cliente} onChange={handleChange} />
             </div>
@@ -210,6 +218,7 @@ function Clientes() {
                   <th>Nombre</th>
                   <th>Apellido</th>
                   <th>DPI</th>
+                  <th>NIT</th>
                   <th>Teléfono</th>
                   <th>Correo</th>
                   <th>Dirección</th>
@@ -218,7 +227,7 @@ function Clientes() {
               </thead>
               <tbody>
                 {clientes.length === 0 ? (
-                  <tr><td colSpan="8" className="text-center">No hay clientes registrados.</td></tr>
+                  <tr><td colSpan="9" className="text-center">No hay clientes registrados.</td></tr>
                 ) : (
                   clientes.map((cliente, idx) => (
                     <tr key={cliente.PK_id_cliente || idx}>
@@ -226,6 +235,7 @@ function Clientes() {
                       <td>{cliente.nombre_cliente}</td>
                       <td>{cliente.apellido_cliente}</td>
                       <td>{cliente.dpi_cliente}</td>
+                      <td>{cliente.NIT}</td>
                       <td>{cliente.telefono_cliente}</td>
                       <td>{cliente.correo_cliente}</td>
                       <td>{cliente.direccion_cliente}</td>

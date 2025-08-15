@@ -176,7 +176,7 @@ app.post('/api/actualizar-usuario', upload.single('foto'), async (req, res) => {
 
 // Endpoint para registrar un nuevo cliente
 app.post('/api/clientes', async (req, res) => {
-  const { nombre_cliente, apellido_cliente, dpi_cliente, telefono_cliente, correo_cliente, direccion_cliente } = req.body;
+  const { nombre_cliente, apellido_cliente, dpi_cliente, NIT, telefono_cliente, correo_cliente, direccion_cliente } = req.body;
   if (!nombre_cliente) {
     return res.status(400).json({ message: 'El nombre del cliente es requerido.' });
   }
@@ -184,15 +184,15 @@ app.post('/api/clientes', async (req, res) => {
     const connection = await mysql.createConnection(dbConfig);
     // Insertar cliente
     await connection.execute(
-      `INSERT INTO tbl_clientes (nombre_cliente, apellido_cliente, dpi_cliente, telefono_cliente, correo_cliente, direccion_cliente)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [nombre_cliente, apellido_cliente, dpi_cliente, telefono_cliente, correo_cliente, direccion_cliente]
+      `INSERT INTO tbl_clientes (nombre_cliente, apellido_cliente, dpi_cliente, NIT, telefono_cliente, correo_cliente, direccion_cliente)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [nombre_cliente, apellido_cliente, dpi_cliente, NIT, telefono_cliente, correo_cliente, direccion_cliente]
     );
     await connection.end();
     res.json({ message: 'Cliente registrado exitosamente.' });
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
-      res.status(409).json({ message: 'El DPI ya está registrado.' });
+      res.status(409).json({ message: 'El DPI o NIT ya está registrado.' });
     } else {
       console.error(error);
       res.status(500).json({ message: 'Error al registrar el cliente.' });
@@ -233,12 +233,12 @@ app.get('/api/clientes/dpi/:dpi', async (req, res) => {
 // Endpoint para actualizar un cliente
 app.put('/api/clientes/:id', async (req, res) => {
   const { id } = req.params;
-  const { nombre_cliente, apellido_cliente, dpi_cliente, telefono_cliente, correo_cliente, direccion_cliente } = req.body;
+  const { nombre_cliente, apellido_cliente, dpi_cliente, NIT, telefono_cliente, correo_cliente, direccion_cliente } = req.body;
   try {
     const connection = await mysql.createConnection(dbConfig);
     const [result] = await connection.execute(
-      `UPDATE tbl_clientes SET nombre_cliente = ?, apellido_cliente = ?, dpi_cliente = ?, telefono_cliente = ?, correo_cliente = ?, direccion_cliente = ? WHERE PK_id_cliente = ?`,
-      [nombre_cliente, apellido_cliente, dpi_cliente, telefono_cliente, correo_cliente, direccion_cliente, id]
+      `UPDATE tbl_clientes SET nombre_cliente = ?, apellido_cliente = ?, dpi_cliente = ?, NIT = ?, telefono_cliente = ?, correo_cliente = ?, direccion_cliente = ? WHERE PK_id_cliente = ?`,
+      [nombre_cliente, apellido_cliente, dpi_cliente, NIT, telefono_cliente, correo_cliente, direccion_cliente, id]
     );
     await connection.end();
     if (result.affectedRows === 0) {
@@ -247,7 +247,7 @@ app.put('/api/clientes/:id', async (req, res) => {
     res.json({ message: 'Cliente actualizado correctamente.' });
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
-      res.status(409).json({ message: 'El DPI ya está registrado.' });
+      res.status(409).json({ message: 'El DPI o NIT ya está registrado.' });
     } else {
       console.error(error);
       res.status(500).json({ message: 'Error al actualizar el cliente.' });
@@ -274,15 +274,13 @@ app.delete('/api/clientes/:id', async (req, res) => {
 
 // ==================== ENDPOINTS PARA VEHÍCULOS ====================
 
-// Endpoint para obtener todos los vehículos con información del cliente
+// Endpoint para obtener todos los vehículos
 app.get('/api/vehiculos', async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
     const [rows] = await connection.execute(`
-      SELECT v.*, c.nombre_cliente, c.apellido_cliente, c.dpi_cliente 
-      FROM tbl_vehiculos v 
-      INNER JOIN tbl_clientes c ON v.fk_id_cliente = c.PK_id_cliente
-      ORDER BY v.pk_id_vehiculo DESC
+      SELECT * FROM tbl_vehiculos
+      ORDER BY pk_id_vehiculo DESC
     `);
     await connection.end();
     res.json(rows);
@@ -313,15 +311,8 @@ app.get('/api/vehiculos/buscar-cliente/:dpi', async (req, res) => {
 });
 
 // Endpoint para registrar un nuevo vehículo
-app.post('/api/vehiculos', upload.fields([
-  { name: 'imagen_1', maxCount: 1 },
-  { name: 'imagen_2', maxCount: 1 },
-  { name: 'imagen_3', maxCount: 1 },
-  { name: 'imagen_4', maxCount: 1 },
-  { name: 'video', maxCount: 1 }
-]), async (req, res) => {
+app.post('/api/vehiculos', async (req, res) => {
   const { 
-    fk_id_cliente, 
     placa_vehiculo, 
     marca_vehiculo, 
     modelo_vehiculo, 
@@ -329,25 +320,18 @@ app.post('/api/vehiculos', upload.fields([
     color_vehiculo 
   } = req.body;
 
-  if (!fk_id_cliente || !placa_vehiculo || !marca_vehiculo || !modelo_vehiculo) {
-    return res.status(400).json({ message: 'Cliente, placa, marca y modelo son requeridos.' });
+  if (!placa_vehiculo || !marca_vehiculo || !modelo_vehiculo) {
+    return res.status(400).json({ message: 'Placa, marca y modelo son requeridos.' });
   }
 
   try {
     const connection = await mysql.createConnection(dbConfig);
     
-    // Procesar archivos subidos
-    const imagen_1 = req.files['imagen_1'] ? req.files['imagen_1'][0].filename : 'sin_imagen.jpg';
-    const imagen_2 = req.files['imagen_2'] ? req.files['imagen_2'][0].filename : 'sin_imagen.jpg';
-    const imagen_3 = req.files['imagen_3'] ? req.files['imagen_3'][0].filename : 'sin_imagen.jpg';
-    const imagen_4 = req.files['imagen_4'] ? req.files['imagen_4'][0].filename : 'sin_imagen.jpg';
-    const video = req.files['video'] ? req.files['video'][0].filename : 'sin_video.mp4';
-
     // Insertar vehículo
     await connection.execute(
-      `INSERT INTO tbl_vehiculos (fk_id_cliente, placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo, color_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [fk_id_cliente, placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo, color_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video]
+      `INSERT INTO tbl_vehiculos (placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo, color_vehiculo)
+       VALUES (?, ?, ?, ?, ?)`,
+      [placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo, color_vehiculo]
     );
     await connection.end();
     res.json({ message: 'Vehículo registrado exitosamente.' });
@@ -366,12 +350,10 @@ app.get('/api/vehiculos/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const connection = await mysql.createConnection(dbConfig);
-    const [rows] = await connection.execute(`
-      SELECT v.*, c.nombre_cliente, c.apellido_cliente, c.dpi_cliente 
-      FROM tbl_vehiculos v 
-      INNER JOIN tbl_clientes c ON v.fk_id_cliente = c.PK_id_cliente
-      WHERE v.pk_id_vehiculo = ?
-    `, [id]);
+    const [rows] = await connection.execute(
+      'SELECT * FROM tbl_vehiculos WHERE pk_id_vehiculo = ?',
+      [id]
+    );
     await connection.end();
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Vehículo no encontrado.' });
@@ -384,16 +366,9 @@ app.get('/api/vehiculos/:id', async (req, res) => {
 });
 
 // Endpoint para actualizar un vehículo
-app.put('/api/vehiculos/:id', upload.fields([
-  { name: 'imagen_1', maxCount: 1 },
-  { name: 'imagen_2', maxCount: 1 },
-  { name: 'imagen_3', maxCount: 1 },
-  { name: 'imagen_4', maxCount: 1 },
-  { name: 'video', maxCount: 1 }
-]), async (req, res) => {
+app.put('/api/vehiculos/:id', async (req, res) => {
   const { id } = req.params;
   const { 
-    fk_id_cliente, 
     placa_vehiculo, 
     marca_vehiculo, 
     modelo_vehiculo, 
@@ -404,30 +379,10 @@ app.put('/api/vehiculos/:id', upload.fields([
   try {
     const connection = await mysql.createConnection(dbConfig);
     
-    // Obtener vehículo actual para preservar imágenes no actualizadas
-    const [currentVehicle] = await connection.execute(
-      'SELECT imagen_1, imagen_2, imagen_3, imagen_4, video FROM tbl_vehiculos WHERE pk_id_vehiculo = ?',
-      [id]
-    );
-
-    if (currentVehicle.length === 0) {
-      await connection.end();
-      return res.status(404).json({ message: 'Vehículo no encontrado.' });
-    }
-
-    const current = currentVehicle[0];
-    
-    // Procesar archivos subidos (mantener existentes si no se suben nuevos)
-    const imagen_1 = req.files['imagen_1'] ? req.files['imagen_1'][0].filename : current.imagen_1;
-    const imagen_2 = req.files['imagen_2'] ? req.files['imagen_2'][0].filename : current.imagen_2;
-    const imagen_3 = req.files['imagen_3'] ? req.files['imagen_3'][0].filename : current.imagen_3;
-    const imagen_4 = req.files['imagen_4'] ? req.files['imagen_4'][0].filename : current.imagen_4;
-    const video = req.files['video'] ? req.files['video'][0].filename : current.video;
-
     // Actualizar vehículo
     const [result] = await connection.execute(
-      `UPDATE tbl_vehiculos SET fk_id_cliente = ?, placa_vehiculo = ?, marca_vehiculo = ?, modelo_vehiculo = ?, anio_vehiculo = ?, color_vehiculo = ?, imagen_1 = ?, imagen_2 = ?, imagen_3 = ?, imagen_4 = ?, video = ? WHERE pk_id_vehiculo = ?`,
-      [fk_id_cliente, placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo, color_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video, id]
+      `UPDATE tbl_vehiculos SET placa_vehiculo = ?, marca_vehiculo = ?, modelo_vehiculo = ?, anio_vehiculo = ?, color_vehiculo = ? WHERE pk_id_vehiculo = ?`,
+      [placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo, color_vehiculo, id]
     );
     await connection.end();
     
@@ -459,6 +414,158 @@ app.delete('/api/vehiculos/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error al eliminar el vehículo.' });
+  }
+});
+
+// ==================== ENDPOINTS PARA SERVICIOS ====================
+
+// Endpoint para obtener todos los servicios
+app.get('/api/servicios', async (req, res) => {
+  try {
+    console.log('🔍 Intentando obtener servicios...');
+    const connection = await mysql.createConnection(dbConfig);
+    console.log('✅ Conexión a BD establecida');
+    const [rows] = await connection.execute('SELECT * FROM tbl_servicios ORDER BY pk_id_servicio DESC');
+    console.log('📊 Servicios obtenidos:', rows.length);
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ Error al obtener servicios:', error);
+    res.status(500).json({ message: 'Error al obtener los servicios.', error: error.message });
+  }
+});
+
+// Endpoint para registrar un nuevo servicio
+app.post('/api/servicios', async (req, res) => {
+  const { servicio, descripcion_servicios } = req.body;
+  if (!servicio) {
+    return res.status(400).json({ message: 'El nombre del servicio es requerido.' });
+  }
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    await connection.execute(
+      'INSERT INTO tbl_servicios (servicio, descripcion_servicios) VALUES (?, ?)',
+      [servicio, descripcion_servicios]
+    );
+    await connection.end();
+    res.json({ message: 'Servicio registrado exitosamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al registrar el servicio.' });
+  }
+});
+
+// Endpoint para actualizar un servicio
+app.put('/api/servicios/:id', async (req, res) => {
+  const { id } = req.params;
+  const { servicio, descripcion_servicios } = req.body;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      'UPDATE tbl_servicios SET servicio = ?, descripcion_servicios = ? WHERE pk_id_servicio = ?',
+      [servicio, descripcion_servicios, id]
+    );
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Servicio no encontrado.' });
+    }
+    res.json({ message: 'Servicio actualizado correctamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al actualizar el servicio.' });
+  }
+});
+
+// Endpoint para eliminar un servicio
+app.delete('/api/servicios/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute('DELETE FROM tbl_servicios WHERE pk_id_servicio = ?', [id]);
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Servicio no encontrado.' });
+    }
+    res.json({ message: 'Servicio eliminado correctamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al eliminar el servicio.' });
+  }
+});
+
+// ==================== ENDPOINTS PARA ESTADOS ====================
+
+// Endpoint para obtener todos los estados
+app.get('/api/estados', async (req, res) => {
+  try {
+    console.log('🔍 Intentando obtener estados...');
+    const connection = await mysql.createConnection(dbConfig);
+    console.log('✅ Conexión a BD establecida');
+    const [rows] = await connection.execute('SELECT * FROM tbl_orden_estado ORDER BY pk_id_estado DESC');
+    console.log('📊 Estados obtenidos:', rows.length);
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ Error al obtener estados:', error);
+    res.status(500).json({ message: 'Error al obtener los estados.', error: error.message });
+  }
+});
+
+// Endpoint para registrar un nuevo estado
+app.post('/api/estados', async (req, res) => {
+  const { estado_orden, descripcion_estado } = req.body;
+  if (!estado_orden) {
+    return res.status(400).json({ message: 'El nombre del estado es requerido.' });
+  }
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    await connection.execute(
+      'INSERT INTO tbl_orden_estado (estado_orden, descripcion_estado) VALUES (?, ?)',
+      [estado_orden, descripcion_estado]
+    );
+    await connection.end();
+    res.json({ message: 'Estado registrado exitosamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al registrar el estado.' });
+  }
+});
+
+// Endpoint para actualizar un estado
+app.put('/api/estados/:id', async (req, res) => {
+  const { id } = req.params;
+  const { estado_orden, descripcion_estado } = req.body;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      'UPDATE tbl_orden_estado SET estado_orden = ?, descripcion_estado = ? WHERE pk_id_estado = ?',
+      [estado_orden, descripcion_estado, id]
+    );
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Estado no encontrado.' });
+    }
+    res.json({ message: 'Estado actualizado correctamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al actualizar el estado.' });
+  }
+});
+
+// Endpoint para eliminar un estado
+app.delete('/api/estados/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute('DELETE FROM tbl_orden_estado WHERE pk_id_estado = ?', [id]);
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Estado no encontrado.' });
+    }
+    res.json({ message: 'Estado eliminado correctamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al eliminar el estado.' });
   }
 });
 

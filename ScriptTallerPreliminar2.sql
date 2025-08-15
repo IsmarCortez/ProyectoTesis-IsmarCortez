@@ -8,57 +8,94 @@ USE taller_mecanico;
 CREATE TABLE tbl_clientes (
     PK_id_cliente INT AUTO_INCREMENT PRIMARY KEY,
     nombre_cliente VARCHAR(100) NOT NULL,
-    dpi_cliente VARCHAR(20) UNIQUE,
-    telefono_cliente VARCHAR(20),
+    apellido_cliente VARCHAR(100),
+    dpi_cliente VARCHAR(13) UNIQUE,
+	NIT VARCHAR(13) UNIQUE,
+    telefono_cliente VARCHAR(8),
     correo_cliente VARCHAR(100),
     direccion_cliente TEXT,
     fecha_registro_cliente DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ALTER TABLE tbl_clientes
+-- ADD COLUMN apellido_cliente VARCHAR(100) NOT NULL AFTER nombre_cliente;
+
 -- Tabla de vehículos
 CREATE TABLE tbl_vehiculos (
     pk_id_vehiculo INT AUTO_INCREMENT PRIMARY KEY,
-    fk_id_cliente INT,
+--    fk_id_cliente INT,
     placa_vehiculo VARCHAR(20) UNIQUE,
     marca_vehiculo VARCHAR(50),
     modelo_vehiculo VARCHAR(50),
     anio_vehiculo INT,
-    color_vehiculo VARCHAR(30),
-    FOREIGN KEY (fk_id_cliente) REFERENCES tbl_clientes(pk_id_cliente)
-        ON DELETE CASCADE
+    color_vehiculo VARCHAR(30)
+--    FOREIGN KEY (fk_id_cliente) REFERENCES tbl_clientes(pk_id_cliente)
+--        ON DELETE CASCADE
 );
 
-ALTER TABLE tbl_vehiculos
-ADD COLUMN imagen_1 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg' AFTER color_vehiculo,
-ADD COLUMN imagen_2 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg' AFTER imagen_1,
-ADD COLUMN imagen_3 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg' AFTER imagen_2,
-ADD COLUMN imagen_4 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg' AFTER imagen_3,
-ADD COLUMN video     VARCHAR(255) NOT NULL DEFAULT 'sin_video.mp4' AFTER imagen_4;
+-- ALTER TABLE tbl_vehiculos
+-- ADD COLUMN imagen_1 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg' AFTER color_vehiculo,
+-- ADD COLUMN imagen_2 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg' AFTER imagen_1,
+-- ADD COLUMN imagen_3 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg' AFTER imagen_2,
+-- ADD COLUMN imagen_4 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg' AFTER imagen_3,
+-- ADD COLUMN video     VARCHAR(255) NOT NULL DEFAULT 'sin_video.mp4' AFTER imagen_4;
+
+CREATE TABLE tbl_servicios (
+    pk_id_servicio INT AUTO_INCREMENT PRIMARY KEY,
+    servicio VARCHAR(50),
+    descripcion_servicios varchar(100)
+);
+
+-- Tabla de seguimiento de órdenes (historial de estados)
+CREATE TABLE tbl_orden_estado (
+    pk_id_estado INT AUTO_INCREMENT PRIMARY KEY,
+    estado_orden VARCHAR(50),
+    descripcion_estado varchar(100)
+);
 
 
 -- Tabla de órdenes de mantenimiento y reparación
 CREATE TABLE tbl_ordenes (
+    -- Encabezado -------------------------
     pk_id_orden INT AUTO_INCREMENT PRIMARY KEY,
+	fecha_ingreso_orden DATETIME DEFAULT CURRENT_TIMESTAMP,
+    -- ------------------------------------
+    
+    -- Datos vehiculo y cliente -----------
     fk_id_vehiculo INT,
-    fecha_ingreso_orden DATETIME DEFAULT CURRENT_TIMESTAMP,
-    descripcion_problema_orden TEXT,
-    estado_actual_orden VARCHAR(50) DEFAULT 'Recibido',
-    enlace_seguimiento_orden VARCHAR(100) UNIQUE,
-    fecha_salida_orden DATETIME NULL,
+    fk_id_cliente INT,
+	-- ------------------------------------
+    --  Servicios -------------------------
+    fk_id_servicio int,
+    -- ------------------------------------
+    -- Datos orden -----------------------
+	comentario_cliente_orden TEXT,
+    nivel_combustible_orden ENUM('Empty', 'Low', 'Medium', 'High', 'Full') NOT NULL,
+    odometro_auto_cliente_orden float,
+    
+    imagen_1 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg',
+    imagen_2 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg',
+    imagen_3 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg',
+    imagen_4 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg',
+    video    VARCHAR(255) NOT NULL DEFAULT 'sin_video.mp4',    
+
+    -- ------------------------------------
+
+-- -------Añadidos estado orden o mejor dicho, nuevos campos-------------
+    fk_id_estado_orden int not null,
+    observaciones_orden varchar(100),
+-- ----------------------------------------    
     FOREIGN KEY (fk_id_vehiculo) REFERENCES tbl_vehiculos(pk_id_vehiculo)
+        ON DELETE CASCADE,
+	FOREIGN KEY (fk_id_cliente) REFERENCES tbl_clientes(PK_id_cliente)
+        ON DELETE CASCADE, 
+	FOREIGN KEY (fk_id_estado_orden) REFERENCES tbl_orden_estado(PK_id_estado)
+        ON DELETE CASCADE,
+	FOREIGN KEY (fk_id_servicio) REFERENCES tbl_servicios(pk_id_servicio)
         ON DELETE CASCADE
+
 );
 
--- Tabla de seguimiento de órdenes (historial de estados)
-CREATE TABLE tbl_seguimiento_orden (
-    pk_id_seguimiento INT AUTO_INCREMENT PRIMARY KEY,
-    fk_id_orden INT,
-    estado_orden VARCHAR(50),
-    comentario_orden TEXT,
-    fecha_orden DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (fk_id_orden) REFERENCES tbl_ordenes(pk_id_orden)
-        ON DELETE CASCADE
-);
 
 -- Tabla de imágenes del vehículo
 -- CREATE TABLE tbl_imagenes_vehiculo (
@@ -119,8 +156,7 @@ UPDATE tbl_usuarios
 SET foto_perfil_usuario = 'Home.jpg'
 WHERE nombre_usuario = 'admin';
 
-ALTER TABLE tbl_clientes
-ADD COLUMN apellido_cliente VARCHAR(100) NOT NULL AFTER nombre_cliente;
+
 
 INSERT INTO tbl_clientes (nombre_cliente, apellido_cliente, dpi_cliente, telefono_cliente, correo_cliente, direccion_cliente)
 VALUES

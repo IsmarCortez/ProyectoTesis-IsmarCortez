@@ -54,4 +54,114 @@ Bitácora de cambios - 2024-07-25
    - Se corrigió error de JSX (elementos adyacentes envueltos en fragmentos).
    - Se mejoró la experiencia de usuario con navegación intuitiva.
 
+7. **ACTUALIZACIÓN DEL DÍA DE HOY:**
+   - Se revisó y documentó el estado actual del sistema de vehículos.
+   - Se verificó el funcionamiento correcto del modal de visualización multimedia.
+   - Se confirmó la integración completa entre frontend y backend para el módulo de vehículos.
+   - Se validó el manejo de archivos múltiples (imágenes y videos) en el sistema.
+   - Se actualizó la bitácora con el progreso realizado hasta la fecha.
+
+8. **ACTUALIZACIÓN DE BASE DE DATOS Y SISTEMA:**
+   - Se actualizó la estructura de la base de datos según el archivo Taller_LDD.sql:
+     * Se agregó el campo NIT VARCHAR(13) UNIQUE a la tabla tbl_clientes.
+     * Se eliminó la relación directa entre vehículos y clientes (se removió fk_id_cliente de tbl_vehiculos).
+     * Los vehículos ahora son entidades independientes que se relacionan con clientes a través de la tabla tbl_ordenes.
+   
+   - **Modificaciones en el Backend (index.js):**
+     * Se actualizaron los endpoints de clientes para incluir el campo NIT en POST y PUT.
+     * Se modificaron los mensajes de error para incluir validación de NIT duplicado.
+     * Se simplificaron los endpoints de vehículos eliminando la relación con clientes.
+     * Se removió la validación de cliente requerido en vehículos.
+     * Se actualizaron las consultas SQL para trabajar con la nueva estructura.
+   
+   - **Modificaciones en el Frontend:**
+     * **Clientes.jsx**: Se agregó campo NIT al formulario y tabla de clientes.
+     * **Vehiculos.jsx**: Se eliminó la búsqueda de cliente por DPI y toda la lógica de relación con clientes.
+     * Se simplificó la tabla de vehículos mostrando solo información del vehículo.
+     * Se actualizó el modal de multimedia para mostrar solo información del vehículo.
+     * Se mantuvieron todas las funcionalidades de manejo de archivos (imágenes y videos).
+   
+   - **Cambios en la experiencia de usuario:**
+     * Los vehículos ahora se registran de forma independiente sin necesidad de asociar un cliente.
+     * Se mantiene la funcionalidad completa de CRUD para ambos módulos.
+     * La interfaz se adaptó a la nueva estructura de datos.
+
+9. **ELIMINACIÓN DE FUNCIONALIDAD DE ARCHIVOS EN VEHÍCULOS:**
+   - Se removió completamente la funcionalidad de manejo de archivos (imágenes y videos) del módulo de vehículos.
+   
+   - **Cambios en el Backend:**
+     * Se eliminó el middleware multer de los endpoints POST y PUT de vehículos.
+     * Se simplificaron las consultas SQL eliminando los campos de archivos (imagen_1, imagen_2, imagen_3, imagen_4, video).
+     * Se removió la lógica de procesamiento y preservación de archivos existentes.
+     * Los endpoints ahora solo manejan datos básicos del vehículo (placa, marca, modelo, año, color).
+   
+   - **Cambios en el Frontend:**
+     * Se eliminó el estado `archivos` y toda la lógica de manejo de archivos.
+     * Se removieron los campos de entrada de archivos del formulario.
+     * Se eliminó el botón 📷 y el modal de visualización multimedia.
+     * Se simplificó la tabla de vehículos eliminando la columna de acciones multimedia.
+     * Se actualizó la lógica de envío de formularios para usar JSON en lugar de FormData.
+   
+   - **Resultado:**
+     * El módulo de vehículos ahora es más simple y enfocado solo en la información básica del vehículo.
+     * Se mantiene toda la funcionalidad CRUD para los datos del vehículo.
+     * La interfaz es más limpia y directa sin la complejidad del manejo de archivos.
+
+10. **IMPLEMENTACIÓN DE MÓDULOS SERVICIOS Y ESTADOS:**
+   - Se agregaron dos nuevos módulos al sistema: Servicios y Estados de Órdenes.
+   
+   - **Nuevos Componentes Frontend:**
+     * **Servicios.jsx**: Módulo completo para gestionar servicios del taller con CRUD:
+       - Formulario de registro/edición con campos: nombre del servicio y descripción.
+       - Tabla de servicios registrados con acciones de editar y eliminar.
+       - Validaciones de campos requeridos.
+       - Interfaz consistente con el resto del sistema.
+     
+     * **Estados.jsx**: Módulo completo para gestionar estados de órdenes con CRUD:
+       - Formulario de registro/edición con campos: nombre del estado y descripción.
+       - Tabla de estados registrados con acciones de editar y eliminar.
+       - Validaciones de campos requeridos.
+       - Interfaz consistente con el resto del sistema.
+   
+   - **Nuevos Endpoints Backend:**
+     * **Servicios**: GET, POST, PUT, DELETE para /api/servicios
+     * **Estados**: GET, POST, PUT, DELETE para /api/estados
+     * Todos los endpoints incluyen validaciones y manejo de errores.
+     * Consultas SQL optimizadas para las tablas tbl_servicios y tbl_orden_estado.
+   
+   - **Actualización del Menú Principal:**
+     * Se agregaron los botones "Servicios" y "Estados" en el menú de navegación.
+     * Se actualizó App.js con las nuevas rutas protegidas.
+     * Orden del menú: Inicio, Clientes, Vehículos, Servicios, Estados, Órdenes, Nuevo usuario.
+   
+   - **Funcionalidades Implementadas:**
+     * CRUD completo para ambos módulos.
+     * Navegación integrada con el sistema existente.
+     * Botones de retorno al menú principal.
+     * Mensajes de confirmación y error.
+     * Interfaz responsiva con Bootstrap.
+
+11. **SOLUCIÓN DE PROBLEMAS EN ENDPOINTS SERVICIOS Y ESTADOS:**
+   - Se identificó un problema donde los módulos de Servicios y Estados mostraban "Error al cargar los datos".
+   
+   - **Diagnóstico del Problema:**
+     * Las tablas tbl_servicios y tbl_orden_estado podrían no existir en la base de datos actual.
+     * Los endpoints estaban funcionando correctamente pero las tablas no tenían datos.
+     * Falta de datos de prueba para verificar el funcionamiento.
+   
+   - **Soluciones Implementadas:**
+     * Se creó el archivo verificar_tablas.sql para crear las tablas si no existen.
+     * Se agregaron datos de prueba para servicios y estados en Taller_LDD.sql.
+     * Se implementaron logs de depuración en los endpoints para identificar errores.
+     * Se mejoró el manejo de errores para mostrar mensajes más descriptivos.
+   
+   - **Datos de Prueba Agregados:**
+     * **Servicios**: Cambio de aceite, Frenos, Suspensión, Motor
+     * **Estados**: Pendiente, En Proceso, Completado, Cancelado
+   
+   - **Mejoras en el Backend:**
+     * Logs detallados para debugging de conexiones y consultas.
+     * Mensajes de error más informativos.
+     * Verificación de existencia de tablas antes de operaciones.
+
 Responsable: Asistente IA 
