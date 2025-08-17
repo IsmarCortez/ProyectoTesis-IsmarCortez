@@ -578,34 +578,35 @@ app.get('/api/ordenes', async (req, res) => {
     const connection = await mysql.createConnection(dbConfig);
     console.log('✅ Conexión a BD establecida');
     
-    const query = `
-      SELECT 
-        o.pk_id_orden,
-        o.fecha_ingreso_orden,
-        o.comentario_cliente_orden,
-        o.nivel_combustible_orden,
-        o.odometro_auto_cliente_orden,
-        o.imagen_1,
-        o.imagen_2,
-        o.imagen_3,
-        o.imagen_4,
-        o.video,
-        o.observaciones_orden,
-        c.dpi_cliente,
-        c.nombre_cliente,
-        c.apellido_cliente,
-        v.placa_vehiculo,
-        v.marca_vehiculo,
-        v.modelo_vehiculo,
-        s.servicio,
-        e.estado_orden
-      FROM tbl_ordenes o
-      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
-      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
-      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
-      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
-      ORDER BY o.fecha_ingreso_orden DESC
-    `;
+          const query = `
+        SELECT 
+          o.pk_id_orden,
+          o.fecha_ingreso_orden,
+          o.comentario_cliente_orden,
+          o.nivel_combustible_orden,
+          o.odometro_auto_cliente_orden,
+          o.imagen_1,
+          o.imagen_2,
+          o.imagen_3,
+          o.imagen_4,
+          o.video,
+          o.observaciones_orden,
+          c.dpi_cliente,
+          c.nombre_cliente,
+          c.apellido_cliente,
+          c.telefono_cliente,
+          v.placa_vehiculo,
+          v.marca_vehiculo,
+          v.modelo_vehiculo,
+          s.servicio,
+          e.estado_orden
+        FROM tbl_ordenes o
+        LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+        LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+        LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+        LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+        ORDER BY o.fecha_ingreso_orden DESC
+      `;
     
     const [rows] = await connection.execute(query);
     console.log('📊 Órdenes obtenidas:', rows.length);

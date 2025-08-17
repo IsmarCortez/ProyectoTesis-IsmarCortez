@@ -211,4 +211,123 @@ Bitácora de cambios - 2024-07-25
      * **Modal Informativo**: Visualización completa de multimedia con contexto de la orden.
      * **Estados Visuales**: Badges de colores para diferentes estados de la orden.
 
+13. **IMPLEMENTACIÓN COMPLETA DEL SISTEMA DE IMPRESIÓN DE ÓRDENES:**
+   - Se implementó exitosamente un sistema completo de impresión profesional para las órdenes del taller.
+   
+   - **Componente ImprimirOrden.jsx (NUEVO):**
+     * **Encabezado corporativo**: Logo oficial del taller (LogoTecnoAuto.jpg) con nombre "TECNO AUTO" y subtítulo "Taller Mecánico".
+     * **Información completa de la orden**: ID único, fecha y hora de ingreso, estado actual con badge de color.
+     * **Sección del cliente**: Nombre completo y DPI del cliente registrado.
+     * **Sección del vehículo**: Placa, marca, modelo y año del vehículo.
+     * **Detalles del servicio**: Tipo de servicio seleccionado, nivel de combustible (traducido al español), odómetro en kilómetros.
+     * **Comentarios y observaciones**: Comentarios del cliente y observaciones técnicas del taller (condicionales).
+     * **Resumen multimedia**: Cantidad de imágenes adjuntas y estado del video.
+     * **Pie de página profesional**: Fecha de impresión, espacios para firmas del cliente y técnico, área para sello del taller.
+     * **Notas legales**: Advertencias importantes sobre responsabilidades y términos del servicio.
+   
+   - **Funcionalidades Avanzadas de Impresión:**
+     * **Vista previa completa**: Modal XL con formato exacto de impresión antes de imprimir.
+     * **Botón de impresión integrado**: 🖨️ agregado en la tabla de órdenes junto al botón 📷 de multimedia.
+     * **Estilos optimizados para impresión**: CSS específico con @media print para tamaños de fuente y espaciado apropiados.
+     * **Formato profesional**: Diseño similar a órdenes de trabajo de talleres mecánicos reales.
+     * **Responsive design**: Adaptable a diferentes tamaños de pantalla y dispositivos.
+   
+   - **Integración Completa en el Sistema:**
+     * **Importación del componente**: Agregado import de ImprimirOrden en Ordenes.jsx.
+     * **Estados de impresión**: Nuevos estados para controlar la vista de impresión (mostrarImpresion, ordenParaImprimir).
+     * **Función imprimirOrden**: Nueva función que activa la vista de impresión de una orden específica.
+     * **Botón en tabla**: Botón 🖨️ integrado en la columna multimedia de la tabla de órdenes.
+     * **Modal de impresión**: Ventana modal completa con header personalizado y contenido del componente de impresión.
+     * **Overlay de impresión**: Fondo oscuro para el modal de impresión.
+   
+   - **Características Técnicas Implementadas:**
+     * **Logo integrado**: Usa el mismo logo del login (LogoTecnoAuto.jpg) para consistencia de marca.
+     * **Formato de fecha local**: Fechas en formato local de Guatemala (es-GT).
+     * **Traducción automática**: Combustible traducido al español (Empty→Vacío, Low→Bajo, Medium→Medio, High→Alto, Full→Lleno).
+     * **CSS de impresión avanzado**: Estilos específicos para @media print con tamaños optimizados.
+     * **Estructura HTML semántica**: Código bien estructurado para impresión profesional y accesibilidad.
+     * **Manejo de estados**: Control de visibilidad de elementos durante la impresión.
+     * **Optimización de página única**: Configuración @page con márgenes de 0.5in para A4, evitando saltos de página.
+     * **Tamaños de fuente optimizados**: Fuente base de 10px con line-height de 1.2 para máximo aprovechamiento del espacio.
+     * **Espaciado compacto**: Reducción de márgenes y padding para que toda la orden quepa en una sola página.
+     * **Control de saltos**: page-break-inside: avoid en todas las secciones para mantener integridad del contenido.
+   
+   - **Beneficios Implementados para el Taller:**
+     * **Documentación profesional**: Órdenes impresas con logo corporativo y formato estándar de la industria.
+     * **Trazabilidad completa**: Registro físico de todas las órdenes de trabajo con información detallada.
+     * **Validación legal**: Espacios para firmas del cliente y técnico, área para sello oficial del taller.
+     * **Comunicación clara**: Información completa y bien organizada para el cliente y personal del taller.
+     * **Cumplimiento normativo**: Documentación adecuada para auditorías y cumplimiento legal.
+     * **Imagen corporativa**: Presentación profesional que mejora la percepción del cliente sobre el taller.
+     * **Eficiencia operativa**: Proceso de impresión rápido y directo desde la interfaz principal.
+   
+   - **Flujo de Usuario Implementado:**
+     * **Paso 1**: Usuario ve la tabla de órdenes con botón 🖨️ en cada fila.
+     * **Paso 2**: Al hacer clic en 🖨️, se abre modal de vista previa de impresión.
+     * **Paso 3**: Usuario revisa la orden completa en formato de impresión.
+     * **Paso 4**: Al hacer clic en "🖨️ Imprimir Orden", se activa la función de impresión del navegador.
+     * **Paso 5**: Solo se imprime el contenido de la orden (sin controles de pantalla).
+   
+   - **Archivos Modificados/Creados:**
+     * **NUEVO**: frontend/src/ImprimirOrden.jsx - Componente completo de impresión.
+     * **MODIFICADO**: frontend/src/Ordenes.jsx - Integración del sistema de impresión.
+     * **ACTUALIZADO**: bitacora_2024-07-25.txt - Registro de esta implementación.
+     * **NUEVO**: agregar_telefono_usuario.sql - Script para agregar teléfono del usuario.
+     * **MODIFICADO**: backend/index.js - Endpoint de órdenes incluye información del empleado.
+
+14. **IMPLEMENTACIÓN CORREGIDA DE TELÉFONO DEL CLIENTE EN ÓRDENES:**
+    - Se corrigió la implementación para mostrar el teléfono del cliente vinculado a la orden, no del usuario del sistema.
+    
+    - **Modificaciones en Base de Datos:**
+      * **Campo de teléfono del cliente**: Ya existía `telefono_cliente VARCHAR(8)` en la tabla `tbl_clientes`.
+      * **Vínculo con órdenes**: Las órdenes ya tienen relación con clientes a través de `fk_id_cliente`.
+      * **No se requieren cambios**: La estructura de base de datos ya soporta esta funcionalidad.
+    
+    - **Modificaciones en Backend:**
+      * **Endpoint de órdenes**: Modificado `/api/ordenes` para incluir `c.telefono_cliente`.
+      * **Información del cliente**: Ahora retorna el teléfono del cliente junto con los demás datos.
+      * **Query simplificado**: Eliminado JOIN innecesario con tabla de usuarios.
+      * **Optimización**: Solo se obtienen los datos necesarios del cliente.
+    
+    - **Modificaciones en Frontend:**
+      * **Componente ImprimirOrden**: Agregado teléfono en la sección de información del cliente.
+      * **Información mostrada**: Teléfono del cliente bajo su nombre y DPI.
+      * **Posicionamiento**: Integrado naturalmente en la sección del cliente.
+      * **Validación condicional**: Solo se muestra si el cliente tiene teléfono registrado.
+    
+    - **Beneficios Implementados:**
+      * **Contacto del cliente**: El taller puede contactar al cliente usando el teléfono mostrado.
+      * **Información completa**: La orden incluye todos los datos de contacto del cliente.
+      * **Diseño coherente**: El teléfono está ubicado lógicamente con la información del cliente.
+      * **Documentación útil**: Facilita la comunicación entre el taller y el cliente.
+    
+         - **Archivos Modificados:**
+       * **MODIFICADO**: backend/index.js - Endpoint de órdenes incluye teléfono del cliente.
+       * **MODIFICADO**: frontend/src/ImprimirOrden.jsx - Teléfono del cliente en su sección correspondiente.
+       * **MODIFICADO**: frontend/src/Ordenes.jsx - Función editarOrden corregida para mostrar opciones seleccionadas en combobox.
+       * **ACTUALIZADO**: bitacora_2024-07-25.txt - Registro de la corrección implementada.
+
+15. **CORRECCIÓN DE COMBOBOX EN EDICIÓN DE ÓRDENES:**
+    - Se corrigió la funcionalidad de edición para que los campos de combobox muestren las opciones correctamente seleccionadas.
+    
+    - **Problema Identificado:**
+      * **Confusión en combobox**: Al editar una orden, los campos de servicio y estado aparecían vacíos.
+      * **IDs vs Nombres**: Los campos contenían IDs pero los combobox necesitaban mostrar los nombres correspondientes.
+      * **Experiencia de usuario**: Generaba confusión sobre qué opción estaba seleccionada previamente.
+    
+    - **Solución Implementada:**
+      * **Búsqueda de IDs correctos**: La función `editarOrden` ahora busca los IDs basándose en los nombres.
+      * **Mapeo de servicios**: `servicios.find(s => s.servicio === orden.servicio)` para obtener el ID correcto.
+      * **Mapeo de estados**: `estados.find(e => e.estado_orden === orden.estado_orden)` para obtener el ID correcto.
+      * **Formulario prellenado**: Los combobox ahora muestran las opciones correctamente seleccionadas.
+    
+    - **Beneficios Implementados:**
+      * **Claridad visual**: El usuario puede ver exactamente qué opción estaba seleccionada.
+      * **Experiencia mejorada**: No hay confusión sobre el estado actual de la orden.
+      * **Edición eficiente**: Se puede modificar solo lo necesario sin perder contexto.
+      * **Validación visual**: Los campos muestran claramente los valores actuales.
+    
+    - **Archivos Modificados:**
+      * **MODIFICADO**: frontend/src/Ordenes.jsx - Función editarOrden optimizada para combobox.
+
 Responsable: Asistente IA 

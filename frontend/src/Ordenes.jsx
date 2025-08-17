@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ImprimirOrden from './ImprimirOrden';
 
 const Ordenes = () => {
   const navigate = useNavigate();
@@ -12,6 +13,8 @@ const Ordenes = () => {
   const [vehiculoEncontrado, setVehiculoEncontrado] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
+  const [mostrarImpresion, setMostrarImpresion] = useState(false);
+  const [ordenParaImprimir, setOrdenParaImprimir] = useState(null);
 
   const [form, setForm] = useState({
     dpi_cliente: '',
@@ -206,14 +209,18 @@ const Ordenes = () => {
   };
 
   const editarOrden = (orden) => {
+    // Buscar los IDs correctos basándose en los nombres
+    const servicioEncontrado = servicios.find(s => s.servicio === orden.servicio);
+    const estadoEncontrado = estados.find(e => e.estado_orden === orden.estado_orden);
+    
     setForm({
       dpi_cliente: orden.dpi_cliente || '',
       placa_vehiculo: orden.placa_vehiculo || '',
-      fk_id_servicio: orden.fk_id_servicio || '',
+      fk_id_servicio: servicioEncontrado ? servicioEncontrado.pk_id_servicio : '',
       comentario_cliente_orden: orden.comentario_cliente_orden || '',
       nivel_combustible_orden: orden.nivel_combustible_orden || 'Medium',
       odometro_auto_cliente_orden: orden.odometro_auto_cliente_orden || '',
-      fk_id_estado_orden: orden.fk_id_estado_orden || '',
+      fk_id_estado_orden: estadoEncontrado ? estadoEncontrado.pk_id_estado : '',
       observaciones_orden: orden.observaciones_orden || '',
       imagen_1: null,
       imagen_2: null,
@@ -258,6 +265,11 @@ const Ordenes = () => {
   const verMultimedia = (orden) => {
     setOrdenSeleccionada(orden);
     setMostrarModal(true);
+  };
+
+  const imprimirOrden = (orden) => {
+    setOrdenParaImprimir(orden);
+    setMostrarImpresion(true);
   };
 
   const formatearFecha = (fecha) => {
@@ -558,13 +570,22 @@ const Ordenes = () => {
                     <td>{orden.nivel_combustible_orden}</td>
                     <td>{orden.odometro_auto_cliente_orden ? `${orden.odometro_auto_cliente_orden} km` : '-'}</td>
                     <td>
-                      <button
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => verMultimedia(orden)}
-                        title="Ver multimedia"
-                      >
-                        📷
-                      </button>
+                      <div className="btn-group" role="group">
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => verMultimedia(orden)}
+                          title="Ver multimedia"
+                        >
+                          📷
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-success"
+                          onClick={() => imprimirOrden(orden)}
+                          title="Imprimir orden"
+                        >
+                          🖨️
+                        </button>
+                      </div>
                     </td>
                     <td>
                       <div className="btn-group" role="group">
@@ -703,6 +724,37 @@ const Ordenes = () => {
 
       {/* Overlay del modal */}
       {mostrarModal && (
+        <div className="modal-backdrop fade show" />
+      )}
+
+      {/* Componente de Impresión */}
+      {mostrarImpresion && ordenParaImprimir && (
+        <div className="modal fade show" style={{ display: 'block' }}>
+          <div className="modal-dialog modal-xl">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  🖨️ Imprimir Orden #{ordenParaImprimir.pk_id_orden}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setMostrarImpresion(false)}
+                />
+              </div>
+              <div className="modal-body p-0">
+                <ImprimirOrden 
+                  orden={ordenParaImprimir} 
+                  onClose={() => setMostrarImpresion(false)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Overlay del modal de impresión */}
+      {mostrarImpresion && (
         <div className="modal-backdrop fade show" />
       )}
     </div>
