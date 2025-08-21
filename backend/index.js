@@ -8,6 +8,9 @@ const path = require('path');  // <-- Importamos path para rutas
 const nodemailer = require('nodemailer'); // <-- Importar nodemailer
 const multer = require('multer'); //s <-- Importar multer para manejo de archivos
 
+// ==================== SISTEMA DE NOTIFICACIONES ====================
+const NotificationService = require('./services/notificationService');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -692,7 +695,7 @@ app.post('/api/ordenes', upload.fields([
     const imagen_4 = req.files.imagen_4 ? req.files.imagen_4[0].filename : 'sin_imagen.jpg';
     const video = req.files.video ? req.files.video[0].filename : 'sin_video.mp4';
 
-    await connection.execute(
+    const [result] = await connection.execute(
       `INSERT INTO tbl_ordenes (
         fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
         nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
@@ -706,7 +709,30 @@ app.post('/api/ordenes', upload.fields([
     );
     
     await connection.end();
-    res.json({ message: 'Orden registrada exitosamente.' });
+    
+    // Procesar notificaciones automáticas en segundo plano (no bloqueante)
+    if (result.insertId) {
+      setImmediate(async () => {
+        try {
+          console.log(`📧 Procesando notificaciones automáticas para orden #${result.insertId}`);
+          const notificationResults = await NotificationService.processOrderNotifications(result.insertId);
+          console.log(`✅ Notificaciones procesadas para orden #${result.insertId}:`, {
+            pdf: notificationResults.pdf.success ? '✅' : '❌',
+            email: notificationResults.email.success ? '✅' : '❌',
+            whatsapp: notificationResults.whatsapp.success ? '✅' : '❌',
+            processingTime: `${notificationResults.processingTime}ms`
+          });
+        } catch (error) {
+          console.error(`❌ Error procesando notificaciones para orden #${result.insertId}:`, error.message);
+        }
+      });
+    }
+    
+    res.json({ 
+      message: 'Orden registrada exitosamente.',
+      orderId: result.insertId,
+      notifications: 'Procesando notificaciones automáticas...'
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error al registrar la orden.' });
@@ -830,7 +856,69 @@ app.delete('/api/ordenes/:id', async (req, res) => {
   }
 });
 
+// ==================== ENDPOINTS DE GESTIÓN DE NOTIFICACIONES ====================
+
+// Endpoint para obtener el estado de los servicios de notificación
+app.get('/api/notifications/status', async (req, res) => {
+  try {
+    const status = NotificationService.getServicesStatus();
+    res.json(status);
+  } catch (error) {
+    console.error('❌ Error getting notification status:', error);
+    res.status(500).json({ message: 'Error al obtener estado de notificaciones.' });
+  }
+});
+
+// Endpoint para enviar notificaciones de prueba
+app.post('/api/notifications/test', async (req, res) => {
+  try {
+    const { email, phone } = req.body;
+    
+    if (!email && !phone) {
+      return res.status(400).json({ message: 'Se requiere email o teléfono para la prueba.' });
+    }
+    
+    const results = await NotificationService.sendTestNotifications(email, phone);
+    res.json(results);
+  } catch (error) {
+    console.error('❌ Error sending test notifications:', error);
+    res.status(500).json({ message: 'Error al enviar notificaciones de prueba.' });
+  }
+});
+
+// Endpoint para reenviar notificaciones de una orden específica
+app.post('/api/notifications/resend/:orderId', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
+    if (!orderId || isNaN(orderId)) {
+      return res.status(400).json({ message: 'ID de orden válido requerido.' });
+    }
+    
+    const results = await NotificationService.processOrderNotifications(parseInt(orderId));
+    res.json(results);
+  } catch (error) {
+    console.error('❌ Error resending notifications:', error);
+    res.status(500).json({ message: 'Error al reenviar notificaciones.' });
+  }
+});
+
+// ==================== INICIALIZACIÓN DEL SISTEMA ====================
+
+// Inicializar servicios de notificación al arrancar el servidor
+async function initializeServices() {
+  try {
+    await NotificationService.initialize();
+    console.log('✅ Sistema de notificaciones inicializado correctamente');
+  } catch (error) {
+    console.error('❌ Error inicializando sistema de notificaciones:', error);
+  }
+}
+
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🟢 Servidor backend escuchando en puerto ${PORT}`);
+  
+  // Inicializar servicios de notificación
+  await initializeServices();
 });
