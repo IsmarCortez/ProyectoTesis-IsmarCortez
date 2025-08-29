@@ -227,3 +227,4 @@ EMPRESA_DIRECCION=Zona 1, Ciudad de Guatemala
 
 *Bitácora creada el 19 de Diciembre, 2024*
 *Sistema de Notificaciones - Taller Mecánico Tecno Auto*
+

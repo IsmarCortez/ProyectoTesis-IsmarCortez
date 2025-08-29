@@ -99,7 +99,7 @@ function Home({ usuario, onLogout }) {
           <button onClick={() => navigate('/servicios')} style={menuBtnStyleHeader}>Servicios</button>
           <button onClick={() => navigate('/estados')} style={menuBtnStyleHeader}>Estados</button>
           <button onClick={() => navigate('/ordenes')} style={menuBtnStyleHeader}>Órdenes</button>
-          <button onClick={() => navigate('/nuevo-usuario')} style={menuBtnStyleHeader}>Nuevo usuario</button>
+          <button onClick={() => navigate('/usuarios')} style={menuBtnStyleHeader}>Usuarios</button>
         </nav>
       </header>
 

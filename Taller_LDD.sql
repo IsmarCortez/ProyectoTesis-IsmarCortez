@@ -122,6 +122,11 @@ WHERE nombre_usuario = 'admin';
 
 
 
+select* from tbl_usuarios;
+select* from tbl_clientes;
+
+
+
 
 
 

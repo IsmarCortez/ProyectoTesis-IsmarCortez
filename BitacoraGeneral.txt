@@ -503,3 +503,180 @@ Bitácora de cambios - 2025-07-25
     - **Sistema de Notificaciones - Taller Mecánico Tecno Auto**
 
 Responsable: Asistente IA 
+
+18. **IMPLEMENTACIÓN COMPLETA DEL CRUD DE USUARIOS:**
+    - Se implementó exitosamente el sistema completo de gestión de usuarios del taller mecánico.
+    
+    - **🔧 Backend - Endpoints Implementados:**
+      * **GET /api/usuarios**: Obtener todos los usuarios registrados
+      * **GET /api/usuarios/:id**: Obtener un usuario específico por ID
+      * **POST /api/usuarios**: Registrar un nuevo usuario con validaciones
+      * **PUT /api/usuarios/:id**: Actualizar información de usuario existente
+      * **PUT /api/usuarios/:id/cambiar-contrasena**: Cambiar contraseña de usuario
+      * **DELETE /api/usuarios/:id**: Eliminar usuario (con protección para admin)
+    
+    - **🔒 Funcionalidades de Seguridad Implementadas:**
+      * **Validación de email**: Formato de email válido y único
+      * **Validación de contraseña**: Mínimo 6 caracteres
+      * **Hash de contraseñas**: Encriptación SHA-256 para seguridad
+      * **Protección de admin**: No se puede eliminar el usuario administrador principal
+      * **Validación de datos**: Todos los campos requeridos validados
+      * **Manejo de archivos**: Subida segura de fotos de perfil
+    
+    - **📱 Frontend - Componente Usuarios.jsx:**
+      * **Formulario de registro**: Campos para nombre, email, contraseña y pregunta de seguridad
+      * **Formulario de edición**: Modificación de información sin cambiar contraseña
+      * **Modal de cambio de contraseña**: Interfaz dedicada para cambiar contraseñas
+      * **Tabla de usuarios**: Vista completa con fotos, información y acciones
+      * **Validaciones en tiempo real**: Feedback inmediato de errores
+      * **Manejo de archivos**: Subida y visualización de fotos de perfil
+      * **Confirmaciones**: Diálogos de confirmación para acciones críticas
+    
+    - **🎨 Características de la Interfaz:**
+      * **Diseño responsivo**: Adaptable a diferentes tamaños de pantalla
+      * **Fotos de perfil**: Visualización circular con fallback para usuarios sin foto
+      * **Botones de acción**: Editar (✏️), Cambiar contraseña (🔒), Eliminar (🗑️)
+      * **Estados visuales**: Loading, errores y mensajes de éxito
+      * **Navegación intuitiva**: Botón de retorno al menú principal
+      * **Modal profesional**: Para cambio de contraseña con validaciones
+    
+    - **📋 Funcionalidades CRUD Completas:**
+      * **CREATE**: Registro de nuevos usuarios con validaciones completas
+      * **READ**: Listado de usuarios con información detallada
+      * **UPDATE**: Edición de información y cambio de contraseñas
+      * **DELETE**: Eliminación segura con protecciones
+    
+    - **🔧 Integración del Sistema:**
+      * **Ruta agregada**: /usuarios en App.js con protección de autenticación
+      * **Menú principal**: Botón "Usuarios" agregado al menú de navegación
+      * **Consistencia**: Diseño y funcionalidades alineadas con otros módulos
+      * **Navegación**: Integración completa con el sistema de rutas
+    
+    - **📊 Validaciones Implementadas:**
+      * **Campos requeridos**: Todos los campos obligatorios validados
+      * **Formato de email**: Validación de estructura de email
+      * **Email único**: No se permiten emails duplicados
+      * **Longitud de contraseña**: Mínimo 6 caracteres
+      * **Confirmación de contraseña**: Verificación en cambio de contraseña
+      * **Confirmación de eliminación**: Diálogo de confirmación antes de eliminar
+    
+    - **🛡️ Medidas de Seguridad:**
+      * **Protección de admin**: El usuario "admin" no puede ser eliminado
+      * **Hash de contraseñas**: Encriptación SHA-256 para almacenamiento seguro
+      * **Validación de sesión**: Solo usuarios autenticados pueden acceder
+      * **Sanitización de datos**: Validación de entrada en frontend y backend
+      * **Manejo de errores**: Mensajes de error descriptivos sin exponer información sensible
+    
+    - **📁 Archivos Creados/Modificados:**
+      * **NUEVO**: frontend/src/Usuarios.jsx - Componente completo de gestión de usuarios
+      * **MODIFICADO**: backend/index.js - Endpoints CRUD de usuarios
+      * **MODIFICADO**: frontend/src/App.js - Nueva ruta /usuarios
+      * **MODIFICADO**: frontend/src/Home.jsx - Botón "Usuarios" en menú principal
+      * **ACTUALIZADO**: BitacoraGeneral.txt - Documentación de esta implementación
+    
+    - **🎯 Beneficios Implementados:**
+      * **Gestión completa**: Administración total de usuarios del sistema
+      * **Seguridad mejorada**: Controles de acceso y validaciones robustas
+      * **Experiencia de usuario**: Interfaz intuitiva y fácil de usar
+      * **Escalabilidad**: Sistema preparado para múltiples usuarios
+      * **Mantenimiento**: Funcionalidades de edición y eliminación
+      * **Auditoría**: Registro completo de usuarios del sistema
+    
+    - **🔍 Funcionalidades Específicas:**
+      * **Registro de usuarios**: Formulario completo con validaciones
+      * **Edición de perfiles**: Modificación de información personal
+      * **Cambio de contraseñas**: Modal dedicado con confirmación
+      * **Gestión de fotos**: Subida y visualización de fotos de perfil
+      * **Eliminación segura**: Protecciones para evitar eliminación accidental
+      * **Búsqueda y filtrado**: Tabla organizada por nombre
+    
+    - **📈 Estado del Sistema:**
+      * **✅ Completamente funcional**: CRUD completo implementado
+      * **✅ Integrado**: Conectado con el sistema de autenticación existente
+      * **✅ Seguro**: Validaciones y protecciones implementadas
+      * **✅ Responsivo**: Interfaz adaptable a diferentes dispositivos
+      * **✅ Documentado**: Código bien estructurado y comentado
+    
+    - **🚀 Próximos Pasos Recomendados:**
+      * **Roles y permisos**: Implementar sistema de roles (admin, técnico, recepcionista)
+      * **Logs de actividad**: Registro de acciones de usuarios
+      * **Recuperación de cuenta**: Sistema de recuperación por email
+      * **Perfiles avanzados**: Información adicional de usuarios
+      * **Dashboard de usuarios**: Estadísticas de usuarios activos
+    
+    - **⏱️ Tiempo de Desarrollo:**
+      * **Backend**: 1 día (endpoints y validaciones)
+      * **Frontend**: 1 día (componente y interfaz)
+      * **Integración**: 0.5 días (rutas y navegación)
+      * **Pruebas**: 0.5 días (validación de funcionalidades)
+      * **Total**: 3 días de desarrollo completo
+
+20. **FUNCIONALIDADES PENDIENTES Y MEJORAS IDENTIFICADAS (ACTUALIZADO FINAL):**
+    
+    - **MEJORAS EN SISTEMA DE NOTIFICACIONES:**
+      * **Descarga automática de PDF** al enviar correo
+      * **Almacenamiento local de PDFs** para reenvío
+      * **Historial de envíos de PDFs** con timestamps
+      * **Reenvío con descarga** de PDFs anteriores
+    
+    - **CORRECCIÓN Y COMPLETADO DE WHATSAPP:**
+      * **Implementación completa** de la funcionalidad de WhatsApp
+      * **Configuración de plantillas** de mensajes personalizables
+      * **Integración con eventos** del sistema (nuevas órdenes, cambios de estado)
+      * **Notificaciones automáticas** por WhatsApp
+    
+    - **MEJORAS EN SISTEMA DE IMPRESIÓN:**
+      * **Mejor visualización** de la impresión
+      * **Generación y descarga** de PDF de orden
+      * **Personalización de plantillas** de impresión
+      * **Vista previa** antes de imprimir
+    
+    - **DASHBOARD DE ESTADÍSTICAS:**
+      * **Panel de control** con métricas clave del taller
+      * **Gráficos y visualizaciones** de datos
+      * **Filtros por fecha**, servicio, cliente, etc.
+      * **Reportes en tiempo real** de actividades
+    
+    - **SISTEMA DE REPORTES:**
+      * **Generación de reportes** en formato Excel
+      * **Generación de reportes** en formato PDF
+      * **Reportes personalizables** (órdenes, clientes, servicios, etc.)
+      * **Programación automática** de reportes
+    
+    - **TRACKER PÚBLICO DE ÓRDENES:**
+      * **Vista pública** para clientes
+      * **Búsqueda por número** de teléfono o número de orden
+      * **Visualización del estado** actual de la orden
+      * **Historial de cambios** de estado
+    
+    - **GESTIÓN MEJORADA DE ARCHIVOS (IMÁGENES Y VIDEOS):**
+      * **Optimización del almacenamiento** de archivos
+      * **Integración con servicios** de almacenamiento en la nube (ej. Cloudinary, S3)
+      * **Reducción del tamaño** de archivos para GitHub
+      * **Gestión de versiones** y miniaturas
+    
+    - **SISTEMA DE LOGS DE ACTIVIDADES (PRIORIDAD BAJA):**
+      * **Registro de actividades** de usuarios en el sistema
+      * **Auditoría completa** de acciones realizadas
+      * **Interfaz para visualizar** logs de actividades
+      * **Reportes de auditoría** en PDF/Excel
+      * **Alertas para actividades** sospechosas
+      * **Limpieza automática** de logs antiguos
+    
+    - **MEJORAS EN SEGURIDAD:**
+      * **Sistema de roles** y permisos (admin, técnico, recepcionista)
+      * **Autenticación de dos factores** (2FA)
+      * **Encriptación avanzada** de datos sensibles
+      * **Backup automático** de base de datos
+    
+    - **OPTIMIZACIONES DE RENDIMIENTO:**
+      * **Caché de consultas** frecuentes
+      * **Compresión de imágenes** automática
+      * **Paginación** en listas grandes
+      * **Lazy loading** de componentes
+    
+    - **MEJORAS EN LA EXPERIENCIA DE USUARIO:**
+      * **Notificaciones push** en tiempo real
+      * **Modo oscuro** para la interfaz
+      * **Accesibilidad mejorada** (lectores de pantalla)
+      * **Responsive design** optimizado para móviles 
