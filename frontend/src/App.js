@@ -11,6 +11,7 @@ import Estados from './Estados';
 import Ordenes from './Ordenes';
 import Usuarios from './Usuarios';
 import Dashboard from './Dashboard';
+import Reportes from './Reportes';
 
 function App() {
   const [usuario, setUsuario] = useState(() => {
@@ -40,6 +41,7 @@ function App() {
         <Route path="/ordenes" element={usuario ? <Ordenes /> : <Navigate to="/" />} />
         <Route path="/usuarios" element={usuario ? <Usuarios /> : <Navigate to="/" />} />
         <Route path="/dashboard" element={usuario ? <Dashboard /> : <Navigate to="/" />} />
+        <Route path="/reportes" element={usuario ? <Reportes /> : <Navigate to="/" />} />
         <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
       </Routes>
     </Router>

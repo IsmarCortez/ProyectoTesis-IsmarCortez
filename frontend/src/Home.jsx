@@ -95,6 +95,7 @@ function Home({ usuario, onLogout }) {
         <nav style={{ display: 'flex', gap: 24 }}>
           <button onClick={() => navigate('/home')} style={menuBtnStyleHeader}>Inicio</button>
           <button onClick={() => navigate('/dashboard')} style={menuBtnStyleHeader}>📊 Dashboard</button>
+          <button onClick={() => navigate('/reportes')} style={menuBtnStyleHeader}>📄 Reportes</button>
           <button onClick={() => navigate('/clientes')} style={menuBtnStyleHeader}>Clientes</button>
           <button onClick={() => navigate('/vehiculos')} style={menuBtnStyleHeader}>Vehículos</button>
           <button onClick={() => navigate('/servicios')} style={menuBtnStyleHeader}>Servicios</button>
@@ -270,29 +271,52 @@ function Home({ usuario, onLogout }) {
           <p className="lead mb-4">Taller Mecánico Tecno Auto - Repuestos Electrofrio</p>
           
           <div className="row justify-content-center">
-            <div className="col-md-8">
-              <div className="card shadow">
-                <div className="card-body">
-                  <h3 className="card-title">📊 Dashboard de Estadísticas</h3>
-                  <p className="card-text">
-                    Accede a un resumen completo de las estadísticas del taller, incluyendo:
-                  </p>
-                  <ul className="list-unstyled">
-                    <li>🚗 Vehículos más ingresados</li>
-                    <li>👥 Clientes por mes</li>
-                    <li>🔧 Servicios más solicitados</li>
-                    <li>📈 Tendencias de órdenes</li>
-                    <li>💰 Ingresos estimados</li>
-                  </ul>
-                  <button 
-                    className="btn btn-primary btn-lg"
-                    onClick={() => navigate('/dashboard')}
-                  >
-                    📊 Ver Dashboard de Estadísticas
-                  </button>
+              <div className="col-md-6">
+                <div className="card shadow">
+                  <div className="card-body">
+                    <h3 className="card-title">📊 Dashboard de Estadísticas</h3>
+                    <p className="card-text">
+                      Accede a un resumen completo de las estadísticas del taller, incluyendo:
+                    </p>
+                    <ul className="list-unstyled">
+                      <li>🚗 Vehículos más ingresados</li>
+                      <li>👥 Clientes por mes</li>
+                      <li>🔧 Servicios más solicitados</li>
+                      <li>📈 Tendencias de órdenes</li>
+                      <li>💰 Ingresos estimados</li>
+                    </ul>
+                    <button
+                      className="btn btn-primary btn-lg"
+                      onClick={() => navigate('/dashboard')}
+                    >
+                      📊 Ver Dashboard de Estadísticas
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+              <div className="col-md-6">
+                <div className="card shadow">
+                  <div className="card-body">
+                    <h3 className="card-title">📄 Generador de Reportes</h3>
+                    <p className="card-text">
+                      Genera reportes profesionales en PDF y Excel:
+                    </p>
+                    <ul className="list-unstyled">
+                      <li>📋 Reportes de órdenes</li>
+                      <li>👥 Listado de clientes</li>
+                      <li>🚗 Inventario de vehículos</li>
+                      <li>🔧 Catálogo de servicios</li>
+                      <li>📊 Estadísticas generales</li>
+                    </ul>
+                    <button
+                      className="btn btn-success btn-lg"
+                      onClick={() => navigate('/reportes')}
+                    >
+                      📄 Generar Reportes
+                    </button>
+                  </div>
+                </div>
+              </div>
           </div>
         </div>
       </main>

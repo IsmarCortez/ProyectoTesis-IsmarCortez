@@ -1224,8 +1224,8 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
         (SELECT COUNT(*) FROM tbl_vehiculos) as total_vehiculos,
         (SELECT COUNT(*) FROM tbl_ordenes) as total_ordenes,
         (SELECT COUNT(*) FROM tbl_ordenes WHERE fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as ordenes_mes_actual,
-        (SELECT COUNT(*) FROM tbl_ordenes WHERE fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Completado')) as ordenes_completadas,
-        (SELECT COUNT(*) FROM tbl_ordenes WHERE fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Pendiente')) as ordenes_pendientes
+        (SELECT COUNT(*) FROM tbl_ordenes WHERE fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Finalizado')) as ordenes_completadas,
+        (SELECT COUNT(*) FROM tbl_ordenes WHERE fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Recibido')) as ordenes_pendientes
     `);
 
     // 7. Marcas de vehículos más populares
@@ -1249,7 +1249,7 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
         (COUNT(*) * 500) as ingresos_estimados
       FROM tbl_ordenes o
       INNER JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
-      WHERE e.estado_orden = 'Completado' 
+      WHERE e.estado_orden = 'Finalizado' 
         AND o.fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
       GROUP BY DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m')
       ORDER BY mes ASC
@@ -1306,9 +1306,9 @@ app.get('/api/dashboard/estadisticas/:periodo', async (req, res) => {
         COUNT(*) as total_ordenes,
         COUNT(DISTINCT fk_id_cliente) as clientes_unicos,
         COUNT(DISTINCT fk_id_vehiculo) as vehiculos_unicos,
-        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Completado') THEN 1 END) as ordenes_completadas,
-        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Pendiente') THEN 1 END) as ordenes_pendientes,
-        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'En Proceso') THEN 1 END) as ordenes_en_proceso
+        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Finalizado') THEN 1 END) as ordenes_completadas,
+        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Recibido') THEN 1 END) as ordenes_pendientes,
+        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'En proceso') THEN 1 END) as ordenes_en_proceso
       FROM tbl_ordenes 
       WHERE fecha_ingreso_orden >= ${fechaInicio}
     `);
@@ -1323,6 +1323,118 @@ app.get('/api/dashboard/estadisticas/:periodo', async (req, res) => {
   } catch (error) {
     console.error('Error obteniendo estadísticas del período:', error);
     res.status(500).json({ message: 'Error al obtener estadísticas del período.' });
+  }
+});
+
+// ==================== ENDPOINTS DE REPORTES ====================
+
+const ReportService = require('./services/reportService');
+
+// Endpoint para generar reportes en PDF
+app.get('/api/reportes/pdf/:tipo', async (req, res) => {
+  try {
+    const { tipo } = req.params;
+    const filtros = req.query;
+    
+    console.log(`📄 Generando reporte PDF: ${tipo}`, filtros);
+    
+    const pdfBuffer = await ReportService.generatePDFReport(tipo, filtros);
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="reporte_${tipo}_${new Date().toISOString().split('T')[0]}.pdf"`);
+    res.send(pdfBuffer);
+    
+  } catch (error) {
+    console.error('Error generando reporte PDF:', error);
+    res.status(500).json({ message: 'Error al generar el reporte PDF.' });
+  }
+});
+
+// Endpoint para generar reportes en Excel
+app.get('/api/reportes/excel/:tipo', async (req, res) => {
+  try {
+    const { tipo } = req.params;
+    const filtros = req.query;
+    
+    console.log(`📊 Generando reporte Excel: ${tipo}`, filtros);
+    
+    const excelBuffer = await ReportService.generateExcelReport(tipo, filtros);
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="reporte_${tipo}_${new Date().toISOString().split('T')[0]}.xlsx"`);
+    res.send(excelBuffer);
+    
+  } catch (error) {
+    console.error('Error generando reporte Excel:', error);
+    res.status(500).json({ message: 'Error al generar el reporte Excel.' });
+  }
+});
+
+// Endpoint para obtener tipos de reportes disponibles
+app.get('/api/reportes/tipos', async (req, res) => {
+  try {
+    const tiposReportes = [
+      {
+        id: 'ordenes',
+        nombre: 'Órdenes de Servicio',
+        descripcion: 'Reporte completo de todas las órdenes de servicio',
+        filtros: ['fechaInicio', 'fechaFin', 'estado', 'servicio']
+      },
+      {
+        id: 'clientes',
+        nombre: 'Clientes',
+        descripcion: 'Listado completo de clientes registrados',
+        filtros: []
+      },
+      {
+        id: 'vehiculos',
+        nombre: 'Vehículos',
+        descripcion: 'Inventario de vehículos registrados',
+        filtros: []
+      },
+      {
+        id: 'servicios',
+        nombre: 'Servicios',
+        descripcion: 'Catálogo de servicios y estadísticas de uso',
+        filtros: []
+      },
+      {
+        id: 'estadisticas',
+        nombre: 'Estadísticas Generales',
+        descripcion: 'Resumen estadístico del taller',
+        filtros: []
+      }
+    ];
+    
+    res.json(tiposReportes);
+    
+  } catch (error) {
+    console.error('Error obteniendo tipos de reportes:', error);
+    res.status(500).json({ message: 'Error al obtener tipos de reportes.' });
+  }
+});
+
+// Endpoint para obtener opciones de filtros
+app.get('/api/reportes/filtros', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Obtener estados disponibles
+    const [estados] = await connection.execute('SELECT estado_orden FROM tbl_orden_estado ORDER BY estado_orden');
+    
+    // Obtener servicios disponibles
+    const [servicios] = await connection.execute('SELECT servicio FROM tbl_servicios ORDER BY servicio');
+    
+    await connection.end();
+    
+    res.json({
+      estados: estados.map(e => e.estado_orden),
+      servicios: servicios.map(s => s.servicio)
+    });
+    
+  } catch (error) {
+    console.error('Error obteniendo filtros:', error);
+    res.status(500).json({ message: 'Error al obtener filtros.' });
   }
 });
 
