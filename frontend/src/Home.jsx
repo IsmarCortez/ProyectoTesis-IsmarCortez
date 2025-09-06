@@ -96,6 +96,7 @@ function Home({ usuario, onLogout }) {
           <button onClick={() => navigate('/home')} style={menuBtnStyleHeader}>Inicio</button>
           <button onClick={() => navigate('/dashboard')} style={menuBtnStyleHeader}>📊 Dashboard</button>
           <button onClick={() => navigate('/reportes')} style={menuBtnStyleHeader}>📄 Reportes</button>
+          <button onClick={() => navigate('/tracker')} style={menuBtnStyleHeader}>🔍 Tracker</button>
           <button onClick={() => navigate('/clientes')} style={menuBtnStyleHeader}>Clientes</button>
           <button onClick={() => navigate('/vehiculos')} style={menuBtnStyleHeader}>Vehículos</button>
           <button onClick={() => navigate('/servicios')} style={menuBtnStyleHeader}>Servicios</button>
@@ -294,7 +295,7 @@ function Home({ usuario, onLogout }) {
                   </div>
                 </div>
               </div>
-              <div className="col-md-6">
+              <div className="col-md-4">
                 <div className="card shadow">
                   <div className="card-body">
                     <h3 className="card-title">📄 Generador de Reportes</h3>
@@ -313,6 +314,29 @@ function Home({ usuario, onLogout }) {
                       onClick={() => navigate('/reportes')}
                     >
                       📄 Generar Reportes
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="card shadow">
+                  <div className="card-body">
+                    <h3 className="card-title">🔍 Tracker Público</h3>
+                    <p className="card-text">
+                      Consulta el estado de órdenes sin login:
+                    </p>
+                    <ul className="list-unstyled">
+                      <li>📞 Búsqueda por teléfono</li>
+                      <li>🔢 Búsqueda por número de orden</li>
+                      <li>📋 Historial de estados</li>
+                      <li>⏰ Timeline de progreso</li>
+                      <li>🌐 Acceso público</li>
+                    </ul>
+                    <button
+                      className="btn btn-info btn-lg"
+                      onClick={() => navigate('/tracker')}
+                    >
+                      🔍 Consultar Orden
                     </button>
                   </div>
                 </div>

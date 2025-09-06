@@ -314,6 +314,9 @@ const Dashboard = () => {
               <button className="btn btn-outline-success me-2" onClick={() => window.open('/reportes', '_blank')}>
                 📊 Generar Reportes
               </button>
+              <button className="btn btn-outline-info me-2" onClick={() => window.open('/tracker', '_blank')}>
+                🔍 Tracker Público
+              </button>
               <button className="btn btn-outline-secondary" onClick={() => window.history.back()}>
                 ← Volver al Menú Principal
               </button>

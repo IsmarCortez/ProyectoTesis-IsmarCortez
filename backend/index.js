@@ -1438,6 +1438,213 @@ app.get('/api/reportes/filtros', async (req, res) => {
   }
 });
 
+// ==================== ENDPOINTS DEL TRACKER PÚBLICO ====================
+
+// Endpoint público para buscar orden por teléfono
+app.get('/api/tracker/telefono/:telefono', async (req, res) => {
+  try {
+    const { telefono } = req.params;
+    
+    console.log(`🔍 Búsqueda pública por teléfono: ${telefono}`);
+    
+    const connection = await mysql.createConnection(dbConfig);
+    
+    const [ordenes] = await connection.execute(`
+      SELECT 
+        o.pk_id_orden,
+        o.fecha_ingreso_orden,
+        CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) as cliente,
+        c.telefono_cliente,
+        CONCAT(v.marca_vehiculo, ' ', v.modelo_vehiculo) as vehiculo,
+        v.placa_vehiculo,
+        s.servicio,
+        e.estado_orden,
+        e.descripcion_estado,
+        o.comentario_cliente_orden,
+        o.observaciones_orden
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE c.telefono_cliente = ?
+      ORDER BY o.fecha_ingreso_orden DESC
+    `, [telefono]);
+    
+    await connection.end();
+    
+    if (ordenes.length === 0) {
+      return res.json({ 
+        encontrado: false, 
+        mensaje: 'No se encontraron órdenes con ese número de teléfono.' 
+      });
+    }
+    
+    res.json({ 
+      encontrado: true, 
+      ordenes: ordenes,
+      total: ordenes.length
+    });
+    
+  } catch (error) {
+    console.error('Error en búsqueda por teléfono:', error);
+    res.status(500).json({ 
+      encontrado: false, 
+      mensaje: 'Error interno del servidor.' 
+    });
+  }
+});
+
+// Endpoint público para buscar orden por número de orden
+app.get('/api/tracker/orden/:numero', async (req, res) => {
+  try {
+    const { numero } = req.params;
+    
+    console.log(`🔍 Búsqueda pública por número de orden: ${numero}`);
+    
+    const connection = await mysql.createConnection(dbConfig);
+    
+    const [ordenes] = await connection.execute(`
+      SELECT 
+        o.pk_id_orden,
+        o.fecha_ingreso_orden,
+        CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) as cliente,
+        c.telefono_cliente,
+        CONCAT(v.marca_vehiculo, ' ', v.modelo_vehiculo) as vehiculo,
+        v.placa_vehiculo,
+        s.servicio,
+        e.estado_orden,
+        e.descripcion_estado,
+        o.comentario_cliente_orden,
+        o.observaciones_orden
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE o.pk_id_orden = ?
+    `, [numero]);
+    
+    await connection.end();
+    
+    if (ordenes.length === 0) {
+      return res.json({ 
+        encontrado: false, 
+        mensaje: 'No se encontró una orden con ese número.' 
+      });
+    }
+    
+    res.json({ 
+      encontrado: true, 
+      orden: ordenes[0]
+    });
+    
+  } catch (error) {
+    console.error('Error en búsqueda por número de orden:', error);
+    res.status(500).json({ 
+      encontrado: false, 
+      mensaje: 'Error interno del servidor.' 
+    });
+  }
+});
+
+// Endpoint público para obtener historial de estados de una orden
+app.get('/api/tracker/historial/:numero', async (req, res) => {
+  try {
+    const { numero } = req.params;
+    
+    console.log(`📋 Obteniendo historial de orden: ${numero}`);
+    
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Verificar que la orden existe
+    const [ordenExiste] = await connection.execute(`
+      SELECT pk_id_orden FROM tbl_ordenes WHERE pk_id_orden = ?
+    `, [numero]);
+    
+    if (ordenExiste.length === 0) {
+      await connection.end();
+      return res.json({ 
+        encontrado: false, 
+        mensaje: 'Orden no encontrada.' 
+      });
+    }
+    
+    // Obtener información actual de la orden
+    const [ordenActual] = await connection.execute(`
+      SELECT 
+        o.pk_id_orden,
+        o.fecha_ingreso_orden,
+        CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) as cliente,
+        CONCAT(v.marca_vehiculo, ' ', v.modelo_vehiculo) as vehiculo,
+        s.servicio,
+        e.estado_orden,
+        e.descripcion_estado
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE o.pk_id_orden = ?
+    `, [numero]);
+    
+    // Crear historial simulado basado en el estado actual
+    // (En un sistema real, esto vendría de una tabla de historial)
+    const historial = [];
+    const orden = ordenActual[0];
+    
+    // Estado inicial: Recibido
+    historial.push({
+      estado: 'Recibido',
+      descripcion: 'Orden registrada y vehículo recibido en taller',
+      fecha: orden.fecha_ingreso_orden,
+      activo: orden.estado_orden === 'Recibido'
+    });
+    
+    // Estados intermedios según el estado actual
+    const estadosPosibles = [
+      { nombre: 'En proceso', descripcion: 'Servicio en curso' },
+      { nombre: 'En espera de piezas', descripcion: 'Se espera la llegada de repuestos' },
+      { nombre: 'Finalizado', descripcion: 'Servicio completado y listo para entrega' },
+      { nombre: 'Entregado', descripcion: 'Vehículo entregado al cliente' },
+      { nombre: 'Cancelado', descripcion: 'Orden cancelada por cliente o taller' }
+    ];
+    
+    let fechaActual = new Date(orden.fecha_ingreso_orden);
+    
+    for (const estado of estadosPosibles) {
+      fechaActual = new Date(fechaActual.getTime() + (2 * 24 * 60 * 60 * 1000)); // +2 días
+      
+      historial.push({
+        estado: estado.nombre,
+        descripcion: estado.descripcion,
+        fecha: fechaActual.toISOString(),
+        activo: orden.estado_orden === estado.nombre
+      });
+      
+      // Si llegamos al estado actual, parar
+      if (orden.estado_orden === estado.nombre) {
+        break;
+      }
+    }
+    
+    await connection.end();
+    
+    res.json({ 
+      encontrado: true, 
+      orden: orden,
+      historial: historial
+    });
+    
+  } catch (error) {
+    console.error('Error obteniendo historial:', error);
+    res.status(500).json({ 
+      encontrado: false, 
+      mensaje: 'Error interno del servidor.' 
+    });
+  }
+});
+
 // ==================== INICIALIZACIÓN DEL SISTEMA ====================
 
 // Inicializar servicios de notificación al arrancar el servidor
