@@ -1149,7 +1149,182 @@ app.delete('/api/usuarios/:id', async (req, res) => {
   }
 });
 
+// ==================== ENDPOINTS DE ESTADÍSTICAS ====================
 
+// Endpoint para obtener estadísticas generales del dashboard
+app.get('/api/dashboard/estadisticas', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // 1. Estadísticas de vehículos más ingresados (por modelo)
+    const [vehiculosStats] = await connection.execute(`
+      SELECT 
+        CONCAT(v.marca_vehiculo, ' ', v.modelo_vehiculo) as modelo_completo,
+        v.marca_vehiculo,
+        v.modelo_vehiculo,
+        COUNT(o.pk_id_orden) as cantidad_ordenes
+      FROM tbl_vehiculos v
+      LEFT JOIN tbl_ordenes o ON v.pk_id_vehiculo = o.fk_id_vehiculo
+      GROUP BY v.marca_vehiculo, v.modelo_vehiculo
+      ORDER BY cantidad_ordenes DESC
+      LIMIT 10
+    `);
+
+    // 2. Clientes por mes (basado en órdenes)
+    const [clientesPorMes] = await connection.execute(`
+      SELECT 
+        DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m') as mes,
+        COUNT(DISTINCT o.fk_id_cliente) as cantidad_clientes,
+        COUNT(o.pk_id_orden) as cantidad_ordenes
+      FROM tbl_ordenes o
+      WHERE o.fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+      GROUP BY DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m')
+      ORDER BY mes ASC
+    `);
+
+    // 3. Servicios más solicitados
+    const [serviciosStats] = await connection.execute(`
+      SELECT 
+        s.servicio,
+        COUNT(o.pk_id_orden) as cantidad_ordenes,
+        ROUND((COUNT(o.pk_id_orden) * 100.0 / (SELECT COUNT(*) FROM tbl_ordenes)), 2) as porcentaje
+      FROM tbl_servicios s
+      LEFT JOIN tbl_ordenes o ON s.pk_id_servicio = o.fk_id_servicio
+      GROUP BY s.pk_id_servicio, s.servicio
+      ORDER BY cantidad_ordenes DESC
+    `);
+
+    // 4. Estados de órdenes
+    const [estadosStats] = await connection.execute(`
+      SELECT 
+        e.estado_orden,
+        COUNT(o.pk_id_orden) as cantidad_ordenes,
+        ROUND((COUNT(o.pk_id_orden) * 100.0 / (SELECT COUNT(*) FROM tbl_ordenes)), 2) as porcentaje
+      FROM tbl_orden_estado e
+      LEFT JOIN tbl_ordenes o ON e.pk_id_estado = o.fk_id_estado_orden
+      GROUP BY e.pk_id_estado, e.estado_orden
+      ORDER BY cantidad_ordenes DESC
+    `);
+
+    // 5. Órdenes por mes (últimos 12 meses)
+    const [ordenesPorMes] = await connection.execute(`
+      SELECT 
+        DATE_FORMAT(fecha_ingreso_orden, '%Y-%m') as mes,
+        COUNT(*) as cantidad_ordenes
+      FROM tbl_ordenes
+      WHERE fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+      GROUP BY DATE_FORMAT(fecha_ingreso_orden, '%Y-%m')
+      ORDER BY mes ASC
+    `);
+
+    // 6. Estadísticas generales
+    const [estadisticasGenerales] = await connection.execute(`
+      SELECT 
+        (SELECT COUNT(*) FROM tbl_clientes) as total_clientes,
+        (SELECT COUNT(*) FROM tbl_vehiculos) as total_vehiculos,
+        (SELECT COUNT(*) FROM tbl_ordenes) as total_ordenes,
+        (SELECT COUNT(*) FROM tbl_ordenes WHERE fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as ordenes_mes_actual,
+        (SELECT COUNT(*) FROM tbl_ordenes WHERE fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Completado')) as ordenes_completadas,
+        (SELECT COUNT(*) FROM tbl_ordenes WHERE fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Pendiente')) as ordenes_pendientes
+    `);
+
+    // 7. Marcas de vehículos más populares
+    const [marcasStats] = await connection.execute(`
+      SELECT 
+        v.marca_vehiculo,
+        COUNT(DISTINCT v.pk_id_vehiculo) as cantidad_vehiculos,
+        COUNT(o.pk_id_orden) as cantidad_ordenes
+      FROM tbl_vehiculos v
+      LEFT JOIN tbl_ordenes o ON v.pk_id_vehiculo = o.fk_id_vehiculo
+      GROUP BY v.marca_vehiculo
+      ORDER BY cantidad_ordenes DESC
+      LIMIT 8
+    `);
+
+    // 8. Ingresos por mes (simulado - basado en órdenes completadas)
+    const [ingresosPorMes] = await connection.execute(`
+      SELECT 
+        DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m') as mes,
+        COUNT(*) as cantidad_ordenes,
+        (COUNT(*) * 500) as ingresos_estimados
+      FROM tbl_ordenes o
+      INNER JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE e.estado_orden = 'Completado' 
+        AND o.fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+      GROUP BY DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m')
+      ORDER BY mes ASC
+    `);
+
+    await connection.end();
+
+    res.json({
+      vehiculos_mas_ingresados: vehiculosStats,
+      clientes_por_mes: clientesPorMes,
+      servicios_mas_solicitados: serviciosStats,
+      estados_ordenes: estadosStats,
+      ordenes_por_mes: ordenesPorMes,
+      estadisticas_generales: estadisticasGenerales[0],
+      marcas_populares: marcasStats,
+      ingresos_por_mes: ingresosPorMes
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo estadísticas:', error);
+    res.status(500).json({ message: 'Error al obtener estadísticas del dashboard.' });
+  }
+});
+
+// Endpoint para obtener estadísticas de un período específico
+app.get('/api/dashboard/estadisticas/:periodo', async (req, res) => {
+  const { periodo } = req.params;
+  let fechaInicio;
+  
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Determinar el período
+    switch (periodo) {
+      case 'hoy':
+        fechaInicio = 'CURDATE()';
+        break;
+      case 'semana':
+        fechaInicio = 'DATE_SUB(NOW(), INTERVAL 7 DAY)';
+        break;
+      case 'mes':
+        fechaInicio = 'DATE_SUB(NOW(), INTERVAL 30 DAY)';
+        break;
+      case 'año':
+        fechaInicio = 'DATE_SUB(NOW(), INTERVAL 365 DAY)';
+        break;
+      default:
+        fechaInicio = 'DATE_SUB(NOW(), INTERVAL 30 DAY)';
+    }
+
+    // Estadísticas del período
+    const [estadisticasPeriodo] = await connection.execute(`
+      SELECT 
+        COUNT(*) as total_ordenes,
+        COUNT(DISTINCT fk_id_cliente) as clientes_unicos,
+        COUNT(DISTINCT fk_id_vehiculo) as vehiculos_unicos,
+        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Completado') THEN 1 END) as ordenes_completadas,
+        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Pendiente') THEN 1 END) as ordenes_pendientes,
+        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'En Proceso') THEN 1 END) as ordenes_en_proceso
+      FROM tbl_ordenes 
+      WHERE fecha_ingreso_orden >= ${fechaInicio}
+    `);
+
+    await connection.end();
+
+    res.json({
+      periodo: periodo,
+      estadisticas: estadisticasPeriodo[0]
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo estadísticas del período:', error);
+    res.status(500).json({ message: 'Error al obtener estadísticas del período.' });
+  }
+});
 
 // ==================== INICIALIZACIÓN DEL SISTEMA ====================
 

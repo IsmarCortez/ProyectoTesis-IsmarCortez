@@ -94,6 +94,7 @@ function Home({ usuario, onLogout }) {
         <span style={{ fontWeight: 'bold', fontSize: 22, letterSpacing: 1 }}>Menú Principal</span>
         <nav style={{ display: 'flex', gap: 24 }}>
           <button onClick={() => navigate('/home')} style={menuBtnStyleHeader}>Inicio</button>
+          <button onClick={() => navigate('/dashboard')} style={menuBtnStyleHeader}>📊 Dashboard</button>
           <button onClick={() => navigate('/clientes')} style={menuBtnStyleHeader}>Clientes</button>
           <button onClick={() => navigate('/vehiculos')} style={menuBtnStyleHeader}>Vehículos</button>
           <button onClick={() => navigate('/servicios')} style={menuBtnStyleHeader}>Servicios</button>
@@ -264,7 +265,36 @@ function Home({ usuario, onLogout }) {
 
       {/* Contenido principal */}
       <main style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', minHeight: '100vh', paddingTop: 40 }}>
-        <h1 style={{ marginTop: 0, marginBottom: 32 }}>Dashboard de estadísticas</h1>
+        <div className="container text-center">
+          <h1 style={{ marginTop: 0, marginBottom: 32 }}>🏠 Bienvenido al Sistema de Gestión</h1>
+          <p className="lead mb-4">Taller Mecánico Tecno Auto - Repuestos Electrofrio</p>
+          
+          <div className="row justify-content-center">
+            <div className="col-md-8">
+              <div className="card shadow">
+                <div className="card-body">
+                  <h3 className="card-title">📊 Dashboard de Estadísticas</h3>
+                  <p className="card-text">
+                    Accede a un resumen completo de las estadísticas del taller, incluyendo:
+                  </p>
+                  <ul className="list-unstyled">
+                    <li>🚗 Vehículos más ingresados</li>
+                    <li>👥 Clientes por mes</li>
+                    <li>🔧 Servicios más solicitados</li>
+                    <li>📈 Tendencias de órdenes</li>
+                    <li>💰 Ingresos estimados</li>
+                  </ul>
+                  <button 
+                    className="btn btn-primary btn-lg"
+                    onClick={() => navigate('/dashboard')}
+                  >
+                    📊 Ver Dashboard de Estadísticas
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );
