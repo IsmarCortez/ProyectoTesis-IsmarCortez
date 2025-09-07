@@ -57,7 +57,7 @@ class PDFGenerator {
    * Genera el encabezado del PDF
    */
   generateHeader(doc, orderData) {
-    const { empresa } = config.empresa;
+    const { nombre: empresa } = config.empresa;
     
     // Título principal
     doc.fontSize(24)
@@ -189,7 +189,7 @@ class PDFGenerator {
   generateFooter(doc, orderData) {
     this.drawSeparator(doc);
     
-    const { empresa, telefono, email, direccion } = config.empresa;
+    const { nombre: empresa, telefono, email, direccion } = config.empresa;
     
     doc.fontSize(10)
        .fillColor(this.config.colors.secondary)

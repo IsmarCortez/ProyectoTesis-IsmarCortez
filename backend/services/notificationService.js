@@ -202,6 +202,92 @@ class NotificationService {
   }
 
   /**
+   * Envía notificación de cambio de estado de una orden
+   * @param {number} orderId - ID de la orden
+   * @param {string} estadoAnterior - Estado anterior
+   * @param {string} estadoNuevo - Estado nuevo
+   * @returns {Promise<Object>} - Resultado del envío
+   */
+  async sendStateChangeNotification(orderId, estadoAnterior, estadoNuevo) {
+    const startTime = Date.now();
+    const results = {
+      orderId,
+      estadoAnterior,
+      estadoNuevo,
+      timestamp: new Date().toISOString(),
+      processingTime: 0,
+      email: { success: false, error: null },
+      summary: {
+        totalServices: 1,
+        successfulServices: 0,
+        failedServices: 0
+      }
+    };
+
+    try {
+      console.log(`📧 Sending state change notification for order #${orderId}: ${estadoAnterior} → ${estadoNuevo}`);
+      
+      // Obtener datos completos de la orden
+      const orderData = await this.getOrderData(orderId);
+      
+      if (!orderData) {
+        throw new Error(`Order #${orderId} not found`);
+      }
+
+      // Verificar que el cliente tiene email
+      if (!orderData.correo_cliente) {
+        throw new Error(`Client has no email address`);
+      }
+
+      // 1. Generar PDF actualizado
+      console.log(`📄 Generating updated PDF for order #${orderId}`);
+      const pdfResult = await this.generatePDF(orderData);
+      
+      if (pdfResult.success) {
+        results.pdf = pdfResult;
+        console.log(`✅ PDF generated successfully: ${pdfResult.size} bytes`);
+      } else {
+        console.log(`❌ PDF generation failed: ${pdfResult.error}`);
+        results.pdf = pdfResult;
+      }
+
+      // 2. Enviar email de cambio de estado
+      console.log(`📧 Sending state change email to ${orderData.correo_cliente}`);
+      const emailResult = await this.emailService.sendStateChangeEmail(
+        orderData.correo_cliente,
+        orderData,
+        estadoAnterior,
+        estadoNuevo,
+        pdfResult.buffer
+      );
+      
+      results.email = emailResult;
+      
+      if (emailResult.success) {
+        console.log(`✅ State change email sent successfully to ${orderData.correo_cliente}`);
+        results.summary.successfulServices++;
+      } else {
+        console.log(`❌ State change email failed: ${emailResult.error}`);
+        results.summary.failedServices++;
+      }
+
+      results.processingTime = Date.now() - startTime;
+      
+      console.log(`📊 State change notification completed in ${results.processingTime}ms`);
+      console.log(`✅ Successful: ${results.summary.successfulServices}/${results.summary.totalServices}`);
+      
+      return results;
+
+    } catch (error) {
+      console.error('❌ State change notification failed:', error.message);
+      results.processingTime = Date.now() - startTime;
+      results.email.error = error.message;
+      results.summary.failedServices = results.summary.totalServices;
+      return results;
+    }
+  }
+
+  /**
    * Envía notificaciones de prueba
    * @param {string} testEmail - Email de prueba
    * @param {string} testPhone - Teléfono de prueba

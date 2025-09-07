@@ -118,10 +118,83 @@ class EmailService {
   }
 
   /**
+   * Envía notificación de cambio de estado de una orden
+   * @param {string} email - Email del cliente
+   * @param {Object} orderData - Datos de la orden
+   * @param {string} estadoAnterior - Estado anterior
+   * @param {string} estadoNuevo - Estado nuevo
+   * @param {Buffer} pdfBuffer - Buffer del PDF actualizado
+   * @returns {Promise<Object>} - Resultado del envío
+   */
+  async sendStateChangeEmail(email, orderData, estadoAnterior, estadoNuevo, pdfBuffer) {
+    try {
+      if (!this.isInitialized) {
+        await this.initialize();
+      }
+
+      if (!this.isInitialized) {
+        return {
+          success: false,
+          error: 'Email service not available'
+        };
+      }
+
+      // Verificar que el cliente tenga email
+      if (!email) {
+        return {
+          success: false,
+          error: 'Client has no email address'
+        };
+      }
+
+      // Preparar datos para el template
+      const templateData = this.prepareTemplateData(orderData);
+      
+      // Generar contenido del email de cambio de estado
+      const emailContent = this.generateStateChangeEmailContent(templateData, estadoAnterior, estadoNuevo);
+
+      // Configurar el email
+      const mailOptions = {
+        from: this.config.from,
+        to: email,
+        subject: emailContent.subject,
+        html: emailContent.html,
+        attachments: [
+          {
+            filename: `Orden_Servicio_${orderData.pk_id_orden}_Actualizada.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          }
+        ]
+      };
+
+      // Enviar email
+      const result = await this.transporter.sendMail(mailOptions);
+      
+      console.log(`📧 State change email sent successfully to ${email}`);
+      
+      return {
+        success: true,
+        messageId: result.messageId,
+        recipient: email,
+        estadoAnterior,
+        estadoNuevo
+      };
+
+    } catch (error) {
+      console.error('❌ State change email sending failed:', error.message);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Prepara los datos para el template del email
    */
   prepareTemplateData(orderData) {
-    const { empresa, telefono, email, direccion } = config.empresa;
+    const { nombre: empresa, telefono, email, direccion } = config.empresa;
     
     return {
       orderId: orderData.pk_id_orden,
@@ -138,7 +211,8 @@ class EmailService {
       vehiculoModelo: orderData.modelo_vehiculo || '',
       vehiculoAnio: orderData.anio_vehiculo || 'No especificado',
       vehiculoColor: orderData.color_vehiculo || 'No especificado',
-      servicio: orderData.servicio || '',
+      servicioNombre: orderData.servicio || '',
+      servicioDescripcion: orderData.servicio || '',
       estado: orderData.estado_orden || '',
       fechaIngreso: this.formatDate(orderData.fecha_ingreso_orden),
       comentario: orderData.comentario_cliente_orden || ''
@@ -152,6 +226,198 @@ class EmailService {
     // Usar las plantillas como funciones
     const subject = config.templates.email.subject(templateData);
     const html = config.templates.email.html(templateData);
+
+    return { subject, html };
+  }
+
+  /**
+   * Genera el contenido del email de cambio de estado
+   * @param {Object} templateData - Datos del template
+   * @param {string} estadoAnterior - Estado anterior
+   * @param {string} estadoNuevo - Estado nuevo
+   * @returns {Object} - Contenido del email
+   */
+  generateStateChangeEmailContent(templateData, estadoAnterior, estadoNuevo) {
+    const subject = `Actualización de Orden #${templateData.orderId} - ${estadoNuevo}`;
+    
+    const html = `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Actualización de Orden de Servicio</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f4f4f4;
+            }
+            .container {
+                background-color: #ffffff;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            }
+            .header {
+                text-align: center;
+                border-bottom: 3px solid #007bff;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+            .header h1 {
+                color: #007bff;
+                margin: 0;
+                font-size: 28px;
+            }
+            .header p {
+                color: #666;
+                margin: 5px 0 0 0;
+                font-size: 16px;
+            }
+            .status-change {
+                background: linear-gradient(135deg, #28a745, #20c997);
+                color: white;
+                padding: 20px;
+                border-radius: 8px;
+                text-align: center;
+                margin: 20px 0;
+            }
+            .status-change h2 {
+                margin: 0 0 10px 0;
+                font-size: 24px;
+            }
+            .status-change p {
+                margin: 0;
+                font-size: 18px;
+                font-weight: bold;
+            }
+            .order-info {
+                background-color: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+            .order-info h3 {
+                color: #007bff;
+                margin-top: 0;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 10px;
+            }
+            .info-row {
+                display: flex;
+                justify-content: space-between;
+                margin: 10px 0;
+                padding: 8px 0;
+                border-bottom: 1px solid #e9ecef;
+            }
+            .info-label {
+                font-weight: bold;
+                color: #495057;
+            }
+            .info-value {
+                color: #212529;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 2px solid #e9ecef;
+                color: #6c757d;
+            }
+            .footer p {
+                margin: 5px 0;
+            }
+            .highlight {
+                background-color: #fff3cd;
+                border: 1px solid #ffeaa7;
+                padding: 15px;
+                border-radius: 5px;
+                margin: 15px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>${templateData.empresa}</h1>
+                <p>Actualización de Orden de Servicio</p>
+            </div>
+
+            <div class="status-change">
+                <h2>🔄 Estado Actualizado</h2>
+                <p>${estadoAnterior} → ${estadoNuevo}</p>
+            </div>
+
+            <div class="highlight">
+                <strong>Estimado/a ${templateData.clienteNombre} ${templateData.clienteApellido},</strong><br>
+                Le informamos que el estado de su orden de servicio ha sido actualizado. Adjunto encontrará el documento actualizado con toda la información.
+            </div>
+
+            <div class="order-info">
+                <h3>📋 Información de la Orden</h3>
+                <div class="info-row">
+                    <span class="info-label">Número de Orden:</span>
+                    <span class="info-value">#${templateData.orderId}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Estado Anterior:</span>
+                    <span class="info-value">${estadoAnterior}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Estado Actual:</span>
+                    <span class="info-value"><strong>${estadoNuevo}</strong></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Fecha de Actualización:</span>
+                    <span class="info-value">${new Date().toLocaleDateString('es-GT')}</span>
+                </div>
+            </div>
+
+            <div class="order-info">
+                <h3>🚗 Información del Vehículo</h3>
+                <div class="info-row">
+                    <span class="info-label">Placa:</span>
+                    <span class="info-value">${templateData.vehiculoPlaca}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Marca y Modelo:</span>
+                    <span class="info-value">${templateData.vehiculoMarca} ${templateData.vehiculoModelo}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Año:</span>
+                    <span class="info-value">${templateData.vehiculoAnio}</span>
+                </div>
+            </div>
+
+            <div class="order-info">
+                <h3>🔧 Servicio Solicitado</h3>
+                <div class="info-row">
+                    <span class="info-label">Tipo de Servicio:</span>
+                    <span class="info-value">${templateData.servicioNombre}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Descripción:</span>
+                    <span class="info-value">${templateData.servicioDescripcion}</span>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p><strong>${templateData.empresa}</strong></p>
+                <p>📞 ${templateData.empresaTelefono}</p>
+                <p>📧 ${templateData.empresaEmail}</p>
+                <p>📍 ${templateData.empresaDireccion}</p>
+                <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                    Este es un mensaje automático. Por favor, no responda a este correo.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>`;
 
     return { subject, html };
   }

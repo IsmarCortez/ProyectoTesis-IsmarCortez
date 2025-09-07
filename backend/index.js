@@ -797,9 +797,9 @@ app.put('/api/ordenes/:id', upload.fields([
   try {
     const connection = await mysql.createConnection(dbConfig);
     
-    // Obtener orden actual para preservar archivos existentes
+    // Obtener orden actual para preservar archivos existentes y detectar cambios de estado
     const [currentOrder] = await connection.execute(
-      'SELECT imagen_1, imagen_2, imagen_3, imagen_4, video FROM tbl_ordenes WHERE pk_id_orden = ?',
+      'SELECT imagen_1, imagen_2, imagen_3, imagen_4, video, fk_id_estado_orden FROM tbl_ordenes WHERE pk_id_orden = ?',
       [id]
     );
     
@@ -807,6 +807,11 @@ app.put('/api/ordenes/:id', upload.fields([
       await connection.end();
       return res.status(404).json({ message: 'Orden no encontrada.' });
     }
+
+    // Detectar si el estado cambió
+    const estadoAnterior = currentOrder[0].fk_id_estado_orden;
+    const estadoNuevo = parseInt(fk_id_estado_orden);
+    const estadoCambio = estadoAnterior !== estadoNuevo;
 
     // Procesar archivos nuevos o mantener existentes
     const imagen_1 = req.files.imagen_1 ? req.files.imagen_1[0].filename : currentOrder[0].imagen_1;
@@ -828,11 +833,54 @@ app.put('/api/ordenes/:id', upload.fields([
       ]
     );
     
-    await connection.end();
     if (result.affectedRows === 0) {
+      await connection.end();
       return res.status(404).json({ message: 'Orden no encontrada.' });
     }
-    res.json({ message: 'Orden actualizada correctamente.' });
+
+    // Si el estado cambió, enviar notificación por email
+    if (estadoCambio) {
+      try {
+        console.log(`🔄 Estado de orden #${id} cambió de ${estadoAnterior} a ${estadoNuevo}`);
+        
+        // Obtener nombres de los estados para la notificación
+        const [estadoAnteriorData] = await connection.execute(
+          'SELECT estado_orden FROM tbl_orden_estado WHERE pk_id_estado = ?',
+          [estadoAnterior]
+        );
+        const [estadoNuevoData] = await connection.execute(
+          'SELECT estado_orden FROM tbl_orden_estado WHERE pk_id_estado = ?',
+          [estadoNuevo]
+        );
+
+        const nombreEstadoAnterior = estadoAnteriorData.length > 0 ? estadoAnteriorData[0].estado_orden : 'Desconocido';
+        const nombreEstadoNuevo = estadoNuevoData.length > 0 ? estadoNuevoData[0].estado_orden : 'Desconocido';
+
+        // Enviar notificación de cambio de estado
+        const notificationResult = await NotificationService.sendStateChangeNotification(
+          parseInt(id),
+          nombreEstadoAnterior,
+          nombreEstadoNuevo
+        );
+
+        if (notificationResult.email.success) {
+          console.log(`✅ Notificación de cambio de estado enviada exitosamente para orden #${id}`);
+        } else {
+          console.log(`❌ Error enviando notificación de cambio de estado: ${notificationResult.email.error}`);
+        }
+
+      } catch (notificationError) {
+        console.error('❌ Error en notificación de cambio de estado:', notificationError.message);
+        // No fallar la actualización si la notificación falla
+      }
+    }
+
+    await connection.end();
+    res.json({ 
+      message: 'Orden actualizada correctamente.',
+      estadoCambio: estadoCambio,
+      notificacionEnviada: estadoCambio
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error al actualizar la orden.' });
@@ -1553,7 +1601,7 @@ app.get('/api/tracker/historial/:numero', async (req, res) => {
   try {
     const { numero } = req.params;
     
-    console.log(`📋 Obteniendo historial de orden: ${numero}`);
+    console.log(`📋 Obteniendo historial real de orden: ${numero}`);
     
     const connection = await mysql.createConnection(dbConfig);
     
@@ -1588,58 +1636,215 @@ app.get('/api/tracker/historial/:numero', async (req, res) => {
       WHERE o.pk_id_orden = ?
     `, [numero]);
     
-    // Crear historial simulado basado en el estado actual
-    // (En un sistema real, esto vendría de una tabla de historial)
+    // Obtener historial real de la tabla tbl_historial_estados
+    const [historialReal] = await connection.execute(`
+      SELECT 
+        h.pk_id_historial,
+        h.fecha_cambio,
+        h.comentario_cambio,
+        ea.estado_orden AS estado_anterior,
+        en.estado_orden AS estado_nuevo,
+        en.descripcion_estado AS descripcion_estado,
+        u.nombre_usuario AS usuario_cambio
+      FROM tbl_historial_estados h
+      LEFT JOIN tbl_orden_estado ea ON h.fk_id_estado_anterior = ea.pk_id_estado
+      LEFT JOIN tbl_orden_estado en ON h.fk_id_estado_nuevo = en.pk_id_estado
+      LEFT JOIN tbl_usuarios u ON h.fk_id_usuario_cambio = u.pk_id_usuarios
+      WHERE h.fk_id_orden = ?
+      ORDER BY h.fecha_cambio ASC
+    `, [numero]);
+    
+    // Si no hay historial real, crear el estado inicial
     const historial = [];
     const orden = ordenActual[0];
     
-    // Estado inicial: Recibido
-    historial.push({
-      estado: 'Recibido',
-      descripcion: 'Orden registrada y vehículo recibido en taller',
-      fecha: orden.fecha_ingreso_orden,
-      activo: orden.estado_orden === 'Recibido'
-    });
-    
-    // Estados intermedios según el estado actual
-    const estadosPosibles = [
-      { nombre: 'En proceso', descripcion: 'Servicio en curso' },
-      { nombre: 'En espera de piezas', descripcion: 'Se espera la llegada de repuestos' },
-      { nombre: 'Finalizado', descripcion: 'Servicio completado y listo para entrega' },
-      { nombre: 'Entregado', descripcion: 'Vehículo entregado al cliente' },
-      { nombre: 'Cancelado', descripcion: 'Orden cancelada por cliente o taller' }
-    ];
-    
-    let fechaActual = new Date(orden.fecha_ingreso_orden);
-    
-    for (const estado of estadosPosibles) {
-      fechaActual = new Date(fechaActual.getTime() + (2 * 24 * 60 * 60 * 1000)); // +2 días
-      
+    if (historialReal.length === 0) {
+      // No hay historial registrado, crear estado inicial
       historial.push({
-        estado: estado.nombre,
-        descripcion: estado.descripcion,
-        fecha: fechaActual.toISOString(),
-        activo: orden.estado_orden === estado.nombre
+        estado: orden.estado_orden,
+        descripcion: orden.descripcion_estado || 'Estado inicial de la orden',
+        fecha: orden.fecha_ingreso_orden,
+        activo: true,
+        usuario: 'Sistema',
+        comentario: 'Orden creada inicialmente'
       });
-      
-      // Si llegamos al estado actual, parar
-      if (orden.estado_orden === estado.nombre) {
-        break;
+    } else {
+      // Procesar historial real
+      for (const registro of historialReal) {
+        historial.push({
+          estado: registro.estado_nuevo,
+          descripcion: registro.descripcion_estado || 'Cambio de estado',
+          fecha: registro.fecha_cambio,
+          activo: registro.estado_nuevo === orden.estado_orden,
+          usuario: registro.usuario_cambio || 'Sistema',
+          comentario: registro.comentario_cambio,
+          estado_anterior: registro.estado_anterior
+        });
       }
     }
     
     await connection.end();
     
+    console.log(`✅ Historial obtenido: ${historial.length} registros para orden ${numero}`);
+    
     res.json({ 
       encontrado: true, 
       orden: orden,
-      historial: historial
+      historial: historial,
+      total_registros: historial.length
     });
     
   } catch (error) {
-    console.error('Error obteniendo historial:', error);
+    console.error('Error obteniendo historial real:', error);
     res.status(500).json({ 
       encontrado: false, 
+      mensaje: 'Error interno del servidor.' 
+    });
+  }
+});
+
+// Endpoint para registrar cambio de estado manualmente
+app.post('/api/tracker/cambiar-estado', async (req, res) => {
+  try {
+    const { 
+      fk_id_orden, 
+      fk_id_estado_nuevo, 
+      fk_id_usuario_cambio, 
+      comentario_cambio,
+      ip_usuario,
+      user_agent 
+    } = req.body;
+    
+    console.log(`🔄 Registrando cambio de estado para orden: ${fk_id_orden}`);
+    
+    if (!fk_id_orden || !fk_id_estado_nuevo) {
+      return res.status(400).json({ 
+        success: false, 
+        mensaje: 'ID de orden y nuevo estado son requeridos.' 
+      });
+    }
+    
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Verificar que la orden existe
+    const [ordenExiste] = await connection.execute(`
+      SELECT pk_id_orden, fk_id_estado_orden FROM tbl_ordenes WHERE pk_id_orden = ?
+    `, [fk_id_orden]);
+    
+    if (ordenExiste.length === 0) {
+      await connection.end();
+      return res.status(404).json({ 
+        success: false, 
+        mensaje: 'Orden no encontrada.' 
+      });
+    }
+    
+    const estadoAnterior = ordenExiste[0].fk_id_estado_orden;
+    
+    // Verificar que el nuevo estado existe
+    const [estadoExiste] = await connection.execute(`
+      SELECT pk_id_estado, estado_orden FROM tbl_orden_estado WHERE pk_id_estado = ?
+    `, [fk_id_estado_nuevo]);
+    
+    if (estadoExiste.length === 0) {
+      await connection.end();
+      return res.status(404).json({ 
+        success: false, 
+        mensaje: 'Estado no encontrado.' 
+      });
+    }
+    
+    // Actualizar el estado de la orden
+    await connection.execute(`
+      UPDATE tbl_ordenes SET fk_id_estado_orden = ? WHERE pk_id_orden = ?
+    `, [fk_id_estado_nuevo, fk_id_orden]);
+    
+    // El trigger automáticamente registrará el cambio en el historial
+    // Pero también podemos registrar información adicional manualmente
+    if (comentario_cambio || ip_usuario || user_agent) {
+      await connection.execute(`
+        UPDATE tbl_historial_estados 
+        SET comentario_cambio = ?, ip_usuario = ?, user_agent = ?, fk_id_usuario_cambio = ?
+        WHERE fk_id_orden = ? AND fk_id_estado_nuevo = ?
+        ORDER BY fecha_cambio DESC LIMIT 1
+      `, [comentario_cambio, ip_usuario, user_agent, fk_id_usuario_cambio, fk_id_orden, fk_id_estado_nuevo]);
+    }
+    
+    await connection.end();
+    
+    console.log(`✅ Estado cambiado de ${estadoAnterior} a ${fk_id_estado_nuevo} para orden ${fk_id_orden}`);
+    
+    res.json({ 
+      success: true, 
+      mensaje: 'Estado actualizado correctamente.',
+      orden_id: fk_id_orden,
+      estado_anterior: estadoAnterior,
+      estado_nuevo: fk_id_estado_nuevo,
+      estado_nombre: estadoExiste[0].estado_orden
+    });
+    
+  } catch (error) {
+    console.error('Error cambiando estado:', error);
+    res.status(500).json({ 
+      success: false, 
+      mensaje: 'Error interno del servidor.' 
+    });
+  }
+});
+
+// Endpoint para obtener estadísticas del historial
+app.get('/api/tracker/estadisticas-historial', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Estadísticas generales del historial
+    const [estadisticas] = await connection.execute(`
+      SELECT 
+        COUNT(*) as total_cambios,
+        COUNT(DISTINCT fk_id_orden) as ordenes_con_historial,
+        COUNT(DISTINCT fk_id_usuario_cambio) as usuarios_activos,
+        MIN(fecha_cambio) as primer_cambio,
+        MAX(fecha_cambio) as ultimo_cambio
+      FROM tbl_historial_estados
+    `);
+    
+    // Estados más frecuentes
+    const [estadosFrecuentes] = await connection.execute(`
+      SELECT 
+        e.estado_orden,
+        COUNT(*) as cantidad_cambios
+      FROM tbl_historial_estados h
+      JOIN tbl_orden_estado e ON h.fk_id_estado_nuevo = e.pk_id_estado
+      GROUP BY e.estado_orden
+      ORDER BY cantidad_cambios DESC
+      LIMIT 5
+    `);
+    
+    // Usuarios más activos
+    const [usuariosActivos] = await connection.execute(`
+      SELECT 
+        u.nombre_usuario,
+        COUNT(*) as cambios_realizados
+      FROM tbl_historial_estados h
+      JOIN tbl_usuarios u ON h.fk_id_usuario_cambio = u.pk_id_usuarios
+      GROUP BY u.nombre_usuario
+      ORDER BY cambios_realizados DESC
+      LIMIT 5
+    `);
+    
+    await connection.end();
+    
+    res.json({
+      success: true,
+      estadisticas: estadisticas[0],
+      estados_frecuentes: estadosFrecuentes,
+      usuarios_activos: usuariosActivos
+    });
+    
+  } catch (error) {
+    console.error('Error obteniendo estadísticas del historial:', error);
+    res.status(500).json({ 
+      success: false, 
       mensaje: 'Error interno del servidor.' 
     });
   }

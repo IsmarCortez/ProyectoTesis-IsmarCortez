@@ -3,9 +3,9 @@ module.exports = {
   // Configuración de la empresa
   empresa: {
     nombre: process.env.EMPRESA_NOMBRE || 'Tecno Auto - Repuestos Electrofrio',
-    telefono: process.env.EMPRESA_TELEFONO || '+502 5555-1234',
-    email: process.env.EMPRESA_EMAIL || 'info@tecnoauto.com',
-    direccion: process.env.EMPRESA_DIRECCION || 'Zona 1, Ciudad de Guatemala',
+    telefono: process.env.EMPRESA_TELEFONO || '+502 7844 4001',
+    email: process.env.EMPRESA_EMAIL || 'telectrofrio@gmail.com',
+    direccion: process.env.EMPRESA_DIRECCION || 'Km. 115.6 Carretera Interamericana, Cerro Gordo, Jutiapa, Jutiapa 22001-Jutiapa, Guatemala',
     logo: process.env.EMPRESA_LOGO || '/LogoElectrofrio.jpg'
   },
 

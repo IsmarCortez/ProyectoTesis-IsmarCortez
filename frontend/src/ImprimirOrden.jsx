@@ -194,10 +194,9 @@ const ImprimirOrden = ({ orden, onClose }) => {
         <div className="notas-importantes mt-3 p-2 bg-light rounded">
           <h6 className="text-center mb-1">⚠️ NOTAS IMPORTANTES</h6>
           <ul className="mb-0 small">
-            <li>Esta orden debe ser presentada al retirar el vehículo</li>
+            <li>Garantia de servicio de 1 mes o 1000 km</li>
             <li>El taller no se hace responsable por objetos personales dejados en el vehículo</li>
             <li>Los trabajos adicionales deben ser autorizados por el cliente</li>
-            <li>Conserve esta orden hasta la finalización del servicio</li>
           </ul>
         </div>
       </div>
