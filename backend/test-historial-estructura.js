@@ -196,3 +196,4 @@ function validarEstructuraHistorial() {
 
 // Ejecutar validación
 validarEstructuraHistorial();
+

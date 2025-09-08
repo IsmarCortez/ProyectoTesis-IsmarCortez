@@ -1,16 +1,13 @@
 const PDFDocument = require('pdfkit');
 const config = require('../config/notifications');
+const path = require('path');
+const fs = require('fs');
 
 class PDFGenerator {
   constructor() {
     this.config = config.pdf;
   }
 
-  /**
-   * Genera un PDF profesional de la orden de servicio
-   * @param {Object} orderData - Datos completos de la orden
-   * @returns {Promise<Buffer>} - Buffer del PDF generado
-   */
   async generateOrderPDF(orderData) {
     return new Promise((resolve, reject) => {
       try {
@@ -24,10 +21,10 @@ class PDFGenerator {
         doc.on('data', chunk => chunks.push(chunk));
         doc.on('end', () => resolve(Buffer.concat(chunks)));
 
-        // Configurar fuentes y colores
+        // Configuración inicial
         this.setupDocument(doc);
-        
-        // Generar contenido
+
+        // Contenido
         this.generateHeader(doc, orderData);
         this.generateClientInfo(doc, orderData);
         this.generateVehicleInfo(doc, orderData);
@@ -41,60 +38,67 @@ class PDFGenerator {
     });
   }
 
-  /**
-   * Configura el documento PDF con fuentes y colores
-   */
   setupDocument(doc) {
-    // Configurar colores
     doc.colors = this.config.colors;
-    
-    // Configurar fuentes
     doc.fontSize(this.config.fontSize);
     doc.lineGap(this.config.lineHeight);
   }
 
-  /**
-   * Genera el encabezado del PDF
-   */
   generateHeader(doc, orderData) {
-    const { nombre: empresa } = config.empresa;
+    const { nombre: empresa, telefono, email, direccion } = config.empresa;
     
-    // Título principal
-    doc.fontSize(24)
+    try {
+      const logoTecnoAutoPath = path.join(__dirname, '..', 'Logos', 'LogoTecnoAuto.jpg');
+      if (fs.existsSync(logoTecnoAutoPath)) {
+        doc.image(logoTecnoAutoPath, 50, 20, { width: 100, height: 50 });
+      } else {
+        doc.fontSize(16).fillColor('#1a1a1a').text('TecnoAuto', 50, 30, { width: 100 });
+      }
+
+      const logoElectroFrioPath = path.join(__dirname, '..', 'Logos', 'LogoElectrofrio.jpg');
+      if (fs.existsSync(logoElectroFrioPath)) {
+        doc.image(logoElectroFrioPath, 400, 20, { width: 100, height: 50 });
+      } else {
+        doc.fontSize(14).fillColor('#e74c3c').text('Repuestos', 400, 30, { width: 100 });
+        doc.fontSize(16).fillColor('#0066cc').text('ELECTROFRIO', 400, 45, { width: 100 });
+      }
+    } catch (error) {
+      console.log('❌ Error cargando logos:', error.message);
+      doc.fontSize(16).fillColor('#1a1a1a').text('TecnoAuto', 50, 30, { width: 100 });
+      doc.fontSize(14).fillColor('#e74c3c').text('Repuestos', 400, 30, { width: 100 });
+      doc.fontSize(16).fillColor('#0066cc').text('ELECTROFRIO', 400, 45, { width: 100 });
+    }
+
+    // contacto alineado al margen izquierdo
+    doc.fontSize(9)
+       .fillColor('#666666')
+       .text(`${direccion} | Tel: ${telefono} | ${email}`, doc.page.margins.left, 80, { width: 500 });
+
+    // título
+    doc.fontSize(22)
        .fillColor(this.config.colors.primary)
-       .text('ORDEN DE SERVICIO', { align: 'center' });
-    
-    doc.fontSize(18)
+       .text('ORDEN DE SERVICIO', doc.page.margins.left, 100, { align: 'center' });
+
+    doc.fontSize(16)
        .fillColor(this.config.colors.secondary)
-       .text(`#${orderData.pk_id_orden}`, { align: 'center' });
-    
-    doc.moveDown(0.5);
-    
-    // Información de la empresa
-    doc.fontSize(14)
-       .fillColor(this.config.colors.accent)
-       .text(empresa, { align: 'center' });
-    
-    doc.fontSize(10)
-       .fillColor(this.config.colors.secondary)
-       .text(`Fecha: ${this.formatDate(orderData.fecha_ingreso_orden)}`, { align: 'center' });
-    
-    doc.moveDown(2);
-    
-    // Línea separadora
-    this.drawSeparator(doc);
+       .text(`#${orderData.pk_id_orden}`, doc.page.margins.left, 125, { align: 'center' });
+
+    doc.strokeColor('#e74c3c')
+       .lineWidth(1)
+       .moveTo(doc.page.margins.left, 150)
+       .lineTo(doc.page.width - doc.page.margins.right, 150)
+       .stroke();
+
+    doc.y = 160;
   }
 
-  /**
-   * Genera la sección de información del cliente
-   */
   generateClientInfo(doc, orderData) {
-    doc.fontSize(16)
+    doc.fontSize(14)
        .fillColor(this.config.colors.primary)
-       .text('INFORMACIÓN DEL CLIENTE');
-    
-    doc.moveDown(0.5);
-    
+       .text('INFORMACIÓN DEL CLIENTE', doc.page.margins.left, doc.y);
+
+    doc.moveDown(0.3);
+
     const clientInfo = [
       { label: 'Nombre:', value: `${orderData.nombre_cliente} ${orderData.apellido_cliente}` },
       { label: 'DPI:', value: orderData.dpi_cliente || 'No especificado' },
@@ -103,19 +107,16 @@ class PDFGenerator {
     ];
 
     this.generateInfoTable(doc, clientInfo);
-    doc.moveDown(1);
+    doc.moveDown(0.5);
   }
 
-  /**
-   * Genera la sección de información del vehículo
-   */
   generateVehicleInfo(doc, orderData) {
-    doc.fontSize(16)
+    doc.fontSize(14)
        .fillColor(this.config.colors.primary)
-       .text('INFORMACIÓN DEL VEHÍCULO');
-    
-    doc.moveDown(0.5);
-    
+       .text('INFORMACIÓN DEL VEHÍCULO', doc.page.margins.left, doc.y);
+
+    doc.moveDown(0.3);
+
     const vehicleInfo = [
       { label: 'Placa:', value: orderData.placa_vehiculo },
       { label: 'Marca:', value: orderData.marca_vehiculo },
@@ -127,19 +128,16 @@ class PDFGenerator {
     ];
 
     this.generateInfoTable(doc, vehicleInfo);
-    doc.moveDown(1);
+    doc.moveDown(0.5);
   }
 
-  /**
-   * Genera la sección de información del servicio
-   */
   generateServiceInfo(doc, orderData) {
-    doc.fontSize(16)
+    doc.fontSize(14)
        .fillColor(this.config.colors.primary)
-       .text('INFORMACIÓN DEL SERVICIO');
-    
-    doc.moveDown(0.5);
-    
+       .text('INFORMACIÓN DEL SERVICIO', doc.page.margins.left, doc.y);
+
+    doc.moveDown(0.3);
+
     const serviceInfo = [
       { label: 'Servicio:', value: orderData.servicio },
       { label: 'Estado:', value: orderData.estado_orden },
@@ -147,104 +145,78 @@ class PDFGenerator {
     ];
 
     this.generateInfoTable(doc, serviceInfo);
-    
-    // Comentarios del cliente
+
     if (orderData.comentario_cliente_orden) {
-      doc.moveDown(1);
-      doc.fontSize(14)
-         .fillColor(this.config.colors.primary)
-         .text('COMENTARIOS DEL CLIENTE:');
-      
       doc.moveDown(0.5);
-      doc.fontSize(10)
+      doc.fontSize(12)
+         .fillColor(this.config.colors.primary)
+         .text('COMENTARIOS DEL CLIENTE:', doc.page.margins.left, doc.y);
+
+      doc.moveDown(0.3);
+      doc.fontSize(9)
          .fillColor(this.config.colors.secondary)
          .text(orderData.comentario_cliente_orden, {
            width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
            align: 'justify'
          });
     }
-    
-    // Observaciones técnicas
+
     if (orderData.observaciones_orden) {
-      doc.moveDown(1);
-      doc.fontSize(14)
-         .fillColor(this.config.colors.primary)
-         .text('OBSERVACIONES TÉCNICAS:');
-      
       doc.moveDown(0.5);
-      doc.fontSize(10)
+      doc.fontSize(12)
+         .fillColor(this.config.colors.primary)
+         .text('OBSERVACIONES TÉCNICAS:', doc.page.margins.left, doc.y);
+
+      doc.moveDown(0.3);
+      doc.fontSize(9)
          .fillColor(this.config.colors.secondary)
          .text(orderData.observaciones_orden, {
            width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
            align: 'justify'
          });
     }
-    
-    doc.moveDown(2);
+
+    doc.moveDown(1);
   }
 
-  /**
-   * Genera el pie de página del PDF
-   */
   generateFooter(doc, orderData) {
     this.drawSeparator(doc);
-    
+
     const { nombre: empresa, telefono, email, direccion } = config.empresa;
-    
-    doc.fontSize(10)
-       .fillColor(this.config.colors.secondary)
-       .text(empresa, { align: 'center' });
-    
-    doc.fontSize(8)
-       .text(`Teléfono: ${telefono} | Email: ${email}`, { align: 'center' });
-    
+
+    doc.fontSize(10).fillColor(this.config.colors.secondary).text(empresa, { align: 'center' });
+    doc.fontSize(8).text(`Teléfono: ${telefono} | Email: ${email}`, { align: 'center' });
     doc.text(`Dirección: ${direccion}`, { align: 'center' });
-    
+
     doc.moveDown(1);
-    
-    // Información adicional
+
     doc.fontSize(8)
        .fillColor(this.config.colors.secondary)
        .text('Este documento es generado automáticamente por el sistema de gestión del taller.', { align: 'center' });
-    
     doc.text(`Documento generado el: ${this.formatDate(new Date())}`, { align: 'center' });
   }
 
-  /**
-   * Genera una tabla de información con etiquetas y valores
-   */
+  // ✅ Corregido: etiqueta y valor en una sola línea
   generateInfoTable(doc, infoArray) {
-    const startX = doc.x;
-    const labelWidth = 80;
-    const valueWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right - labelWidth - 20;
-    
-    infoArray.forEach((item, index) => {
-      // Verificar si hay espacio suficiente en la página
+    const startX = doc.page.margins.left; 
+    const lineWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+
+    infoArray.forEach((item) => {
       if (doc.y > doc.page.height - doc.page.margins.bottom - 50) {
         doc.addPage();
         doc.y = doc.page.margins.top;
       }
-      
-      // Etiqueta
-      doc.fontSize(10)
+
+      const line = `${item.label} ${item.value || 'No especificado'}`;
+
+      doc.fontSize(9)
          .fillColor(this.config.colors.primary)
-         .text(item.label, startX, doc.y, { width: labelWidth });
-      
-      // Valor
-      doc.fontSize(10)
-         .fillColor(this.config.colors.secondary)
-         .text(item.value || 'No especificado', startX + labelWidth + 10, doc.y, { 
-           width: valueWidth,
-           align: 'left'
-         });
-      
+         .text(line, startX, doc.y, { width: lineWidth, align: 'left' });
+
       doc.moveDown(0.5);
     });
   }
 
-  /**
-   * Dibuja una línea separadora
-   */
   drawSeparator(doc) {
     const y = doc.y;
     doc.strokeColor(this.config.colors.accent)
@@ -252,16 +224,11 @@ class PDFGenerator {
        .moveTo(doc.page.margins.left, y)
        .lineTo(doc.page.width - doc.page.margins.right, y)
        .stroke();
-    
     doc.moveDown(1);
   }
 
-  /**
-   * Formatea una fecha para mostrar
-   */
   formatDate(date) {
     if (!date) return 'No especificada';
-    
     const d = new Date(date);
     return d.toLocaleDateString('es-GT', {
       year: 'numeric',
@@ -272,26 +239,16 @@ class PDFGenerator {
     });
   }
 
-  /**
-   * Formatea un número de teléfono de Guatemala
-   */
   formatPhone(phone) {
     if (!phone) return 'No especificado';
-    
-    // Remover espacios y caracteres especiales
     const clean = phone.replace(/\D/g, '');
-    
-    // Si empieza con 502, formatear como internacional
     if (clean.startsWith('502')) {
       return `+502 ${clean.substring(3, 7)}-${clean.substring(7)}`;
     }
-    
-    // Si tiene 8 dígitos, formatear como nacional
     if (clean.length === 8) {
       return `${clean.substring(0, 4)}-${clean.substring(4)}`;
     }
-    
-    return phone; // Retornar original si no se puede formatear
+    return phone;
   }
 }
 
