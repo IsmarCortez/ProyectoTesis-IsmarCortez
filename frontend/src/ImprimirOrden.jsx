@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const ImprimirOrden = ({ orden, onClose }) => {
+  const [descargando, setDescargando] = useState(false);
+
   const formatearFecha = (fecha) => {
     return new Date(fecha).toLocaleString('es-GT');
   };
@@ -16,18 +18,73 @@ const ImprimirOrden = ({ orden, onClose }) => {
     return niveles[combustible] || combustible;
   };
 
-  const handleImprimir = () => {
-    window.print();
+  const handleImprimir = async () => {
+    try {
+      setDescargando(true);
+      console.log(`🖨️ Descargando PDF para orden #${orden.pk_id_orden}...`);
+      
+      // Llamar al endpoint del backend para generar el PDF
+      const response = await fetch(`http://localhost:4000/api/ordenes/${orden.pk_id_orden}/pdf`);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      // Obtener el PDF como blob
+      const pdfBlob = await response.blob();
+      
+      // Crear URL temporal para el blob
+      const pdfUrl = window.URL.createObjectURL(pdfBlob);
+      
+      // Crear enlace temporal para descarga
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = `orden_${orden.pk_id_orden}.pdf`;
+      
+      // Simular click para descargar
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpiar
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(pdfUrl);
+      
+      console.log(`✅ PDF descargado exitosamente para orden #${orden.pk_id_orden}`);
+      
+    } catch (error) {
+      console.error('❌ Error descargando PDF:', error);
+      alert('Error al generar el PDF. Por favor, intente nuevamente.');
+    } finally {
+      setDescargando(false);
+    }
   };
 
   return (
     <div className="print-container">
       {/* Controles de impresión - solo visibles en pantalla */}
       <div className="no-print d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded">
-        <h4>Vista Previa de Impresión - Orden #{orden.pk_id_orden}</h4>
         <div>
-          <button className="btn btn-primary me-2" onClick={handleImprimir}>
-            🖨️ Imprimir Orden
+          <h4>Descargar PDF de Orden #{orden.pk_id_orden}</h4>
+          <p className="mb-0 text-muted">
+            <small>📄 Se generará un PDF profesional con el mismo formato que se envía por email</small>
+          </p>
+        </div>
+        <div>
+          <button 
+            className="btn btn-primary me-2" 
+            onClick={handleImprimir}
+            disabled={descargando}
+          >
+            {descargando ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Generando PDF...
+              </>
+            ) : (
+              <>
+                🖨️ Descargar PDF
+              </>
+            )}
           </button>
           <button className="btn btn-secondary" onClick={onClose}>
             ❌ Cerrar

@@ -1929,6 +1929,170 @@ doc.text(line, startX, doc.y, { width: lineWidth, align: 'left' });
 
 **¡La optimización del generador de PDF está completada y el sistema está listo para producción!** 🚀📄✅
 
+## 🖨️ **MEJORA DEL BOTÓN DE IMPRESIÓN - PDF REAL** - 2025-09-07
+
+### 🎯 **Objetivo:**
+Mejorar el botón de impresión en el formulario de órdenes para que genere y descargue el PDF real del backend en lugar de usar la función nativa `window.print()` del navegador.
+
+### 🔧 **Cambios Implementados:**
+
+#### **1. Nuevo Endpoint en Backend:**
+- **Archivo**: `backend/index.js`
+- **Endpoint**: `GET /api/ordenes/:id/pdf`
+- **Funcionalidad**: 
+  * Obtiene datos completos de la orden desde la base de datos
+  * Genera PDF usando el servicio `PDFGenerator`
+  * Retorna el PDF como archivo descargable
+  * Configura headers correctos para descarga (`Content-Type: application/pdf`)
+  * Nombre de archivo: `orden_{id}.pdf`
+
+#### **2. Modificación del Componente de Impresión:**
+- **Archivo**: `frontend/src/ImprimirOrden.jsx`
+- **Cambios**:
+  * Reemplazado `window.print()` por llamada al endpoint del backend
+  * Implementado descarga automática del PDF generado
+  * Agregado estado de carga con spinner durante la generación
+  * Mejorado el texto del botón: "Descargar PDF" en lugar de "Imprimir Orden"
+  * Agregada descripción informativa para el usuario
+  * Manejo de errores con mensajes informativos
+
+#### **3. Funcionalidades del Nuevo Sistema:**
+- **Generación Real**: Usa el mismo PDF que se envía por email
+- **Descarga Automática**: El PDF se descarga automáticamente al navegador
+- **Formato Profesional**: Mantiene el formato con logos reales y estructura profesional
+- **Feedback Visual**: Spinner de carga y mensajes de estado
+- **Manejo de Errores**: Alertas informativas en caso de fallo
+
+### 🎯 **Impacto en el Sistema:**
+
+#### **1. Experiencia del Usuario:**
+- **Antes**: `window.print()` imprimía la página web (formato básico)
+- **Ahora**: Descarga PDF profesional con formato idéntico al enviado por email
+- **Mejora**: Consistencia en el formato de documentos del sistema
+
+#### **2. Funcionalidad Técnica:**
+- **Backend**: Nuevo endpoint dedicado para generación de PDF
+- **Frontend**: Lógica de descarga con manejo de blobs
+- **Integración**: Reutiliza el servicio `PDFGenerator` existente
+
+### ✅ **Estado del Desarrollo:**
+- **✅ Endpoint Backend**: Implementado y funcionando
+- **✅ Componente Frontend**: Modificado y optimizado
+- **✅ Funcionalidad**: Descarga de PDF real implementada
+- **✅ UX**: Mejorada con feedback visual y manejo de errores
+
+### 🚀 **Próximos Pasos:**
+1. **Pruebas en producción**: Verificar con órdenes reales
+2. **Feedback de usuarios**: Recopilar opiniones sobre la nueva funcionalidad
+3. **Optimización**: Considerar cache de PDFs si es necesario
+
+**¡El sistema de impresión ahora genera PDFs reales en lugar de imprimir la página web!** 🚀🖨️✅
+
+## 📄 **UNIFICACIÓN DE FORMATOS PDF - VISTA PREVIA Y DESCARGA** - 2025-09-07
+
+### 🎯 **Problema Identificado:**
+El PDF descargado desde el botón de impresión no coincidía con la vista previa mostrada en el modal. La vista previa incluía notas importantes y firmas, pero el PDF real (el mismo que se envía por email) no las tenía.
+
+### 🔧 **Solución Implementada:**
+
+#### **1. Modificación del PDFGenerator:**
+- **Archivo**: `backend/services/pdfGenerator.js`
+- **Método**: `generateFooter()`
+- **Cambios**:
+  * Agregada sección "FIRMAS Y AUTORIZACIONES"
+  * Incluidas líneas para firma del cliente y técnico
+  * Agregado espacio para sello del taller
+  * Incluidas las "NOTAS IMPORTANTES" con:
+    - Garantía de servicio de 1 mes o 1000 km
+    - Responsabilidad por objetos personales
+    - Autorización de trabajos adicionales
+  * Mantenida información de contacto del taller
+
+#### **2. Elementos Agregados al PDF:**
+- **Sección de Firmas**:
+  * Fecha de impresión
+  * Firma del cliente
+  * Firma del técnico
+  * Sello del taller
+- **Notas Importantes**:
+  * Términos de garantía
+  * Políticas del taller
+  * Condiciones de servicio
+
+### 🎯 **Resultado:**
+- **Antes**: PDF descargado ≠ Vista previa (inconsistencia)
+- **Ahora**: PDF descargado = Vista previa (consistencia total)
+- **Beneficio**: El usuario ve exactamente lo que va a descargar
+
+### ✅ **Estado del Desarrollo:**
+- **✅ PDFGenerator**: Actualizado con notas importantes y firmas
+- **✅ Consistencia**: Vista previa y PDF descargado son idénticos
+- **✅ Funcionalidad**: Mantiene todas las características anteriores
+- **✅ Formato**: Profesional y completo
+
+### 🚀 **Impacto:**
+- **Experiencia del Usuario**: Consistencia visual total
+- **Profesionalismo**: PDFs completos con términos y condiciones
+- **Funcionalidad**: Firmas y sellos para documentos oficiales
+
+**¡Ahora el PDF descargado es idéntico a la vista previa, incluyendo notas importantes y firmas!** 🚀📄✅
+
+## 📄 **OPTIMIZACIÓN PDF PARA UNA SOLA PÁGINA** - 2025-09-07
+
+### 🎯 **Problema Identificado:**
+El PDF se estaba extendiendo a una segunda página debido a que el contenido era demasiado extenso, especialmente la información de contacto del taller al final del documento.
+
+### 🔧 **Solución Implementada:**
+
+#### **1. Optimización de Espaciado:**
+- **Títulos de secciones**: Reducido de `fontSize(14)` a `fontSize(12)`
+- **Espaciado entre secciones**: Reducido de `moveDown(0.5)` a `moveDown(0.3)`
+- **Espaciado en títulos**: Reducido de `moveDown(0.3)` a `moveDown(0.2)`
+- **Texto de información**: Reducido de `fontSize(9)` a `fontSize(8)`
+
+#### **2. Optimización del Footer:**
+- **Verificación de espacio**: Agregada lógica para verificar espacio disponible
+- **Tamaños de fuente reducidos**:
+  * Títulos: `fontSize(9)` en lugar de `fontSize(10)`
+  * Texto: `fontSize(7)` en lugar de `fontSize(8)`
+  * Información de contacto: `fontSize(6)` en lugar de `fontSize(8)`
+- **Espaciado compacto**: Reducido `moveDown()` en todas las secciones
+- **Firmas optimizadas**: Espaciado reducido entre filas de firmas
+
+#### **3. Optimización de Secciones de Contenido:**
+- **Comentarios del cliente**: Reducido `fontSize(10)` y espaciado `moveDown(0.2)`
+- **Observaciones técnicas**: Reducido `fontSize(10)` y espaciado `moveDown(0.2)`
+- **Texto de contenido**: Reducido a `fontSize(8)` para mejor aprovechamiento del espacio
+
+#### **4. Control de Páginas:**
+- **Verificación automática**: El sistema verifica si hay espacio suficiente para el footer
+- **Nueva página si es necesario**: Solo se crea una nueva página si realmente no cabe el contenido
+- **Altura estimada**: Cálculo de `footerHeight = 200` para verificación
+
+### 🎯 **Resultado:**
+- **Antes**: PDF se extendía a 2 páginas
+- **Ahora**: PDF completo en una sola página A4
+- **Beneficio**: Documento más profesional y fácil de imprimir
+
+### ✅ **Elementos Incluidos en Una Página:**
+- ✅ **Header**: Logos, título y información de la empresa
+- ✅ **Información del Cliente**: Nombre, DPI, teléfono, email
+- ✅ **Información del Vehículo**: Placa, marca, modelo, año, color, combustible, odómetro
+- ✅ **Información del Servicio**: Tipo de servicio, estado, fecha de ingreso
+- ✅ **Comentarios del Cliente**: Si existen
+- ✅ **Observaciones Técnicas**: Si existen
+- ✅ **Firmas y Autorizaciones**: Fecha, firmas del cliente y técnico, sello
+- ✅ **Notas Importantes**: Términos y condiciones
+- ✅ **Información de Contacto**: Datos completos del taller
+
+### 🚀 **Impacto:**
+- **Profesionalismo**: Documento completo en una sola página
+- **Eficiencia**: Mejor aprovechamiento del espacio
+- **Impresión**: Más fácil de imprimir y manejar
+- **Consistencia**: Mantiene todos los elementos importantes
+
+**¡El PDF ahora se genera completamente en una sola página A4 con todos los elementos incluidos!** 🚀📄✅
+
 ## 📄 **REVERSIÓN Y MEJORA DEL FORMATO PDF** - 2025-09-07
 
 ### 🔄 **Objetivo:**

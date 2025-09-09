@@ -774,6 +774,66 @@ app.get('/api/ordenes/:id', async (req, res) => {
   }
 });
 
+// Endpoint para generar PDF de una orden específica
+app.get('/api/ordenes/:id/pdf', async (req, res) => {
+  const { id } = req.params;
+  try {
+    console.log(`🖨️ Generando PDF para orden #${id}...`);
+    
+    // Obtener datos de la orden
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      `SELECT 
+        o.*,
+        c.dpi_cliente,
+        c.nombre_cliente,
+        c.apellido_cliente,
+        c.correo_cliente,
+        c.telefono_cliente,
+        v.placa_vehiculo,
+        v.marca_vehiculo,
+        v.modelo_vehiculo,
+        v.anio_vehiculo,
+        v.color_vehiculo,
+        s.servicio,
+        e.estado_orden
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE o.pk_id_orden = ?`,
+      [id]
+    );
+    await connection.end();
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada.' });
+    }
+    
+    const ordenData = rows[0];
+    
+    // Generar PDF usando el servicio
+    const PDFGenerator = require('./services/pdfGenerator');
+    const pdfBuffer = await PDFGenerator.generateOrderPDF(ordenData);
+    
+    // Configurar headers para descarga
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="orden_${id}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    
+    console.log(`✅ PDF generado exitosamente para orden #${id} (${pdfBuffer.length} bytes)`);
+    res.send(pdfBuffer);
+    
+  } catch (error) {
+    console.error('❌ Error generando PDF:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al generar el PDF de la orden.' 
+    });
+  }
+});
+
 // Endpoint para actualizar una orden
 app.put('/api/ordenes/:id', upload.fields([
   { name: 'imagen_1', maxCount: 1 },
