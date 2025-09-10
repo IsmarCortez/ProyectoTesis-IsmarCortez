@@ -76,11 +76,8 @@ function Home({ usuario, onLogout }) {
   return (
     <div style={{ minHeight: '100vh', position: 'relative' }}>
       {/* Header horizontal con menú fijo */}
-      <header style={{
-        width: '100%',
-        height: 60,
-        background: '#343a40',
-        color: '#fff',
+      <header className="header-tecno" style={{
+        height: 70,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -88,44 +85,66 @@ function Home({ usuario, onLogout }) {
         position: 'fixed',
         top: 0,
         left: 0,
+        right: 0,
         zIndex: 1200,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+        boxShadow: 'var(--shadow-medium)'
       }}>
-        <span style={{ fontWeight: 'bold', fontSize: 22, letterSpacing: 1 }}>Menú Principal</span>
-        <nav style={{ display: 'flex', gap: 24 }}>
-          <button onClick={() => navigate('/home')} style={menuBtnStyleHeader}>Inicio</button>
-          <button onClick={() => navigate('/dashboard')} style={menuBtnStyleHeader}>📊 Dashboard</button>
-          <button onClick={() => navigate('/reportes')} style={menuBtnStyleHeader}>📄 Reportes</button>
-          <button onClick={() => navigate('/tracker')} style={menuBtnStyleHeader}>🔍 Tracker</button>
-          <button onClick={() => navigate('/clientes')} style={menuBtnStyleHeader}>Clientes</button>
-          <button onClick={() => navigate('/vehiculos')} style={menuBtnStyleHeader}>Vehículos</button>
-          <button onClick={() => navigate('/servicios')} style={menuBtnStyleHeader}>Servicios</button>
-          <button onClick={() => navigate('/estados')} style={menuBtnStyleHeader}>Estados</button>
-          <button onClick={() => navigate('/ordenes')} style={menuBtnStyleHeader}>Órdenes</button>
-          <button onClick={() => navigate('/usuarios')} style={menuBtnStyleHeader}>Usuarios</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <img 
+            src="/LogoTecnoAuto.jpg" 
+            alt="Tecno Auto" 
+            style={{ 
+              height: '40px', 
+              width: 'auto',
+              borderRadius: '6px'
+            }} 
+          />
+          <span style={{ 
+            fontWeight: '700', 
+            fontSize: '20px', 
+            letterSpacing: '0.5px',
+            background: 'linear-gradient(135deg, var(--tecno-orange), var(--tecno-orange-light))',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            Sistema de Gestión
+          </span>
+        </div>
+        <nav className="nav-tecno">
+          <button onClick={() => navigate('/home')} className="nav-link">🏠 Inicio</button>
+          <button onClick={() => navigate('/dashboard')} className="nav-link">📊 Dashboard</button>
+          <button onClick={() => navigate('/reportes')} className="nav-link">📄 Reportes</button>
+          <button onClick={() => navigate('/tracker')} className="nav-link">🔍 Tracker</button>
+          <button onClick={() => navigate('/clientes')} className="nav-link">👥 Clientes</button>
+          <button onClick={() => navigate('/vehiculos')} className="nav-link">🚗 Vehículos</button>
+          <button onClick={() => navigate('/servicios')} className="nav-link">🔧 Servicios</button>
+          <button onClick={() => navigate('/estados')} className="nav-link">📋 Estados</button>
+          <button onClick={() => navigate('/ordenes')} className="nav-link">📝 Órdenes</button>
+          <button onClick={() => navigate('/usuarios')} className="nav-link">👤 Usuarios</button>
         </nav>
       </header>
 
       {/* Espacio para el header */}
-      <div style={{ height: 60 }} />
+      <div style={{ height: 70 }} />
 
       {/* Botón para abrir el menú lateral */}
       <button
         onClick={() => setOpen(true)}
+        className="btn-tecno"
         style={{
           position: 'absolute',
-          top: 84,
+          top: 90,
           left: 24,
           zIndex: 1001,
-          background: '#007bff',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 4,
-          padding: '10px 16px',
-          cursor: 'pointer',
+          padding: '12px 20px',
+          fontSize: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
         }}
       >
-        ☰ Menú usuario
+        ☰ Menú Usuario
       </button>
 
       {/* Drawer lateral (usuario) */}
@@ -133,28 +152,45 @@ function Home({ usuario, onLogout }) {
         style={{
           position: 'fixed',
           top: 0,
-          left: open ? 0 : -280,
-          width: 260,
+          left: open ? 0 : -300,
+          width: 280,
           height: '100%',
-          background: '#f8f9fa',
-          boxShadow: open ? '2px 0 8px rgba(0,0,0,0.15)' : 'none',
-          padding: '2rem 1rem',
+          background: 'var(--tecno-white)',
+          boxShadow: open ? 'var(--shadow-heavy)' : 'none',
+          padding: '2rem 1.5rem',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          transition: 'left 0.3s',
+          transition: 'left var(--transition-medium)',
           zIndex: 2000,
+          borderRight: '1px solid var(--tecno-gray-light)'
         }}
       >
         <button
           onClick={() => setOpen(false)}
           style={{
             alignSelf: 'flex-end',
-            background: 'transparent',
+            background: 'var(--tecno-gray-light)',
             border: 'none',
-            fontSize: 22,
+            fontSize: '20px',
             cursor: 'pointer',
-            marginBottom: 16,
+            marginBottom: '20px',
+            borderRadius: '50%',
+            width: '32px',
+            height: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--tecno-gray-dark)',
+            transition: 'all var(--transition-fast)'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = 'var(--tecno-orange)';
+            e.target.style.color = 'var(--tecno-white)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'var(--tecno-gray-light)';
+            e.target.style.color = 'var(--tecno-gray-dark)';
           }}
         >
           ×
@@ -174,78 +210,126 @@ function Home({ usuario, onLogout }) {
             style={{ width: 100, height: 100, objectFit: 'cover', marginBottom: 16 }}
           />
         )}
-        <h4 style={{ marginBottom: 8 }}>{usuario.nombre}</h4>
-        <p style={{ color: '#555', fontSize: 14, marginBottom: 24 }}>{usuario.email}</p>
+        <h4 style={{ 
+          marginBottom: '8px', 
+          color: 'var(--tecno-black)',
+          fontWeight: '600'
+        }}>
+          {usuario.nombre}
+        </h4>
+        <p style={{ 
+          color: 'var(--tecno-gray-dark)', 
+          fontSize: '14px', 
+          marginBottom: '24px',
+          textAlign: 'center'
+        }}>
+          {usuario.email}
+        </p>
         <button
           onClick={() => setShowEdit(!showEdit)}
+          className={showEdit ? "btn-tecno-secondary" : "btn-tecno-outline"}
           style={{
-            background: '#ffc107',
-            color: '#333',
-            border: 'none',
-            borderRadius: 4,
-            padding: '8px 16px',
-            cursor: 'pointer',
-            marginBottom: 16,
+            marginBottom: '16px',
+            fontSize: '14px',
+            padding: '10px 16px'
           }}
         >
-          {showEdit ? 'Cancelar' : 'Modificar información'}
+          {showEdit ? '❌ Cancelar' : '✏️ Modificar información'}
         </button>
         {showEdit && (
           <form onSubmit={handleEditSubmit} style={{ width: '100%' }}>
-            <div className="mb-2">
-              <label style={{ fontSize: 13 }}>Nombre de usuario</label>
+            <div className="mb-3">
+              <label className="form-label" style={{ fontSize: '13px', fontWeight: '600' }}>
+                Nombre de usuario
+              </label>
               <input
                 type="text"
                 className="form-control"
                 value={nuevoNombre}
                 onChange={e => setNuevoNombre(e.target.value)}
-                style={{ fontSize: 14, marginBottom: 8 }}
+                style={{ 
+                  fontSize: '14px', 
+                  marginBottom: '8px',
+                  border: '2px solid var(--tecno-gray-light)',
+                  borderRadius: '6px',
+                  padding: '8px 12px'
+                }}
                 required
               />
             </div>
-            <div className="mb-2">
-              <label style={{ fontSize: 13 }}>Foto de perfil</label>
+            <div className="mb-3">
+              <label className="form-label" style={{ fontSize: '13px', fontWeight: '600' }}>
+                Foto de perfil
+              </label>
               <input
                 type="file"
                 accept="image/*"
                 className="form-control"
                 onChange={handleFotoChange}
-                style={{ fontSize: 14, marginBottom: 8 }}
+                style={{ 
+                  fontSize: '14px', 
+                  marginBottom: '8px',
+                  border: '2px solid var(--tecno-gray-light)',
+                  borderRadius: '6px',
+                  padding: '8px 12px'
+                }}
               />
             </div>
-            {error && <div className="alert alert-danger p-1" style={{ fontSize: 13 }}>{error}</div>}
-            {mensaje && <div className="alert alert-success p-1" style={{ fontSize: 13 }}>{mensaje}</div>}
+            {error && (
+              <div className="alert-tecno alert-tecno-danger" style={{ fontSize: '12px', marginBottom: '12px' }}>
+                {error}
+              </div>
+            )}
+            {mensaje && (
+              <div className="alert-tecno alert-tecno-success" style={{ fontSize: '12px', marginBottom: '12px' }}>
+                {mensaje}
+              </div>
+            )}
             <button
               type="submit"
-              className="btn btn-success btn-sm w-100 mb-2"
-              style={{ fontSize: 14 }}
+              className="btn-tecno w-100 mb-2"
+              style={{ fontSize: '14px', padding: '10px' }}
               disabled={loading}
             >
-              {loading ? 'Guardando...' : 'Guardar cambios'}
+              {loading ? '⏳ Guardando...' : '💾 Guardar cambios'}
             </button>
             <button
               type="button"
-              className="btn btn-link btn-sm w-100"
-              style={{ fontSize: 14 }}
+              className="btn-tecno-outline w-100"
+              style={{ fontSize: '14px', padding: '8px' }}
               onClick={() => navigate('/recuperar-contrasena')}
             >
-              Cambiar contraseña
+              🔐 Cambiar contraseña
             </button>
           </form>
         )}
         <button
           onClick={handleLogout}
           style={{
-            background: '#dc3545',
-            color: '#fff',
+            background: 'var(--danger)',
+            color: 'var(--tecno-white)',
             border: 'none',
-            borderRadius: 4,
-            padding: '10px 20px',
+            borderRadius: '6px',
+            padding: '12px 20px',
             cursor: 'pointer',
             marginTop: 'auto',
+            fontSize: '14px',
+            fontWeight: '600',
+            transition: 'all var(--transition-fast)',
+            boxShadow: 'var(--shadow-light)'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = '#c82333';
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = 'var(--shadow-medium)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'var(--danger)';
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = 'var(--shadow-light)';
           }}
         >
-          Cerrar sesión
+          🚪 Cerrar sesión
         </button>
       </div>
 
@@ -266,81 +350,142 @@ function Home({ usuario, onLogout }) {
       )}
 
       {/* Contenido principal */}
-      <main style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', minHeight: '100vh', paddingTop: 40 }}>
+      <main style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        justifyContent: 'flex-start', 
+        alignItems: 'center', 
+        minHeight: '100vh', 
+        paddingTop: '40px',
+        background: 'linear-gradient(135deg, var(--tecno-gray-very-light) 0%, var(--tecno-white) 100%)'
+      }}>
         <div className="container text-center">
-          <h1 style={{ marginTop: 0, marginBottom: 32 }}>🏠 Bienvenido al Sistema de Gestión</h1>
-          <p className="lead mb-4">Taller Mecánico Tecno Auto - Repuestos Electrofrio</p>
+          <div style={{ marginBottom: '48px' }}>
+            <h1 style={{ 
+              marginTop: 0, 
+              marginBottom: '16px',
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              background: 'linear-gradient(135deg, var(--tecno-orange), var(--tecno-orange-light))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              🏠 Bienvenido al Sistema de Gestión
+            </h1>
+            <p style={{ 
+              fontSize: '1.2rem', 
+              color: 'var(--tecno-gray-dark)',
+              fontWeight: '500',
+              marginBottom: '8px'
+            }}>
+              Taller Mecánico Tecno Auto - Repuestos Electrofrio
+            </p>
+            <p style={{ 
+              fontSize: '1rem', 
+              color: 'var(--tecno-gray-medium)',
+              marginBottom: '0'
+            }}>
+              Gestiona tu taller de manera eficiente y profesional
+            </p>
+          </div>
           
-          <div className="row justify-content-center">
-              <div className="col-md-6">
-                <div className="card shadow">
-                  <div className="card-body">
-                    <h3 className="card-title">📊 Dashboard de Estadísticas</h3>
-                    <p className="card-text">
-                      Accede a un resumen completo de las estadísticas del taller, incluyendo:
-                    </p>
-                    <ul className="list-unstyled">
-                      <li>🚗 Vehículos más ingresados</li>
-                      <li>👥 Clientes por mes</li>
-                      <li>🔧 Servicios más solicitados</li>
-                      <li>📈 Tendencias de órdenes</li>
-                      <li>💰 Ingresos estimados</li>
-                    </ul>
-                    <button
-                      className="btn btn-primary btn-lg"
-                      onClick={() => navigate('/dashboard')}
-                    >
-                      📊 Ver Dashboard de Estadísticas
-                    </button>
-                  </div>
+          <div className="row justify-content-center" style={{ gap: '24px' }}>
+            <div className="col-md-4">
+              <div className="card-tecno">
+                <div className="card-tecno-header">
+                  📊 Dashboard de Estadísticas
+                </div>
+                <div className="card-tecno-body">
+                  <p style={{ color: 'var(--tecno-gray-dark)', marginBottom: '20px' }}>
+                    Accede a un resumen completo de las estadísticas del taller:
+                  </p>
+                  <ul style={{ 
+                    listStyle: 'none', 
+                    padding: 0, 
+                    textAlign: 'left',
+                    marginBottom: '24px'
+                  }}>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>🚗 Vehículos más ingresados</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>👥 Clientes por mes</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>🔧 Servicios más solicitados</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>📈 Tendencias de órdenes</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>💰 Ingresos estimados</li>
+                  </ul>
+                  <button
+                    className="btn-tecno w-100"
+                    onClick={() => navigate('/dashboard')}
+                    style={{ fontSize: '16px', padding: '14px' }}
+                  >
+                    📊 Ver Dashboard
+                  </button>
                 </div>
               </div>
-              <div className="col-md-4">
-                <div className="card shadow">
-                  <div className="card-body">
-                    <h3 className="card-title">📄 Generador de Reportes</h3>
-                    <p className="card-text">
-                      Genera reportes profesionales en PDF y Excel:
-                    </p>
-                    <ul className="list-unstyled">
-                      <li>📋 Reportes de órdenes</li>
-                      <li>👥 Listado de clientes</li>
-                      <li>🚗 Inventario de vehículos</li>
-                      <li>🔧 Catálogo de servicios</li>
-                      <li>📊 Estadísticas generales</li>
-                    </ul>
-                    <button
-                      className="btn btn-success btn-lg"
-                      onClick={() => navigate('/reportes')}
-                    >
-                      📄 Generar Reportes
-                    </button>
-                  </div>
+            </div>
+            
+            <div className="col-md-4">
+              <div className="card-tecno">
+                <div className="card-tecno-header">
+                  📄 Generador de Reportes
+                </div>
+                <div className="card-tecno-body">
+                  <p style={{ color: 'var(--tecno-gray-dark)', marginBottom: '20px' }}>
+                    Genera reportes profesionales en PDF y Excel:
+                  </p>
+                  <ul style={{ 
+                    listStyle: 'none', 
+                    padding: 0, 
+                    textAlign: 'left',
+                    marginBottom: '24px'
+                  }}>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>📋 Reportes de órdenes</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>👥 Listado de clientes</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>🚗 Inventario de vehículos</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>🔧 Catálogo de servicios</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>📊 Estadísticas generales</li>
+                  </ul>
+                  <button
+                    className="btn-tecno-secondary w-100"
+                    onClick={() => navigate('/reportes')}
+                    style={{ fontSize: '16px', padding: '14px' }}
+                  >
+                    📄 Generar Reportes
+                  </button>
                 </div>
               </div>
-              <div className="col-md-4">
-                <div className="card shadow">
-                  <div className="card-body">
-                    <h3 className="card-title">🔍 Tracker Público</h3>
-                    <p className="card-text">
-                      Consulta el estado de órdenes sin login:
-                    </p>
-                    <ul className="list-unstyled">
-                      <li>📞 Búsqueda por teléfono</li>
-                      <li>🔢 Búsqueda por número de orden</li>
-                      <li>📋 Historial de estados</li>
-                      <li>⏰ Timeline de progreso</li>
-                      <li>🌐 Acceso público</li>
-                    </ul>
-                    <button
-                      className="btn btn-info btn-lg"
-                      onClick={() => navigate('/tracker')}
-                    >
-                      🔍 Consultar Orden
-                    </button>
-                  </div>
+            </div>
+            
+            <div className="col-md-4">
+              <div className="card-tecno">
+                <div className="card-tecno-header">
+                  🔍 Tracker Público
+                </div>
+                <div className="card-tecno-body">
+                  <p style={{ color: 'var(--tecno-gray-dark)', marginBottom: '20px' }}>
+                    Consulta el estado de órdenes sin login:
+                  </p>
+                  <ul style={{ 
+                    listStyle: 'none', 
+                    padding: 0, 
+                    textAlign: 'left',
+                    marginBottom: '24px'
+                  }}>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>📞 Búsqueda por teléfono</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>🔢 Búsqueda por número de orden</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>📋 Historial de estados</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>⏰ Timeline de progreso</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>🌐 Acceso público</li>
+                  </ul>
+                  <button
+                    className="btn-tecno-outline w-100"
+                    onClick={() => navigate('/tracker')}
+                    style={{ fontSize: '16px', padding: '14px' }}
+                  >
+                    🔍 Consultar Orden
+                  </button>
                 </div>
               </div>
+            </div>
           </div>
         </div>
       </main>
@@ -348,30 +493,5 @@ function Home({ usuario, onLogout }) {
   );
 }
 
-// Estilo para los botones del menú vertical
-const menuBtnStyle = {
-  background: 'none',
-  border: 'none',
-  color: '#343a40',
-  padding: '12px 20px',
-  textAlign: 'left',
-  fontSize: 16,
-  cursor: 'pointer',
-  borderBottom: '1px solid #eee',
-  outline: 'none',
-};
-
-const menuBtnStyleHeader = {
-  background: 'none',
-  border: 'none',
-  color: '#fff',
-  padding: '10px 18px',
-  textAlign: 'center',
-  fontSize: 16,
-  cursor: 'pointer',
-  borderRadius: 4,
-  outline: 'none',
-  transition: 'background 0.2s',
-};
 
 export default Home;

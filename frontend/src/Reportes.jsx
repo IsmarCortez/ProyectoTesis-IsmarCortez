@@ -102,40 +102,61 @@ const Reportes = () => {
   const reporteSeleccionadoData = tiposReportes.find(r => r.id === reporteSeleccionado);
 
   return (
-    <div className="container-fluid mt-4">
-      {/* Header */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
-              <h1 className="h3 mb-0">📊 Generador de Reportes</h1>
-              <p className="text-muted">Genera reportes en PDF y Excel del taller mecánico</p>
-            </div>
-            <button className="btn btn-outline-secondary" onClick={() => window.history.back()}>
-              ← Volver al Dashboard
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {error && (
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, var(--tecno-gray-very-light) 0%, var(--tecno-white) 100%)',
+      paddingTop: '90px'
+    }}>
+      <div className="container-fluid">
+        {/* Header */}
         <div className="row mb-4">
           <div className="col-12">
-            <div className="alert alert-danger" role="alert">
-              {error}
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h1 style={{ 
+                  fontSize: '2.5rem',
+                  fontWeight: '700',
+                  marginBottom: '8px',
+                  background: 'linear-gradient(135deg, var(--tecno-orange), var(--tecno-orange-light))',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
+                  📊 Generador de Reportes
+                </h1>
+                <p style={{ 
+                  color: 'var(--tecno-gray-dark)', 
+                  fontSize: '1.1rem',
+                  marginBottom: '0'
+                }}>
+                  Genera reportes en PDF y Excel del taller mecánico
+                </p>
+              </div>
+              <button className="btn-tecno-outline" onClick={() => window.history.back()}>
+                ← Volver al Dashboard
+              </button>
             </div>
           </div>
         </div>
-      )}
 
-      <div className="row">
-        {/* Panel de selección */}
-        <div className="col-lg-4 mb-4">
-          <div className="card shadow">
-            <div className="card-header">
-              <h5 className="mb-0">📋 Seleccionar Reporte</h5>
+        {error && (
+          <div className="row mb-4">
+            <div className="col-12">
+              <div className="alert-tecno alert-tecno-danger" role="alert">
+                {error}
+              </div>
             </div>
-            <div className="card-body">
+          </div>
+        )}
+
+        <div className="row">
+          {/* Panel de selección */}
+          <div className="col-lg-4 mb-4">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                📋 Seleccionar Reporte
+              </div>
+              <div className="card-tecno-body">
               <div className="mb-3">
                 <label className="form-label">Tipo de Reporte</label>
                 <select 
@@ -153,7 +174,7 @@ const Reportes = () => {
               </div>
 
               {reporteSeleccionadoData && (
-                <div className="alert alert-info">
+                <div className="alert-tecno alert-tecno-info">
                   <strong>{reporteSeleccionadoData.nombre}</strong><br/>
                   <small>{reporteSeleccionadoData.descripcion}</small>
                 </div>
@@ -221,7 +242,7 @@ const Reportes = () => {
                   )}
 
                   <button 
-                    className="btn btn-outline-secondary btn-sm"
+                    className="btn-tecno-outline btn-sm"
                     onClick={limpiarFiltros}
                   >
                     🗑️ Limpiar Filtros
@@ -235,16 +256,18 @@ const Reportes = () => {
                   <h6>📄 Generar Reporte</h6>
                   <div className="d-grid gap-2">
                     <button
-                      className="btn btn-danger"
+                      className="btn-tecno"
                       onClick={() => generarReporte('pdf')}
                       disabled={loading}
+                      style={{ backgroundColor: 'var(--danger)' }}
                     >
                       {loading ? '⏳ Generando...' : '📄 Generar PDF'}
                     </button>
                     <button
-                      className="btn btn-success"
+                      className="btn-tecno"
                       onClick={() => generarReporte('excel')}
                       disabled={loading}
+                      style={{ backgroundColor: 'var(--success)' }}
                     >
                       {loading ? '⏳ Generando...' : '📊 Generar Excel'}
                     </button>
@@ -255,13 +278,13 @@ const Reportes = () => {
           </div>
         </div>
 
-        {/* Panel de información */}
-        <div className="col-lg-8 mb-4">
-          <div className="card shadow">
-            <div className="card-header">
-              <h5 className="mb-0">ℹ️ Información de Reportes</h5>
-            </div>
-            <div className="card-body">
+          {/* Panel de información */}
+          <div className="col-lg-8 mb-4">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                ℹ️ Información de Reportes
+              </div>
+              <div className="card-tecno-body">
               <div className="row">
                 <div className="col-md-6">
                   <h6>📄 Reportes PDF</h6>
@@ -289,12 +312,12 @@ const Reportes = () => {
               <div className="row">
                 {tiposReportes.map(reporte => (
                   <div key={reporte.id} className="col-md-6 mb-3">
-                    <div className="card border">
-                      <div className="card-body p-3">
-                        <h6 className="card-title">{reporte.nombre}</h6>
-                        <p className="card-text small text-muted">{reporte.descripcion}</p>
+                    <div className="card-tecno">
+                      <div className="card-tecno-body p-3">
+                        <h6 style={{ color: 'var(--tecno-black)' }}>{reporte.nombre}</h6>
+                        <p style={{ color: 'var(--tecno-gray-dark)', fontSize: '14px' }}>{reporte.descripcion}</p>
                         {reporte.filtros.length > 0 && (
-                          <small className="text-info">
+                          <small style={{ color: 'var(--info)' }}>
                             🔍 Filtros: {reporte.filtros.join(', ')}
                           </small>
                         )}
@@ -308,27 +331,28 @@ const Reportes = () => {
         </div>
       </div>
 
-      {/* Instrucciones */}
-      <div className="row">
-        <div className="col-12">
-          <div className="card shadow">
-            <div className="card-header">
-              <h5 className="mb-0">📖 Instrucciones de Uso</h5>
-            </div>
-            <div className="card-body">
+        {/* Instrucciones */}
+        <div className="row">
+          <div className="col-12">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                📖 Instrucciones de Uso
+              </div>
+              <div className="card-tecno-body">
               <div className="row">
                 <div className="col-md-4">
-                  <h6>1️⃣ Seleccionar</h6>
-                  <p>Elige el tipo de reporte que necesitas generar</p>
+                  <h6 style={{ color: 'var(--tecno-black)' }}>1️⃣ Seleccionar</h6>
+                  <p style={{ color: 'var(--tecno-gray-dark)' }}>Elige el tipo de reporte que necesitas generar</p>
                 </div>
                 <div className="col-md-4">
-                  <h6>2️⃣ Filtrar</h6>
-                  <p>Aplica filtros para personalizar el reporte según tus necesidades</p>
+                  <h6 style={{ color: 'var(--tecno-black)' }}>2️⃣ Filtrar</h6>
+                  <p style={{ color: 'var(--tecno-gray-dark)' }}>Aplica filtros para personalizar el reporte según tus necesidades</p>
                 </div>
                 <div className="col-md-4">
-                  <h6>3️⃣ Generar</h6>
-                  <p>Haz clic en PDF o Excel para descargar el reporte</p>
+                  <h6 style={{ color: 'var(--tecno-black)' }}>3️⃣ Generar</h6>
+                  <p style={{ color: 'var(--tecno-gray-dark)' }}>Haz clic en PDF o Excel para descargar el reporte</p>
                 </div>
+              </div>
               </div>
             </div>
           </div>

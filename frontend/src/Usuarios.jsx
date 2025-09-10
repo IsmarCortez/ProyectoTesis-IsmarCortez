@@ -179,10 +179,21 @@ function Usuarios() {
 
   if (loading) {
     return (
-      <div className="container mt-4">
-        <div className="d-flex justify-content-center">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Cargando...</span>
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, var(--tecno-gray-very-light) 0%, var(--tecno-white) 100%)',
+        paddingTop: '90px'
+      }}>
+        <div className="container">
+          <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
+            <div className="card-tecno" style={{ padding: '40px', textAlign: 'center' }}>
+              <div className="spinner-border text-tecno-orange" role="status" style={{ color: 'var(--tecno-orange)' }}>
+                <span className="visually-hidden">Cargando...</span>
+              </div>
+              <p style={{ marginTop: '20px', color: 'var(--tecno-gray-dark)', fontWeight: '500' }}>
+                Cargando usuarios...
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -190,41 +201,75 @@ function Usuarios() {
   }
 
   return (
-    <div className="container mt-4">
-      <div className="row">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2>Gestión de Usuarios</h2>
-            <button 
-              className="btn btn-secondary" 
-              onClick={() => window.history.back()}
-            >
-              ← Volver al Menú Principal
-            </button>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, var(--tecno-gray-very-light) 0%, var(--tecno-white) 100%)',
+      paddingTop: '90px'
+    }}>
+      <div className="container">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1 style={{ 
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              marginBottom: '8px',
+              background: 'linear-gradient(135deg, var(--tecno-orange), var(--tecno-orange-light))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              👥 Gestión de Usuarios
+            </h1>
+            <p style={{ 
+              color: 'var(--tecno-gray-dark)', 
+              fontSize: '1.1rem',
+              marginBottom: '0'
+            }}>
+              Administra los usuarios del sistema del taller
+            </p>
           </div>
+          <button 
+            className="btn-tecno-outline" 
+            onClick={() => window.history.back()}
+          >
+            ← Volver al Menú Principal
+          </button>
+        </div>
 
-          {error && (
-            <div className="alert alert-danger alert-dismissible fade show" role="alert">
-              {error}
-              <button type="button" className="btn-close" onClick={() => setError('')}></button>
-            </div>
-          )}
+        {error && (
+          <div className="alert-tecno alert-tecno-danger" role="alert">
+            {error}
+            <button type="button" onClick={() => setError('')} style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--tecno-white)', 
+              fontSize: '18px', 
+              cursor: 'pointer', 
+              marginLeft: '10px' 
+            }}>×</button>
+          </div>
+        )}
 
-          {successMessage && (
-            <div className="alert alert-success alert-dismissible fade show" role="alert">
-              {successMessage}
-              <button type="button" className="btn-close" onClick={() => setSuccessMessage('')}></button>
-            </div>
-          )}
+        {successMessage && (
+          <div className="alert-tecno alert-tecno-success" role="alert">
+            {successMessage}
+            <button type="button" onClick={() => setSuccessMessage('')} style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--tecno-white)', 
+              fontSize: '18px', 
+              cursor: 'pointer', 
+              marginLeft: '10px' 
+            }}>×</button>
+          </div>
+        )}
 
-          {/* Formulario */}
-          <div className="card mb-4">
-            <div className="card-header">
-              <h5 className="mb-0">
-                {isEditing ? 'Editar Usuario' : 'Registrar Nuevo Usuario'}
-              </h5>
-            </div>
-            <div className="card-body">
+        {/* Formulario */}
+        <div className="card-tecno mb-4">
+          <div className="card-tecno-header">
+            {isEditing ? '✏️ Editando Usuario' : '➕ Nuevo Usuario'}
+          </div>
+          <div className="card-tecno-body">
               <form onSubmit={handleSubmit}>
                 <div className="row">
                   <div className="col-md-6 mb-3">
@@ -296,13 +341,13 @@ function Usuarios() {
                 </div>
 
                 <div className="d-flex gap-2">
-                  <button type="submit" className="btn btn-primary">
+                  <button type="submit" className="btn-tecno">
                     {isEditing ? 'Actualizar Usuario' : 'Registrar Usuario'}
                   </button>
                   {isEditing && (
                     <button 
                       type="button" 
-                      className="btn btn-secondary"
+                      className="btn-tecno-secondary"
                       onClick={limpiarFormulario}
                     >
                       Cancelar Edición
@@ -310,35 +355,64 @@ function Usuarios() {
                   )}
                 </div>
               </form>
+              {isEditing && (
+                <div className="alert-tecno alert-tecno-warning mt-3">
+                  <strong>Modo edición activado</strong>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Tabla de Usuarios */}
-          <div className="card">
-            <div className="card-header">
-              <h5 className="mb-0">Usuarios Registrados</h5>
-            </div>
-            <div className="card-body">
+        {/* Tabla de Usuarios */}
+        <div className="card-tecno">
+          <div className="card-tecno-header">
+            📋 Usuarios Registrados
+          </div>
+          <div className="card-tecno-body">
               {usuarios.length === 0 ? (
                 <p className="text-muted">No hay usuarios registrados</p>
               ) : (
                 <div className="table-responsive">
-                  <table className="table table-striped table-hover">
-                    <thead>
+                  <table className="table table-bordered" style={{ marginBottom: '0' }}>
+                    <thead style={{ backgroundColor: 'var(--tecno-gray-very-light)' }}>
                       <tr>
-                        <th>ID</th>
-                        <th>Foto</th>
-                        <th>Nombre</th>
-                        <th>Email</th>
-                        <th>Pregunta de Seguridad</th>
-                        <th>Acciones</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>ID</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>Foto</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>Nombre</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>Email</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>Pregunta de Seguridad</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       {usuarios.map((usuario) => (
                         <tr key={usuario.pk_id_usuarios}>
-                          <td>{usuario.pk_id_usuarios}</td>
-                          <td>
+                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{usuario.pk_id_usuarios}</td>
+                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
                             {usuario.foto_perfil_usuario ? (
                               <img
                                 src={`http://localhost:4000/uploads/${usuario.foto_perfil_usuario}`}
@@ -353,30 +427,56 @@ function Usuarios() {
                               </div>
                             )}
                           </td>
-                          <td>{usuario.nombre_usuario}</td>
-                          <td>{usuario.email_usuario}</td>
-                          <td>{usuario.pregunta_seguridad_usuario}</td>
-                          <td>
+                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{usuario.nombre_usuario}</td>
+                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{usuario.email_usuario}</td>
+                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{usuario.pregunta_seguridad_usuario}</td>
+                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
                             <div className="btn-group" role="group">
                               <button
-                                className="btn btn-sm btn-warning"
+                                className="btn btn-sm"
                                 onClick={() => editarUsuario(usuario)}
                                 title="Editar"
+                                style={{
+                                  backgroundColor: 'var(--warning)',
+                                  color: 'var(--tecno-white)',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  padding: '4px 8px',
+                                  fontSize: '12px',
+                                  marginRight: '4px'
+                                }}
                               >
                                 ✏️
                               </button>
                               <button
-                                className="btn btn-sm btn-info"
+                                className="btn btn-sm"
                                 onClick={() => abrirModalContrasena(usuario)}
                                 title="Cambiar Contraseña"
+                                style={{
+                                  backgroundColor: 'var(--info)',
+                                  color: 'var(--tecno-white)',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  padding: '4px 8px',
+                                  fontSize: '12px',
+                                  marginRight: '4px'
+                                }}
                               >
                                 🔒
                               </button>
                               <button
-                                className="btn btn-sm btn-danger"
+                                className="btn btn-sm"
                                 onClick={() => eliminarUsuario(usuario.pk_id_usuarios, usuario.nombre_usuario)}
                                 title="Eliminar"
                                 disabled={usuario.nombre_usuario.toLowerCase() === 'admin'}
+                                style={{
+                                  backgroundColor: usuario.nombre_usuario.toLowerCase() === 'admin' ? 'var(--tecno-gray-light)' : 'var(--danger)',
+                                  color: 'var(--tecno-white)',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  padding: '4px 8px',
+                                  fontSize: '12px'
+                                }}
                               >
                                 🗑️
                               </button>
@@ -390,23 +490,29 @@ function Usuarios() {
               )}
             </div>
           </div>
-        </div>
-      </div>
 
       {/* Modal para cambiar contraseña */}
       {showPasswordModal && (
         <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
           <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Cambiar Contraseña</h5>
+            <div className="card-tecno">
+              <div className="card-tecno-header d-flex justify-content-between align-items-center">
+                <h5 style={{ margin: '0' }}>🔒 Cambiar Contraseña</h5>
                 <button
                   type="button"
-                  className="btn-close"
                   onClick={() => setShowPasswordModal(false)}
-                ></button>
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--tecno-white)',
+                    fontSize: '24px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ×
+                </button>
               </div>
-              <div className="modal-body">
+              <div className="card-tecno-body">
                 <div className="mb-3">
                   <label className="form-label">Nueva Contraseña *</label>
                   <input
@@ -435,17 +541,22 @@ function Usuarios() {
                   />
                 </div>
               </div>
-              <div className="modal-footer">
+              <div style={{ 
+                padding: '20px', 
+                borderTop: '1px solid var(--tecno-gray-light)',
+                textAlign: 'center'
+              }}>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn-tecno-secondary"
                   onClick={() => setShowPasswordModal(false)}
+                  style={{ marginRight: '10px' }}
                 >
                   Cancelar
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn-tecno"
                   onClick={cambiarContrasena}
                 >
                   Cambiar Contraseña
@@ -460,6 +571,7 @@ function Usuarios() {
       {showPasswordModal && (
         <div className="modal-backdrop fade show"></div>
       )}
+      </div>
     </div>
   );
 }

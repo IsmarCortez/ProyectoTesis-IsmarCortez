@@ -31,33 +31,113 @@ function Login({ setUsuario }) {
       backgroundRepeat: 'no-repeat',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      position: 'relative'
     }}>
-      <div className="container d-flex align-items-center justify-content-center min-vh-100">
-        <div className="card p-4 shadow" style={{ maxWidth: 400, width: '100%' }}>
-          <div className="text-center mb-3">
-            <img src="/LogoTecnoAuto.jpg" alt="Tecno Auto" style={{ maxWidth: '200px', width: '100%', height: 'auto' }} />
+      {/* Overlay sutil para mejorar legibilidad */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.3)',
+        zIndex: 1
+      }} />
+      
+      <div className="container d-flex align-items-center justify-content-center min-vh-100" style={{ position: 'relative', zIndex: 2 }}>
+        <div className="card-tecno" style={{ maxWidth: 450, width: '100%' }}>
+          {/* Header con gradiente */}
+          <div className="card-tecno-header text-center">
+            <img 
+              src="/LogoTecnoAuto.jpg" 
+              alt="Tecno Auto" 
+              style={{ 
+                maxWidth: '180px', 
+                width: '100%', 
+                height: 'auto',
+                marginBottom: '16px',
+                borderRadius: '8px'
+              }} 
+            />
+            <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>Iniciar Sesión</h2>
+            <p style={{ margin: '8px 0 0 0', opacity: 0.9, fontSize: '14px' }}>
+              Sistema de Gestión del Taller
+            </p>
           </div>
-          <h2 className="mb-4 text-center">Iniciar Sesión</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label">Correo electrónico</label>
-              <input type="email" className="form-control" value={email} onChange={e => setEmail(e.target.value)} required />
+          
+          <div className="card-tecno-body">
+            <form onSubmit={handleSubmit} className="form-tecno" style={{ padding: 0, boxShadow: 'none', border: 'none' }}>
+              <div className="mb-4">
+                <label className="form-label">Correo electrónico</label>
+                <input 
+                  type="email" 
+                  className="form-control" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  required 
+                  placeholder="tu@email.com"
+                  style={{ fontSize: '16px' }}
+                />
+              </div>
+              <div className="mb-4">
+                <label className="form-label">Contraseña</label>
+                <input 
+                  type="password" 
+                  className="form-control" 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  required 
+                  placeholder="••••••••"
+                  style={{ fontSize: '16px' }}
+                />
+              </div>
+              {error && (
+                <div className="alert-tecno alert-tecno-danger" style={{ marginBottom: '20px' }}>
+                  {error}
+                </div>
+              )}
+              <button type="submit" className="btn-tecno w-100" style={{ fontSize: '16px', padding: '14px' }}>
+                🚀 Entrar al Sistema
+              </button>
+            </form>
+            
+            <div className="text-center mt-4">
+              <button 
+                className="btn-tecno-outline" 
+                onClick={() => navigate('/recuperar-contrasena')}
+                style={{ fontSize: '14px', padding: '8px 16px' }}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
             </div>
-            <div className="mb-3">
-              <label className="form-label">Contraseña</label>
-              <input type="password" className="form-control" value={password} onChange={e => setPassword(e.target.value)} required />
-            </div>
-            {error && <div className="alert alert-danger">{error}</div>}
-            <button type="submit" className="btn btn-primary w-100">Entrar</button>
-          </form>
-          <div className="mt-3 text-center">
-            <button className="btn btn-link" onClick={() => navigate('/recuperar-contrasena')}>
-              Olvidé mi contraseña
-            </button>
           </div>
-          <div className="text-center mt-4">
-            <img src="/LogoElectrofrio.jpg" alt="Repuestos Electrofrio" style={{ maxWidth: '180px', width: '100%', height: 'auto' }} />
+          
+          {/* Footer con logo Electrofrio */}
+          <div style={{ 
+            padding: '20px', 
+            textAlign: 'center', 
+            backgroundColor: 'var(--tecno-gray-very-light)',
+            borderTop: '1px solid var(--tecno-gray-light)'
+          }}>
+            <img 
+              src="/LogoElectrofrio.jpg" 
+              alt="Repuestos Electrofrio" 
+              style={{ 
+                maxWidth: '160px', 
+                width: '100%', 
+                height: 'auto',
+                borderRadius: '6px'
+              }} 
+            />
+            <p style={{ 
+              margin: '12px 0 0 0', 
+              fontSize: '12px', 
+              color: 'var(--tecno-gray-dark)',
+              fontWeight: '500'
+            }}>
+              Repuestos Electrofrio
+            </p>
           </div>
         </div>
       </div>

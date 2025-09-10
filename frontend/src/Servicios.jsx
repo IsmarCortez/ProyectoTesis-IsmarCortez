@@ -103,24 +103,48 @@ function Servicios() {
   };
 
   return (
-    <div className="container mt-4">
-      {/* Botón para regresar al menú principal */}
-      <div className="mb-3">
-        <button
-          onClick={handleGoHome}
-          className="btn btn-outline-secondary"
-        >
-          ← Volver al Menú Principal
-        </button>
-      </div>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, var(--tecno-gray-very-light) 0%, var(--tecno-white) 100%)',
+      paddingTop: '90px'
+    }}>
+      <div className="container">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1 style={{ 
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              marginBottom: '8px',
+              background: 'linear-gradient(135deg, var(--tecno-orange), var(--tecno-orange-light))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              🔧 Gestión de Servicios
+            </h1>
+            <p style={{ 
+              color: 'var(--tecno-gray-dark)', 
+              fontSize: '1.1rem',
+              marginBottom: '0'
+            }}>
+              Administra los servicios disponibles en el taller
+            </p>
+          </div>
+          <button
+            onClick={handleGoHome}
+            className="btn-tecno-outline"
+          >
+            ← Volver al Menú Principal
+          </button>
+        </div>
 
-      <div className="row">
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-header">
-              <h4>{editId ? 'Editar Servicio' : 'Registrar Servicio'}</h4>
-            </div>
-            <div className="card-body">
+        <div className="row">
+          <div className="col-md-6">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                {editId ? '✏️ Editando Servicio' : '➕ Nuevo Servicio'}
+              </div>
+              <div className="card-tecno-body">
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                   <label className="form-label">Nombre del Servicio *</label>
@@ -145,74 +169,113 @@ function Servicios() {
                   />
                 </div>
 
-                <div className="d-flex gap-2">
-                  <button
-                    type="submit"
-                    className={`btn ${editId ? 'btn-warning' : 'btn-primary'}`}
-                    disabled={loading}
-                  >
-                    {loading ? 'Guardando...' : (editId ? 'Actualizar' : 'Registrar')}
-                  </button>
-                  {editId && (
+                  <div className="d-flex gap-2">
                     <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={handleCancelEdit}
+                      type="submit"
+                      className="btn-tecno"
+                      disabled={loading}
                     >
-                      Cancelar
+                      {loading ? 'Guardando...' : (editId ? 'Actualizar' : 'Registrar')}
                     </button>
-                  )}
-                </div>
-              </form>
+                    {editId && (
+                      <button
+                        type="button"
+                        className="btn-tecno-secondary"
+                        onClick={handleCancelEdit}
+                      >
+                        Cancelar
+                      </button>
+                    )}
+                  </div>
+                </form>
 
-              {mensaje && <div className="alert alert-success mt-3">{mensaje}</div>}
-              {error && <div className="alert alert-danger mt-3">{error}</div>}
+                {mensaje && <div className="alert-tecno alert-tecno-success mt-3">{mensaje}</div>}
+                {error && <div className="alert-tecno alert-tecno-danger mt-3">{error}</div>}
+                {editId && (
+                  <div className="alert-tecno alert-tecno-warning mt-3">
+                    <strong>Modo edición activado</strong>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-header">
-              <h4>Servicios Registrados</h4>
-            </div>
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Servicio</th>
-                      <th>Descripción</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {servicios.map(servicio => (
-                      <tr key={servicio.pk_id_servicio}>
-                        <td>{servicio.pk_id_servicio}</td>
-                        <td>{servicio.servicio}</td>
-                        <td>{servicio.descripcion_servicios || '-'}</td>
-                        <td>
-                          <div className="btn-group btn-group-sm">
-                            <button
-                              className="btn btn-outline-primary"
-                              onClick={() => handleEdit(servicio)}
-                            >
-                              Editar
-                            </button>
-                            <button
-                              className="btn btn-outline-danger"
-                              onClick={() => handleDelete(servicio.pk_id_servicio)}
-                            >
-                              Eliminar
-                            </button>
-                          </div>
-                        </td>
+          <div className="col-md-6">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                📋 Servicios Registrados
+              </div>
+              <div className="card-tecno-body">
+                <div className="table-responsive">
+                  <table className="table table-bordered" style={{ marginBottom: '0' }}>
+                    <thead style={{ backgroundColor: 'var(--tecno-gray-very-light)' }}>
+                      <tr>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>ID</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>Servicio</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>Descripción</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>Acciones</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {servicios.map(servicio => (
+                        <tr key={servicio.pk_id_servicio}>
+                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{servicio.pk_id_servicio}</td>
+                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{servicio.servicio}</td>
+                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{servicio.descripcion_servicios || '-'}</td>
+                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
+                            <div className="btn-group btn-group-sm">
+                              <button
+                                className="btn btn-sm"
+                                onClick={() => handleEdit(servicio)}
+                                style={{
+                                  backgroundColor: 'var(--warning)',
+                                  color: 'var(--tecno-white)',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  padding: '4px 8px',
+                                  fontSize: '12px',
+                                  marginRight: '4px'
+                                }}
+                              >
+                                Editar
+                              </button>
+                              <button
+                                className="btn btn-sm"
+                                onClick={() => handleDelete(servicio.pk_id_servicio)}
+                                style={{
+                                  backgroundColor: 'var(--danger)',
+                                  color: 'var(--tecno-white)',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  padding: '4px 8px',
+                                  fontSize: '12px'
+                                }}
+                              >
+                                Eliminar
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
