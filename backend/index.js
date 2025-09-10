@@ -8,6 +8,9 @@ const path = require('path');  // <-- Importamos path para rutas
 const nodemailer = require('nodemailer'); // <-- Importar nodemailer
 const multer = require('multer'); //s <-- Importar multer para manejo de archivos
 
+// ==================== SISTEMA DE NOTIFICACIONES ====================
+const NotificationService = require('./services/notificationService');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -692,7 +695,7 @@ app.post('/api/ordenes', upload.fields([
     const imagen_4 = req.files.imagen_4 ? req.files.imagen_4[0].filename : 'sin_imagen.jpg';
     const video = req.files.video ? req.files.video[0].filename : 'sin_video.mp4';
 
-    await connection.execute(
+    const [result] = await connection.execute(
       `INSERT INTO tbl_ordenes (
         fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
         nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
@@ -706,7 +709,30 @@ app.post('/api/ordenes', upload.fields([
     );
     
     await connection.end();
-    res.json({ message: 'Orden registrada exitosamente.' });
+    
+    // Procesar notificaciones automáticas en segundo plano (no bloqueante)
+    if (result.insertId) {
+      setImmediate(async () => {
+        try {
+          console.log(`📧 Procesando notificaciones automáticas para orden #${result.insertId}`);
+          const notificationResults = await NotificationService.processOrderNotifications(result.insertId);
+          console.log(`✅ Notificaciones procesadas para orden #${result.insertId}:`, {
+            pdf: notificationResults.pdf.success ? '✅' : '❌',
+            email: notificationResults.email.success ? '✅' : '❌',
+            whatsapp: notificationResults.whatsapp.success ? '✅' : '❌',
+            processingTime: `${notificationResults.processingTime}ms`
+          });
+        } catch (error) {
+          console.error(`❌ Error procesando notificaciones para orden #${result.insertId}:`, error.message);
+        }
+      });
+    }
+    
+    res.json({ 
+      message: 'Orden registrada exitosamente.',
+      orderId: result.insertId,
+      notifications: 'Procesando notificaciones automáticas...'
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error al registrar la orden.' });
@@ -748,6 +774,66 @@ app.get('/api/ordenes/:id', async (req, res) => {
   }
 });
 
+// Endpoint para generar PDF de una orden específica
+app.get('/api/ordenes/:id/pdf', async (req, res) => {
+  const { id } = req.params;
+  try {
+    console.log(`🖨️ Generando PDF para orden #${id}...`);
+    
+    // Obtener datos de la orden
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      `SELECT 
+        o.*,
+        c.dpi_cliente,
+        c.nombre_cliente,
+        c.apellido_cliente,
+        c.correo_cliente,
+        c.telefono_cliente,
+        v.placa_vehiculo,
+        v.marca_vehiculo,
+        v.modelo_vehiculo,
+        v.anio_vehiculo,
+        v.color_vehiculo,
+        s.servicio,
+        e.estado_orden
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE o.pk_id_orden = ?`,
+      [id]
+    );
+    await connection.end();
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada.' });
+    }
+    
+    const ordenData = rows[0];
+    
+    // Generar PDF usando el servicio
+    const PDFGenerator = require('./services/pdfGenerator');
+    const pdfBuffer = await PDFGenerator.generateOrderPDF(ordenData);
+    
+    // Configurar headers para descarga
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="orden_${id}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    
+    console.log(`✅ PDF generado exitosamente para orden #${id} (${pdfBuffer.length} bytes)`);
+    res.send(pdfBuffer);
+    
+  } catch (error) {
+    console.error('❌ Error generando PDF:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al generar el PDF de la orden.' 
+    });
+  }
+});
+
 // Endpoint para actualizar una orden
 app.put('/api/ordenes/:id', upload.fields([
   { name: 'imagen_1', maxCount: 1 },
@@ -771,9 +857,9 @@ app.put('/api/ordenes/:id', upload.fields([
   try {
     const connection = await mysql.createConnection(dbConfig);
     
-    // Obtener orden actual para preservar archivos existentes
+    // Obtener orden actual para preservar archivos existentes y detectar cambios de estado
     const [currentOrder] = await connection.execute(
-      'SELECT imagen_1, imagen_2, imagen_3, imagen_4, video FROM tbl_ordenes WHERE pk_id_orden = ?',
+      'SELECT imagen_1, imagen_2, imagen_3, imagen_4, video, fk_id_estado_orden FROM tbl_ordenes WHERE pk_id_orden = ?',
       [id]
     );
     
@@ -781,6 +867,11 @@ app.put('/api/ordenes/:id', upload.fields([
       await connection.end();
       return res.status(404).json({ message: 'Orden no encontrada.' });
     }
+
+    // Detectar si el estado cambió
+    const estadoAnterior = currentOrder[0].fk_id_estado_orden;
+    const estadoNuevo = parseInt(fk_id_estado_orden);
+    const estadoCambio = estadoAnterior !== estadoNuevo;
 
     // Procesar archivos nuevos o mantener existentes
     const imagen_1 = req.files.imagen_1 ? req.files.imagen_1[0].filename : currentOrder[0].imagen_1;
@@ -802,11 +893,54 @@ app.put('/api/ordenes/:id', upload.fields([
       ]
     );
     
-    await connection.end();
     if (result.affectedRows === 0) {
+      await connection.end();
       return res.status(404).json({ message: 'Orden no encontrada.' });
     }
-    res.json({ message: 'Orden actualizada correctamente.' });
+
+    // Si el estado cambió, enviar notificación por email
+    if (estadoCambio) {
+      try {
+        console.log(`🔄 Estado de orden #${id} cambió de ${estadoAnterior} a ${estadoNuevo}`);
+        
+        // Obtener nombres de los estados para la notificación
+        const [estadoAnteriorData] = await connection.execute(
+          'SELECT estado_orden FROM tbl_orden_estado WHERE pk_id_estado = ?',
+          [estadoAnterior]
+        );
+        const [estadoNuevoData] = await connection.execute(
+          'SELECT estado_orden FROM tbl_orden_estado WHERE pk_id_estado = ?',
+          [estadoNuevo]
+        );
+
+        const nombreEstadoAnterior = estadoAnteriorData.length > 0 ? estadoAnteriorData[0].estado_orden : 'Desconocido';
+        const nombreEstadoNuevo = estadoNuevoData.length > 0 ? estadoNuevoData[0].estado_orden : 'Desconocido';
+
+        // Enviar notificación de cambio de estado
+        const notificationResult = await NotificationService.sendStateChangeNotification(
+          parseInt(id),
+          nombreEstadoAnterior,
+          nombreEstadoNuevo
+        );
+
+        if (notificationResult.email.success) {
+          console.log(`✅ Notificación de cambio de estado enviada exitosamente para orden #${id}`);
+        } else {
+          console.log(`❌ Error enviando notificación de cambio de estado: ${notificationResult.email.error}`);
+        }
+
+      } catch (notificationError) {
+        console.error('❌ Error en notificación de cambio de estado:', notificationError.message);
+        // No fallar la actualización si la notificación falla
+      }
+    }
+
+    await connection.end();
+    res.json({ 
+      message: 'Orden actualizada correctamente.',
+      estadoCambio: estadoCambio,
+      notificacionEnviada: estadoCambio
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error al actualizar la orden.' });
@@ -830,7 +964,968 @@ app.delete('/api/ordenes/:id', async (req, res) => {
   }
 });
 
+// ==================== ENDPOINTS DE GESTIÓN DE NOTIFICACIONES ====================
+
+// Endpoint para obtener el estado de los servicios de notificación
+app.get('/api/notifications/status', async (req, res) => {
+  try {
+    const status = NotificationService.getServicesStatus();
+    res.json(status);
+  } catch (error) {
+    console.error('❌ Error getting notification status:', error);
+    res.status(500).json({ message: 'Error al obtener estado de notificaciones.' });
+  }
+});
+
+// Endpoint para enviar notificaciones de prueba
+app.post('/api/notifications/test', async (req, res) => {
+  try {
+    const { email, phone } = req.body;
+    
+    if (!email && !phone) {
+      return res.status(400).json({ message: 'Se requiere email o teléfono para la prueba.' });
+    }
+    
+    const results = await NotificationService.sendTestNotifications(email, phone);
+    res.json(results);
+  } catch (error) {
+    console.error('❌ Error sending test notifications:', error);
+    res.status(500).json({ message: 'Error al enviar notificaciones de prueba.' });
+  }
+});
+
+// Endpoint para reenviar notificaciones de una orden específica
+app.post('/api/notifications/resend/:orderId', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
+    if (!orderId || isNaN(orderId)) {
+      return res.status(400).json({ message: 'ID de orden válido requerido.' });
+    }
+    
+    const results = await NotificationService.processOrderNotifications(parseInt(orderId));
+    res.json(results);
+  } catch (error) {
+    console.error('❌ Error resending notifications:', error);
+    res.status(500).json({ message: 'Error al reenviar notificaciones.' });
+  }
+});
+
+// ==================== ENDPOINTS DE GESTIÓN DE USUARIOS ====================
+
+// Endpoint para obtener todos los usuarios
+app.get('/api/usuarios', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      'SELECT pk_id_usuarios, nombre_usuario, email_usuario, foto_perfil_usuario, pregunta_seguridad_usuario FROM tbl_usuarios ORDER BY nombre_usuario'
+    );
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener los usuarios.' });
+  }
+});
+
+// Endpoint para obtener un usuario específico
+app.get('/api/usuarios/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      'SELECT pk_id_usuarios, nombre_usuario, email_usuario, foto_perfil_usuario, pregunta_seguridad_usuario FROM tbl_usuarios WHERE pk_id_usuarios = ?',
+      [id]
+    );
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener el usuario.' });
+  }
+});
+
+// Endpoint para registrar un nuevo usuario
+app.post('/api/usuarios', upload.single('foto'), async (req, res) => {
+  const { nombre_usuario, email_usuario, contrasenia_usuario, pregunta_seguridad_usuario } = req.body;
+  
+  if (!nombre_usuario || !email_usuario || !contrasenia_usuario || !pregunta_seguridad_usuario) {
+    return res.status(400).json({ message: 'Todos los campos son requeridos.' });
+  }
+
+  // Validar formato de email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email_usuario)) {
+    return res.status(400).json({ message: 'Formato de email inválido.' });
+  }
+
+  // Validar longitud de contraseña
+  if (contrasenia_usuario.length < 6) {
+    return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres.' });
+  }
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Verificar si el email ya existe
+    const [existingUsers] = await connection.execute(
+      'SELECT pk_id_usuarios FROM tbl_usuarios WHERE email_usuario = ?',
+      [email_usuario]
+    );
+    
+    if (existingUsers.length > 0) {
+      await connection.end();
+      return res.status(409).json({ message: 'El email ya está registrado.' });
+    }
+
+    // Hashear la contraseña
+    const hashPassword = crypto.createHash('sha256').update(contrasenia_usuario).digest('hex');
+    
+    // Procesar foto si se subió
+    let foto_perfil_usuario = '';
+    if (req.file) {
+      foto_perfil_usuario = req.file.filename;
+    }
+
+    // Insertar nuevo usuario
+    const [result] = await connection.execute(
+      `INSERT INTO tbl_usuarios (nombre_usuario, email_usuario, contrasenia_usuario, foto_perfil_usuario, pregunta_seguridad_usuario)
+       VALUES (?, ?, ?, ?, ?)`,
+      [nombre_usuario, email_usuario, hashPassword, foto_perfil_usuario, pregunta_seguridad_usuario]
+    );
+    
+    await connection.end();
+    
+    res.status(201).json({ 
+      message: 'Usuario registrado exitosamente.',
+      id: result.insertId
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al registrar el usuario.' });
+  }
+});
+
+// Endpoint para actualizar un usuario
+app.put('/api/usuarios/:id', upload.single('foto'), async (req, res) => {
+  const { id } = req.params;
+  const { nombre_usuario, email_usuario, pregunta_seguridad_usuario } = req.body;
+  
+  if (!nombre_usuario || !email_usuario || !pregunta_seguridad_usuario) {
+    return res.status(400).json({ message: 'Nombre, email y pregunta de seguridad son requeridos.' });
+  }
+
+  // Validar formato de email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email_usuario)) {
+    return res.status(400).json({ message: 'Formato de email inválido.' });
+  }
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Verificar si el usuario existe
+    const [existingUser] = await connection.execute(
+      'SELECT pk_id_usuarios FROM tbl_usuarios WHERE pk_id_usuarios = ?',
+      [id]
+    );
+    
+    if (existingUser.length === 0) {
+      await connection.end();
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    }
+
+    // Verificar si el email ya existe en otro usuario
+    const [existingEmail] = await connection.execute(
+      'SELECT pk_id_usuarios FROM tbl_usuarios WHERE email_usuario = ? AND pk_id_usuarios != ?',
+      [email_usuario, id]
+    );
+    
+    if (existingEmail.length > 0) {
+      await connection.end();
+      return res.status(409).json({ message: 'El email ya está registrado por otro usuario.' });
+    }
+
+    // Procesar foto si se subió
+    let query = 'UPDATE tbl_usuarios SET nombre_usuario = ?, email_usuario = ?, pregunta_seguridad_usuario = ?';
+    let params = [nombre_usuario, email_usuario, pregunta_seguridad_usuario];
+    
+    if (req.file) {
+      query += ', foto_perfil_usuario = ?';
+      params.push(req.file.filename);
+    }
+    
+    query += ' WHERE pk_id_usuarios = ?';
+    params.push(id);
+
+    await connection.execute(query, params);
+    await connection.end();
+    
+    res.json({ message: 'Usuario actualizado correctamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al actualizar el usuario.' });
+  }
+});
+
+// Endpoint para cambiar contraseña de usuario
+app.put('/api/usuarios/:id/cambiar-contrasena', async (req, res) => {
+  const { id } = req.params;
+  const { contrasenia_usuario } = req.body;
+  
+  if (!contrasenia_usuario) {
+    return res.status(400).json({ message: 'La nueva contraseña es requerida.' });
+  }
+
+  // Validar longitud de contraseña
+  if (contrasenia_usuario.length < 6) {
+    return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres.' });
+  }
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Verificar si el usuario existe
+    const [existingUser] = await connection.execute(
+      'SELECT pk_id_usuarios FROM tbl_usuarios WHERE pk_id_usuarios = ?',
+      [id]
+    );
+    
+    if (existingUser.length === 0) {
+      await connection.end();
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    }
+
+    // Hashear la nueva contraseña
+    const hashPassword = crypto.createHash('sha256').update(contrasenia_usuario).digest('hex');
+    
+    await connection.execute(
+      'UPDATE tbl_usuarios SET contrasenia_usuario = ? WHERE pk_id_usuarios = ?',
+      [hashPassword, id]
+    );
+    
+    await connection.end();
+    
+    res.json({ message: 'Contraseña actualizada correctamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al cambiar la contraseña.' });
+  }
+});
+
+// Endpoint para eliminar un usuario
+app.delete('/api/usuarios/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Verificar si el usuario existe
+    const [existingUser] = await connection.execute(
+      'SELECT pk_id_usuarios, nombre_usuario FROM tbl_usuarios WHERE pk_id_usuarios = ?',
+      [id]
+    );
+    
+    if (existingUser.length === 0) {
+      await connection.end();
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    }
+
+    // No permitir eliminar el usuario admin principal
+    if (existingUser[0].nombre_usuario.toLowerCase() === 'admin') {
+      await connection.end();
+      return res.status(403).json({ message: 'No se puede eliminar el usuario administrador principal.' });
+    }
+
+    const [result] = await connection.execute(
+      'DELETE FROM tbl_usuarios WHERE pk_id_usuarios = ?',
+      [id]
+    );
+    
+    await connection.end();
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    }
+    
+    res.json({ message: 'Usuario eliminado correctamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al eliminar el usuario.' });
+  }
+});
+
+// ==================== ENDPOINTS DE ESTADÍSTICAS ====================
+
+// Endpoint para obtener estadísticas generales del dashboard
+app.get('/api/dashboard/estadisticas', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // 1. Estadísticas de vehículos más ingresados (por modelo)
+    const [vehiculosStats] = await connection.execute(`
+      SELECT 
+        CONCAT(v.marca_vehiculo, ' ', v.modelo_vehiculo) as modelo_completo,
+        v.marca_vehiculo,
+        v.modelo_vehiculo,
+        COUNT(o.pk_id_orden) as cantidad_ordenes
+      FROM tbl_vehiculos v
+      LEFT JOIN tbl_ordenes o ON v.pk_id_vehiculo = o.fk_id_vehiculo
+      GROUP BY v.marca_vehiculo, v.modelo_vehiculo
+      ORDER BY cantidad_ordenes DESC
+      LIMIT 10
+    `);
+
+    // 2. Clientes por mes (basado en órdenes)
+    const [clientesPorMes] = await connection.execute(`
+      SELECT 
+        DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m') as mes,
+        COUNT(DISTINCT o.fk_id_cliente) as cantidad_clientes,
+        COUNT(o.pk_id_orden) as cantidad_ordenes
+      FROM tbl_ordenes o
+      WHERE o.fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+      GROUP BY DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m')
+      ORDER BY mes ASC
+    `);
+
+    // 3. Servicios más solicitados
+    const [serviciosStats] = await connection.execute(`
+      SELECT 
+        s.servicio,
+        COUNT(o.pk_id_orden) as cantidad_ordenes,
+        ROUND((COUNT(o.pk_id_orden) * 100.0 / (SELECT COUNT(*) FROM tbl_ordenes)), 2) as porcentaje
+      FROM tbl_servicios s
+      LEFT JOIN tbl_ordenes o ON s.pk_id_servicio = o.fk_id_servicio
+      GROUP BY s.pk_id_servicio, s.servicio
+      ORDER BY cantidad_ordenes DESC
+    `);
+
+    // 4. Estados de órdenes
+    const [estadosStats] = await connection.execute(`
+      SELECT 
+        e.estado_orden,
+        COUNT(o.pk_id_orden) as cantidad_ordenes,
+        ROUND((COUNT(o.pk_id_orden) * 100.0 / (SELECT COUNT(*) FROM tbl_ordenes)), 2) as porcentaje
+      FROM tbl_orden_estado e
+      LEFT JOIN tbl_ordenes o ON e.pk_id_estado = o.fk_id_estado_orden
+      GROUP BY e.pk_id_estado, e.estado_orden
+      ORDER BY cantidad_ordenes DESC
+    `);
+
+    // 5. Órdenes por mes (últimos 12 meses)
+    const [ordenesPorMes] = await connection.execute(`
+      SELECT 
+        DATE_FORMAT(fecha_ingreso_orden, '%Y-%m') as mes,
+        COUNT(*) as cantidad_ordenes
+      FROM tbl_ordenes
+      WHERE fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+      GROUP BY DATE_FORMAT(fecha_ingreso_orden, '%Y-%m')
+      ORDER BY mes ASC
+    `);
+
+    // 6. Estadísticas generales
+    const [estadisticasGenerales] = await connection.execute(`
+      SELECT 
+        (SELECT COUNT(*) FROM tbl_clientes) as total_clientes,
+        (SELECT COUNT(*) FROM tbl_vehiculos) as total_vehiculos,
+        (SELECT COUNT(*) FROM tbl_ordenes) as total_ordenes,
+        (SELECT COUNT(*) FROM tbl_ordenes WHERE fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as ordenes_mes_actual,
+        (SELECT COUNT(*) FROM tbl_ordenes WHERE fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Finalizado')) as ordenes_completadas,
+        (SELECT COUNT(*) FROM tbl_ordenes WHERE fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Recibido')) as ordenes_pendientes
+    `);
+
+    // 7. Marcas de vehículos más populares
+    const [marcasStats] = await connection.execute(`
+      SELECT 
+        v.marca_vehiculo,
+        COUNT(DISTINCT v.pk_id_vehiculo) as cantidad_vehiculos,
+        COUNT(o.pk_id_orden) as cantidad_ordenes
+      FROM tbl_vehiculos v
+      LEFT JOIN tbl_ordenes o ON v.pk_id_vehiculo = o.fk_id_vehiculo
+      GROUP BY v.marca_vehiculo
+      ORDER BY cantidad_ordenes DESC
+      LIMIT 8
+    `);
+
+    // 8. Ingresos por mes (simulado - basado en órdenes completadas)
+    const [ingresosPorMes] = await connection.execute(`
+      SELECT 
+        DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m') as mes,
+        COUNT(*) as cantidad_ordenes,
+        (COUNT(*) * 500) as ingresos_estimados
+      FROM tbl_ordenes o
+      INNER JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE e.estado_orden = 'Finalizado' 
+        AND o.fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+      GROUP BY DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m')
+      ORDER BY mes ASC
+    `);
+
+    await connection.end();
+
+    res.json({
+      vehiculos_mas_ingresados: vehiculosStats,
+      clientes_por_mes: clientesPorMes,
+      servicios_mas_solicitados: serviciosStats,
+      estados_ordenes: estadosStats,
+      ordenes_por_mes: ordenesPorMes,
+      estadisticas_generales: estadisticasGenerales[0],
+      marcas_populares: marcasStats,
+      ingresos_por_mes: ingresosPorMes
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo estadísticas:', error);
+    res.status(500).json({ message: 'Error al obtener estadísticas del dashboard.' });
+  }
+});
+
+// Endpoint para obtener estadísticas de un período específico
+app.get('/api/dashboard/estadisticas/:periodo', async (req, res) => {
+  const { periodo } = req.params;
+  let fechaInicio;
+  
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Determinar el período
+    switch (periodo) {
+      case 'hoy':
+        fechaInicio = 'CURDATE()';
+        break;
+      case 'semana':
+        fechaInicio = 'DATE_SUB(NOW(), INTERVAL 7 DAY)';
+        break;
+      case 'mes':
+        fechaInicio = 'DATE_SUB(NOW(), INTERVAL 30 DAY)';
+        break;
+      case 'año':
+        fechaInicio = 'DATE_SUB(NOW(), INTERVAL 365 DAY)';
+        break;
+      default:
+        fechaInicio = 'DATE_SUB(NOW(), INTERVAL 30 DAY)';
+    }
+
+    // Estadísticas del período
+    const [estadisticasPeriodo] = await connection.execute(`
+      SELECT 
+        COUNT(*) as total_ordenes,
+        COUNT(DISTINCT fk_id_cliente) as clientes_unicos,
+        COUNT(DISTINCT fk_id_vehiculo) as vehiculos_unicos,
+        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Finalizado') THEN 1 END) as ordenes_completadas,
+        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Recibido') THEN 1 END) as ordenes_pendientes,
+        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'En proceso') THEN 1 END) as ordenes_en_proceso
+      FROM tbl_ordenes 
+      WHERE fecha_ingreso_orden >= ${fechaInicio}
+    `);
+
+    await connection.end();
+
+    res.json({
+      periodo: periodo,
+      estadisticas: estadisticasPeriodo[0]
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo estadísticas del período:', error);
+    res.status(500).json({ message: 'Error al obtener estadísticas del período.' });
+  }
+});
+
+// ==================== ENDPOINTS DE REPORTES ====================
+
+const ReportService = require('./services/reportService');
+
+// Endpoint para generar reportes en PDF
+app.get('/api/reportes/pdf/:tipo', async (req, res) => {
+  try {
+    const { tipo } = req.params;
+    const filtros = req.query;
+    
+    console.log(`📄 Generando reporte PDF: ${tipo}`, filtros);
+    
+    const pdfBuffer = await ReportService.generatePDFReport(tipo, filtros);
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="reporte_${tipo}_${new Date().toISOString().split('T')[0]}.pdf"`);
+    res.send(pdfBuffer);
+    
+  } catch (error) {
+    console.error('Error generando reporte PDF:', error);
+    res.status(500).json({ message: 'Error al generar el reporte PDF.' });
+  }
+});
+
+// Endpoint para generar reportes en Excel
+app.get('/api/reportes/excel/:tipo', async (req, res) => {
+  try {
+    const { tipo } = req.params;
+    const filtros = req.query;
+    
+    console.log(`📊 Generando reporte Excel: ${tipo}`, filtros);
+    
+    const excelBuffer = await ReportService.generateExcelReport(tipo, filtros);
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="reporte_${tipo}_${new Date().toISOString().split('T')[0]}.xlsx"`);
+    res.send(excelBuffer);
+    
+  } catch (error) {
+    console.error('Error generando reporte Excel:', error);
+    res.status(500).json({ message: 'Error al generar el reporte Excel.' });
+  }
+});
+
+// Endpoint para obtener tipos de reportes disponibles
+app.get('/api/reportes/tipos', async (req, res) => {
+  try {
+    const tiposReportes = [
+      {
+        id: 'ordenes',
+        nombre: 'Órdenes de Servicio',
+        descripcion: 'Reporte completo de todas las órdenes de servicio',
+        filtros: ['fechaInicio', 'fechaFin', 'estado', 'servicio']
+      },
+      {
+        id: 'clientes',
+        nombre: 'Clientes',
+        descripcion: 'Listado completo de clientes registrados',
+        filtros: []
+      },
+      {
+        id: 'vehiculos',
+        nombre: 'Vehículos',
+        descripcion: 'Inventario de vehículos registrados',
+        filtros: []
+      },
+      {
+        id: 'servicios',
+        nombre: 'Servicios',
+        descripcion: 'Catálogo de servicios y estadísticas de uso',
+        filtros: []
+      },
+      {
+        id: 'estadisticas',
+        nombre: 'Estadísticas Generales',
+        descripcion: 'Resumen estadístico del taller',
+        filtros: []
+      }
+    ];
+    
+    res.json(tiposReportes);
+    
+  } catch (error) {
+    console.error('Error obteniendo tipos de reportes:', error);
+    res.status(500).json({ message: 'Error al obtener tipos de reportes.' });
+  }
+});
+
+// Endpoint para obtener opciones de filtros
+app.get('/api/reportes/filtros', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Obtener estados disponibles
+    const [estados] = await connection.execute('SELECT estado_orden FROM tbl_orden_estado ORDER BY estado_orden');
+    
+    // Obtener servicios disponibles
+    const [servicios] = await connection.execute('SELECT servicio FROM tbl_servicios ORDER BY servicio');
+    
+    await connection.end();
+    
+    res.json({
+      estados: estados.map(e => e.estado_orden),
+      servicios: servicios.map(s => s.servicio)
+    });
+    
+  } catch (error) {
+    console.error('Error obteniendo filtros:', error);
+    res.status(500).json({ message: 'Error al obtener filtros.' });
+  }
+});
+
+// ==================== ENDPOINTS DEL TRACKER PÚBLICO ====================
+
+// Endpoint público para buscar orden por teléfono
+app.get('/api/tracker/telefono/:telefono', async (req, res) => {
+  try {
+    const { telefono } = req.params;
+    
+    console.log(`🔍 Búsqueda pública por teléfono: ${telefono}`);
+    
+    const connection = await mysql.createConnection(dbConfig);
+    
+    const [ordenes] = await connection.execute(`
+      SELECT 
+        o.pk_id_orden,
+        o.fecha_ingreso_orden,
+        CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) as cliente,
+        c.telefono_cliente,
+        CONCAT(v.marca_vehiculo, ' ', v.modelo_vehiculo) as vehiculo,
+        v.placa_vehiculo,
+        s.servicio,
+        e.estado_orden,
+        e.descripcion_estado,
+        o.comentario_cliente_orden,
+        o.observaciones_orden
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE c.telefono_cliente = ?
+      ORDER BY o.fecha_ingreso_orden DESC
+    `, [telefono]);
+    
+    await connection.end();
+    
+    if (ordenes.length === 0) {
+      return res.json({ 
+        encontrado: false, 
+        mensaje: 'No se encontraron órdenes con ese número de teléfono.' 
+      });
+    }
+    
+    res.json({ 
+      encontrado: true, 
+      ordenes: ordenes,
+      total: ordenes.length
+    });
+    
+  } catch (error) {
+    console.error('Error en búsqueda por teléfono:', error);
+    res.status(500).json({ 
+      encontrado: false, 
+      mensaje: 'Error interno del servidor.' 
+    });
+  }
+});
+
+// Endpoint público para buscar orden por número de orden
+app.get('/api/tracker/orden/:numero', async (req, res) => {
+  try {
+    const { numero } = req.params;
+    
+    console.log(`🔍 Búsqueda pública por número de orden: ${numero}`);
+    
+    const connection = await mysql.createConnection(dbConfig);
+    
+    const [ordenes] = await connection.execute(`
+      SELECT 
+        o.pk_id_orden,
+        o.fecha_ingreso_orden,
+        CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) as cliente,
+        c.telefono_cliente,
+        CONCAT(v.marca_vehiculo, ' ', v.modelo_vehiculo) as vehiculo,
+        v.placa_vehiculo,
+        s.servicio,
+        e.estado_orden,
+        e.descripcion_estado,
+        o.comentario_cliente_orden,
+        o.observaciones_orden
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE o.pk_id_orden = ?
+    `, [numero]);
+    
+    await connection.end();
+    
+    if (ordenes.length === 0) {
+      return res.json({ 
+        encontrado: false, 
+        mensaje: 'No se encontró una orden con ese número.' 
+      });
+    }
+    
+    res.json({ 
+      encontrado: true, 
+      orden: ordenes[0]
+    });
+    
+  } catch (error) {
+    console.error('Error en búsqueda por número de orden:', error);
+    res.status(500).json({ 
+      encontrado: false, 
+      mensaje: 'Error interno del servidor.' 
+    });
+  }
+});
+
+// Endpoint público para obtener historial de estados de una orden
+app.get('/api/tracker/historial/:numero', async (req, res) => {
+  try {
+    const { numero } = req.params;
+    
+    console.log(`📋 Obteniendo historial real de orden: ${numero}`);
+    
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Verificar que la orden existe
+    const [ordenExiste] = await connection.execute(`
+      SELECT pk_id_orden FROM tbl_ordenes WHERE pk_id_orden = ?
+    `, [numero]);
+    
+    if (ordenExiste.length === 0) {
+      await connection.end();
+      return res.json({ 
+        encontrado: false, 
+        mensaje: 'Orden no encontrada.' 
+      });
+    }
+    
+    // Obtener información actual de la orden
+    const [ordenActual] = await connection.execute(`
+      SELECT 
+        o.pk_id_orden,
+        o.fecha_ingreso_orden,
+        CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) as cliente,
+        CONCAT(v.marca_vehiculo, ' ', v.modelo_vehiculo) as vehiculo,
+        s.servicio,
+        e.estado_orden,
+        e.descripcion_estado
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE o.pk_id_orden = ?
+    `, [numero]);
+    
+    // Obtener historial real de la tabla tbl_historial_estados
+    const [historialReal] = await connection.execute(`
+      SELECT 
+        h.pk_id_historial,
+        h.fecha_cambio,
+        h.comentario_cambio,
+        ea.estado_orden AS estado_anterior,
+        en.estado_orden AS estado_nuevo,
+        en.descripcion_estado AS descripcion_estado,
+        u.nombre_usuario AS usuario_cambio
+      FROM tbl_historial_estados h
+      LEFT JOIN tbl_orden_estado ea ON h.fk_id_estado_anterior = ea.pk_id_estado
+      LEFT JOIN tbl_orden_estado en ON h.fk_id_estado_nuevo = en.pk_id_estado
+      LEFT JOIN tbl_usuarios u ON h.fk_id_usuario_cambio = u.pk_id_usuarios
+      WHERE h.fk_id_orden = ?
+      ORDER BY h.fecha_cambio ASC
+    `, [numero]);
+    
+    // Si no hay historial real, crear el estado inicial
+    const historial = [];
+    const orden = ordenActual[0];
+    
+    if (historialReal.length === 0) {
+      // No hay historial registrado, crear estado inicial
+      historial.push({
+        estado: orden.estado_orden,
+        descripcion: orden.descripcion_estado || 'Estado inicial de la orden',
+        fecha: orden.fecha_ingreso_orden,
+        activo: true,
+        usuario: 'Sistema',
+        comentario: 'Orden creada inicialmente'
+      });
+    } else {
+      // Procesar historial real
+      for (const registro of historialReal) {
+        historial.push({
+          estado: registro.estado_nuevo,
+          descripcion: registro.descripcion_estado || 'Cambio de estado',
+          fecha: registro.fecha_cambio,
+          activo: registro.estado_nuevo === orden.estado_orden,
+          usuario: registro.usuario_cambio || 'Sistema',
+          comentario: registro.comentario_cambio,
+          estado_anterior: registro.estado_anterior
+        });
+      }
+    }
+    
+    await connection.end();
+    
+    console.log(`✅ Historial obtenido: ${historial.length} registros para orden ${numero}`);
+    
+    res.json({ 
+      encontrado: true, 
+      orden: orden,
+      historial: historial,
+      total_registros: historial.length
+    });
+    
+  } catch (error) {
+    console.error('Error obteniendo historial real:', error);
+    res.status(500).json({ 
+      encontrado: false, 
+      mensaje: 'Error interno del servidor.' 
+    });
+  }
+});
+
+// Endpoint para registrar cambio de estado manualmente
+app.post('/api/tracker/cambiar-estado', async (req, res) => {
+  try {
+    const { 
+      fk_id_orden, 
+      fk_id_estado_nuevo, 
+      fk_id_usuario_cambio, 
+      comentario_cambio,
+      ip_usuario,
+      user_agent 
+    } = req.body;
+    
+    console.log(`🔄 Registrando cambio de estado para orden: ${fk_id_orden}`);
+    
+    if (!fk_id_orden || !fk_id_estado_nuevo) {
+      return res.status(400).json({ 
+        success: false, 
+        mensaje: 'ID de orden y nuevo estado son requeridos.' 
+      });
+    }
+    
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Verificar que la orden existe
+    const [ordenExiste] = await connection.execute(`
+      SELECT pk_id_orden, fk_id_estado_orden FROM tbl_ordenes WHERE pk_id_orden = ?
+    `, [fk_id_orden]);
+    
+    if (ordenExiste.length === 0) {
+      await connection.end();
+      return res.status(404).json({ 
+        success: false, 
+        mensaje: 'Orden no encontrada.' 
+      });
+    }
+    
+    const estadoAnterior = ordenExiste[0].fk_id_estado_orden;
+    
+    // Verificar que el nuevo estado existe
+    const [estadoExiste] = await connection.execute(`
+      SELECT pk_id_estado, estado_orden FROM tbl_orden_estado WHERE pk_id_estado = ?
+    `, [fk_id_estado_nuevo]);
+    
+    if (estadoExiste.length === 0) {
+      await connection.end();
+      return res.status(404).json({ 
+        success: false, 
+        mensaje: 'Estado no encontrado.' 
+      });
+    }
+    
+    // Actualizar el estado de la orden
+    await connection.execute(`
+      UPDATE tbl_ordenes SET fk_id_estado_orden = ? WHERE pk_id_orden = ?
+    `, [fk_id_estado_nuevo, fk_id_orden]);
+    
+    // El trigger automáticamente registrará el cambio en el historial
+    // Pero también podemos registrar información adicional manualmente
+    if (comentario_cambio || ip_usuario || user_agent) {
+      await connection.execute(`
+        UPDATE tbl_historial_estados 
+        SET comentario_cambio = ?, ip_usuario = ?, user_agent = ?, fk_id_usuario_cambio = ?
+        WHERE fk_id_orden = ? AND fk_id_estado_nuevo = ?
+        ORDER BY fecha_cambio DESC LIMIT 1
+      `, [comentario_cambio, ip_usuario, user_agent, fk_id_usuario_cambio, fk_id_orden, fk_id_estado_nuevo]);
+    }
+    
+    await connection.end();
+    
+    console.log(`✅ Estado cambiado de ${estadoAnterior} a ${fk_id_estado_nuevo} para orden ${fk_id_orden}`);
+    
+    res.json({ 
+      success: true, 
+      mensaje: 'Estado actualizado correctamente.',
+      orden_id: fk_id_orden,
+      estado_anterior: estadoAnterior,
+      estado_nuevo: fk_id_estado_nuevo,
+      estado_nombre: estadoExiste[0].estado_orden
+    });
+    
+  } catch (error) {
+    console.error('Error cambiando estado:', error);
+    res.status(500).json({ 
+      success: false, 
+      mensaje: 'Error interno del servidor.' 
+    });
+  }
+});
+
+// Endpoint para obtener estadísticas del historial
+app.get('/api/tracker/estadisticas-historial', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Estadísticas generales del historial
+    const [estadisticas] = await connection.execute(`
+      SELECT 
+        COUNT(*) as total_cambios,
+        COUNT(DISTINCT fk_id_orden) as ordenes_con_historial,
+        COUNT(DISTINCT fk_id_usuario_cambio) as usuarios_activos,
+        MIN(fecha_cambio) as primer_cambio,
+        MAX(fecha_cambio) as ultimo_cambio
+      FROM tbl_historial_estados
+    `);
+    
+    // Estados más frecuentes
+    const [estadosFrecuentes] = await connection.execute(`
+      SELECT 
+        e.estado_orden,
+        COUNT(*) as cantidad_cambios
+      FROM tbl_historial_estados h
+      JOIN tbl_orden_estado e ON h.fk_id_estado_nuevo = e.pk_id_estado
+      GROUP BY e.estado_orden
+      ORDER BY cantidad_cambios DESC
+      LIMIT 5
+    `);
+    
+    // Usuarios más activos
+    const [usuariosActivos] = await connection.execute(`
+      SELECT 
+        u.nombre_usuario,
+        COUNT(*) as cambios_realizados
+      FROM tbl_historial_estados h
+      JOIN tbl_usuarios u ON h.fk_id_usuario_cambio = u.pk_id_usuarios
+      GROUP BY u.nombre_usuario
+      ORDER BY cambios_realizados DESC
+      LIMIT 5
+    `);
+    
+    await connection.end();
+    
+    res.json({
+      success: true,
+      estadisticas: estadisticas[0],
+      estados_frecuentes: estadosFrecuentes,
+      usuarios_activos: usuariosActivos
+    });
+    
+  } catch (error) {
+    console.error('Error obteniendo estadísticas del historial:', error);
+    res.status(500).json({ 
+      success: false, 
+      mensaje: 'Error interno del servidor.' 
+    });
+  }
+});
+
+// ==================== INICIALIZACIÓN DEL SISTEMA ====================
+
+// Inicializar servicios de notificación al arrancar el servidor
+async function initializeServices() {
+  try {
+    await NotificationService.initialize();
+    console.log('✅ Sistema de notificaciones inicializado correctamente');
+  } catch (error) {
+    console.error('❌ Error inicializando sistema de notificaciones:', error);
+  }
+}
+
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🟢 Servidor backend escuchando en puerto ${PORT}`);
+  
+  // Inicializar servicios de notificación
+  await initializeServices();
 });

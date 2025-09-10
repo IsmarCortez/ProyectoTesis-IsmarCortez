@@ -94,12 +94,15 @@ function Home({ usuario, onLogout }) {
         <span style={{ fontWeight: 'bold', fontSize: 22, letterSpacing: 1 }}>Menú Principal</span>
         <nav style={{ display: 'flex', gap: 24 }}>
           <button onClick={() => navigate('/home')} style={menuBtnStyleHeader}>Inicio</button>
+          <button onClick={() => navigate('/dashboard')} style={menuBtnStyleHeader}>📊 Dashboard</button>
+          <button onClick={() => navigate('/reportes')} style={menuBtnStyleHeader}>📄 Reportes</button>
+          <button onClick={() => navigate('/tracker')} style={menuBtnStyleHeader}>🔍 Tracker</button>
           <button onClick={() => navigate('/clientes')} style={menuBtnStyleHeader}>Clientes</button>
           <button onClick={() => navigate('/vehiculos')} style={menuBtnStyleHeader}>Vehículos</button>
           <button onClick={() => navigate('/servicios')} style={menuBtnStyleHeader}>Servicios</button>
           <button onClick={() => navigate('/estados')} style={menuBtnStyleHeader}>Estados</button>
           <button onClick={() => navigate('/ordenes')} style={menuBtnStyleHeader}>Órdenes</button>
-          <button onClick={() => navigate('/nuevo-usuario')} style={menuBtnStyleHeader}>Nuevo usuario</button>
+          <button onClick={() => navigate('/usuarios')} style={menuBtnStyleHeader}>Usuarios</button>
         </nav>
       </header>
 
@@ -264,7 +267,82 @@ function Home({ usuario, onLogout }) {
 
       {/* Contenido principal */}
       <main style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', minHeight: '100vh', paddingTop: 40 }}>
-        <h1 style={{ marginTop: 0, marginBottom: 32 }}>Dashboard de estadísticas</h1>
+        <div className="container text-center">
+          <h1 style={{ marginTop: 0, marginBottom: 32 }}>🏠 Bienvenido al Sistema de Gestión</h1>
+          <p className="lead mb-4">Taller Mecánico Tecno Auto - Repuestos Electrofrio</p>
+          
+          <div className="row justify-content-center">
+              <div className="col-md-6">
+                <div className="card shadow">
+                  <div className="card-body">
+                    <h3 className="card-title">📊 Dashboard de Estadísticas</h3>
+                    <p className="card-text">
+                      Accede a un resumen completo de las estadísticas del taller, incluyendo:
+                    </p>
+                    <ul className="list-unstyled">
+                      <li>🚗 Vehículos más ingresados</li>
+                      <li>👥 Clientes por mes</li>
+                      <li>🔧 Servicios más solicitados</li>
+                      <li>📈 Tendencias de órdenes</li>
+                      <li>💰 Ingresos estimados</li>
+                    </ul>
+                    <button
+                      className="btn btn-primary btn-lg"
+                      onClick={() => navigate('/dashboard')}
+                    >
+                      📊 Ver Dashboard de Estadísticas
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="card shadow">
+                  <div className="card-body">
+                    <h3 className="card-title">📄 Generador de Reportes</h3>
+                    <p className="card-text">
+                      Genera reportes profesionales en PDF y Excel:
+                    </p>
+                    <ul className="list-unstyled">
+                      <li>📋 Reportes de órdenes</li>
+                      <li>👥 Listado de clientes</li>
+                      <li>🚗 Inventario de vehículos</li>
+                      <li>🔧 Catálogo de servicios</li>
+                      <li>📊 Estadísticas generales</li>
+                    </ul>
+                    <button
+                      className="btn btn-success btn-lg"
+                      onClick={() => navigate('/reportes')}
+                    >
+                      📄 Generar Reportes
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="card shadow">
+                  <div className="card-body">
+                    <h3 className="card-title">🔍 Tracker Público</h3>
+                    <p className="card-text">
+                      Consulta el estado de órdenes sin login:
+                    </p>
+                    <ul className="list-unstyled">
+                      <li>📞 Búsqueda por teléfono</li>
+                      <li>🔢 Búsqueda por número de orden</li>
+                      <li>📋 Historial de estados</li>
+                      <li>⏰ Timeline de progreso</li>
+                      <li>🌐 Acceso público</li>
+                    </ul>
+                    <button
+                      className="btn btn-info btn-lg"
+                      onClick={() => navigate('/tracker')}
+                    >
+                      🔍 Consultar Orden
+                    </button>
+                  </div>
+                </div>
+              </div>
+          </div>
+        </div>
       </main>
     </div>
   );

@@ -122,6 +122,180 @@ WHERE nombre_usuario = 'admin';
 
 
 
+select* from tbl_usuarios;
+select* from tbl_clientes;
 
+-- --------------------------------------------------------
+-- Tabla de historial de estados de órdenes
+-- Esta tabla registra todos los cambios de estado de las órdenes
+-- con timestamps y usuarios responsables para el tracker público
+-- --------------------------------------------------------
+CREATE TABLE tbl_historial_estados (
+    pk_id_historial INT AUTO_INCREMENT PRIMARY KEY,
+    fk_id_orden INT NOT NULL,
+    fk_id_estado_anterior INT,
+    fk_id_estado_nuevo INT NOT NULL,
+    fk_id_usuario_cambio INT,
+    fecha_cambio DATETIME DEFAULT CURRENT_TIMESTAMP,
+    comentario_cambio TEXT,
+    ip_usuario VARCHAR(45),
+    user_agent VARCHAR(255),
+    
+    -- Claves foráneas
+    FOREIGN KEY (fk_id_orden) REFERENCES tbl_ordenes(pk_id_orden)
+        ON DELETE CASCADE,
+    FOREIGN KEY (fk_id_estado_anterior) REFERENCES tbl_orden_estado(pk_id_estado)
+        ON DELETE SET NULL,
+    FOREIGN KEY (fk_id_estado_nuevo) REFERENCES tbl_orden_estado(pk_id_estado)
+        ON DELETE CASCADE,
+    FOREIGN KEY (fk_id_usuario_cambio) REFERENCES tbl_usuarios(pk_id_usuarios)
+        ON DELETE SET NULL,
+    
+    -- Índices para optimizar consultas
+    INDEX idx_orden_fecha (fk_id_orden, fecha_cambio),
+    INDEX idx_fecha_cambio (fecha_cambio),
+    INDEX idx_estado_nuevo (fk_id_estado_nuevo)
+);
+
+-- --------------------------------------------------------
+-- Trigger para registrar automáticamente cambios de estado
+-- Este trigger se ejecuta cuando se actualiza el estado de una orden
+-- --------------------------------------------------------
+DELIMITER $$
+
+CREATE TRIGGER tr_historial_estados_orden
+AFTER UPDATE ON tbl_ordenes
+FOR EACH ROW
+BEGIN
+    -- Solo registrar si el estado cambió
+    IF OLD.fk_id_estado_orden != NEW.fk_id_estado_orden THEN
+        INSERT INTO tbl_historial_estados (
+            fk_id_orden,
+            fk_id_estado_anterior,
+            fk_id_estado_nuevo,
+            fecha_cambio,
+            comentario_cambio
+        ) VALUES (
+            NEW.pk_id_orden,
+            OLD.fk_id_estado_orden,
+            NEW.fk_id_estado_orden,
+            NOW(),
+            CONCAT('Estado cambiado de "', 
+                   (SELECT estado_orden FROM tbl_orden_estado WHERE pk_id_estado = OLD.fk_id_estado_orden),
+                   '" a "',
+                   (SELECT estado_orden FROM tbl_orden_estado WHERE pk_id_estado = NEW.fk_id_estado_orden),
+                   '"')
+        );
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+-- Datos de ejemplo para el historial (opcional)
+-- Estos datos se pueden usar para pruebas del sistema
+-- --------------------------------------------------------
+-- INSERT INTO tbl_historial_estados (fk_id_orden, fk_id_estado_anterior, fk_id_estado_nuevo, comentario_cambio)
+-- VALUES 
+-- (1, NULL, 1, 'Orden creada y recibida en el taller'),
+-- (1, 1, 2, 'Orden en proceso de revisión'),
+-- (1, 2, 3, 'Esperando piezas de repuesto'),
+-- (1, 3, 4, 'Servicio completado y listo para entrega');
+
+-- --------------------------------------------------------
+-- Vista para consultar el historial completo de una orden
+-- Esta vista facilita las consultas del tracker público
+-- --------------------------------------------------------
+CREATE VIEW vw_historial_completo AS
+SELECT 
+    h.pk_id_historial,
+    h.fk_id_orden,
+    h.fecha_cambio,
+    h.comentario_cambio,
+    h.ip_usuario,
+    -- Estado anterior
+    ea.estado_orden AS estado_anterior,
+    ea.descripcion_estado AS descripcion_estado_anterior,
+    -- Estado nuevo
+    en.estado_orden AS estado_nuevo,
+    en.descripcion_estado AS descripcion_estado_nuevo,
+    -- Usuario que hizo el cambio
+    u.nombre_usuario AS usuario_cambio,
+    u.email_usuario AS email_usuario_cambio
+FROM tbl_historial_estados h
+LEFT JOIN tbl_orden_estado ea ON h.fk_id_estado_anterior = ea.pk_id_estado
+LEFT JOIN tbl_orden_estado en ON h.fk_id_estado_nuevo = en.pk_id_estado
+LEFT JOIN tbl_usuarios u ON h.fk_id_usuario_cambio = u.pk_id_usuarios
+ORDER BY h.fecha_cambio DESC;
+
+-- --------------------------------------------------------
+-- Procedimiento almacenado para obtener historial de una orden
+-- Facilita las consultas desde el backend
+-- --------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE sp_obtener_historial_orden(IN p_id_orden INT)
+BEGIN
+    SELECT 
+        h.pk_id_historial,
+        h.fecha_cambio,
+        h.comentario_cambio,
+        ea.estado_orden AS estado_anterior,
+        en.estado_orden AS estado_nuevo,
+        en.descripcion_estado AS descripcion_estado,
+        u.nombre_usuario AS usuario_cambio
+    FROM tbl_historial_estados h
+    LEFT JOIN tbl_orden_estado ea ON h.fk_id_estado_anterior = ea.pk_id_estado
+    LEFT JOIN tbl_orden_estado en ON h.fk_id_estado_nuevo = en.pk_id_estado
+    LEFT JOIN tbl_usuarios u ON h.fk_id_usuario_cambio = u.pk_id_usuarios
+    WHERE h.fk_id_orden = p_id_orden
+    ORDER BY h.fecha_cambio ASC;
+END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+-- Comentarios sobre la implementación
+-- --------------------------------------------------------
+/*
+TABLA DE HISTORIAL DE ESTADOS IMPLEMENTADA:
+
+1. ESTRUCTURA:
+   - pk_id_historial: ID único del registro de historial
+   - fk_id_orden: Referencia a la orden
+   - fk_id_estado_anterior: Estado previo (puede ser NULL para órdenes nuevas)
+   - fk_id_estado_nuevo: Nuevo estado
+   - fk_id_usuario_cambio: Usuario que hizo el cambio (opcional)
+   - fecha_cambio: Timestamp del cambio
+   - comentario_cambio: Comentario adicional
+   - ip_usuario: IP del usuario (para auditoría)
+   - user_agent: Información del navegador (para auditoría)
+
+2. TRIGGER AUTOMÁTICO:
+   - Se ejecuta automáticamente cuando se actualiza el estado de una orden
+   - Registra el cambio con timestamp y comentario descriptivo
+   - No requiere intervención manual
+
+3. VISTA DE CONSULTA:
+   - vw_historial_completo: Vista que une todas las tablas relacionadas
+   - Facilita las consultas del tracker público
+   - Incluye nombres de estados y usuarios
+
+4. PROCEDIMIENTO ALMACENADO:
+   - sp_obtener_historial_orden: Obtiene el historial de una orden específica
+   - Optimizado para consultas del backend
+   - Ordenado cronológicamente
+
+5. ÍNDICES:
+   - Optimizados para consultas frecuentes por orden y fecha
+   - Mejoran el rendimiento del tracker público
+
+BENEFICIOS:
+- Tracker público con datos reales
+- Auditoría completa de cambios
+- Historial cronológico detallado
+- Información de usuarios responsables
+- Optimización de consultas
+*/
 
 
