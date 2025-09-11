@@ -105,10 +105,10 @@ function Login({ setUsuario }) {
             <div className="text-center mt-4">
               <button 
                 className="btn-tecno-outline" 
-                onClick={() => navigate('/recuperar-contrasena')}
+                onClick={() => navigate('/forgot-password')}
                 style={{ fontSize: '14px', padding: '8px 16px' }}
               >
-                ¿Olvidaste tu contraseña?
+                🔐 ¿Olvidaste tu contraseña?
               </button>
             </div>
           </div>

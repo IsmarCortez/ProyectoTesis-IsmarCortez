@@ -60,7 +60,7 @@ app.post('/api/login', async (req, res) => {
 
     if (hashPassword !== usuario.contrasenia_usuario) {
       return res.status(401).json({ message: 'Credenciales inválidas.' });
-    }0.
+    }
 
     const token = jwt.sign(
       {
@@ -84,6 +84,156 @@ app.post('/api/login', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error en el servidor.' });
+  }
+});
+
+// ==================== ENDPOINTS DE RECUPERACIÓN DE CONTRASEÑA ====================
+
+// Endpoint para solicitar recuperación de contraseña
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    return res.status(400).json({ message: 'Email es requerido.' });
+  }
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Verificar si el usuario existe
+    const [users] = await connection.execute(
+      'SELECT pk_id_usuarios, nombre_usuario, email_usuario FROM tbl_usuarios WHERE email_usuario = ?',
+      [email]
+    );
+
+    if (users.length === 0) {
+      await connection.end();
+      // Por seguridad, no revelamos si el email existe o no
+      return res.json({ 
+        message: 'Si el email existe en nuestro sistema, recibirás un enlace de recuperación.' 
+      });
+    }
+
+    const user = users[0];
+
+    // Generar token único
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expirationTime = new Date(Date.now() + 3600000); // 1 hora
+
+    // Invalidar tokens anteriores del usuario
+    await connection.execute(
+      'UPDATE tbl_password_reset_tokens SET usado = TRUE WHERE fk_id_usuario = ? AND usado = FALSE',
+      [user.pk_id_usuarios]
+    );
+
+    // Insertar nuevo token
+    await connection.execute(
+      'INSERT INTO tbl_password_reset_tokens (fk_id_usuario, token, email_usuario, fecha_expiracion) VALUES (?, ?, ?, ?)',
+      [user.pk_id_usuarios, resetToken, email, expirationTime]
+    );
+
+    await connection.end();
+
+    // Enviar email con el enlace de recuperación
+    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    
+    // Usar el servicio de notificaciones existente para enviar el email
+    try {
+      await NotificationService.sendPasswordResetEmail(email, user.nombre_usuario, resetLink);
+    } catch (emailError) {
+      console.error('Error enviando email de recuperación:', emailError);
+      // No fallar la operación si el email no se puede enviar
+    }
+
+    res.json({ 
+      message: 'Si el email existe en nuestro sistema, recibirás un enlace de recuperación.' 
+    });
+
+  } catch (error) {
+    console.error('Error en forgot-password:', error);
+    res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+});
+
+// Endpoint para resetear contraseña con token
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  
+  if (!token || !newPassword) {
+    return res.status(400).json({ message: 'Token y nueva contraseña son requeridos.' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres.' });
+  }
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Buscar token válido
+    const [tokens] = await connection.execute(
+      `SELECT prt.*, u.nombre_usuario, u.email_usuario 
+       FROM tbl_password_reset_tokens prt 
+       JOIN tbl_usuarios u ON prt.fk_id_usuario = u.pk_id_usuarios 
+       WHERE prt.token = ? AND prt.usado = FALSE AND prt.fecha_expiracion > NOW()`,
+      [token]
+    );
+
+    if (tokens.length === 0) {
+      await connection.end();
+      return res.status(400).json({ message: 'Token inválido o expirado.' });
+    }
+
+    const resetToken = tokens[0];
+
+    // Hashear nueva contraseña
+    const hashedPassword = crypto.createHash('sha256').update(newPassword).digest('hex');
+
+    // Actualizar contraseña del usuario
+    await connection.execute(
+      'UPDATE tbl_usuarios SET contrasenia_usuario = ? WHERE pk_id_usuarios = ?',
+      [hashedPassword, resetToken.fk_id_usuario]
+    );
+
+    // Marcar token como usado
+    await connection.execute(
+      'UPDATE tbl_password_reset_tokens SET usado = TRUE WHERE pk_id_token = ?',
+      [resetToken.pk_id_token]
+    );
+
+    await connection.end();
+
+    res.json({ message: 'Contraseña actualizada exitosamente.' });
+
+  } catch (error) {
+    console.error('Error en reset-password:', error);
+    res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+});
+
+// Endpoint para verificar si un token es válido
+app.get('/api/auth/verify-reset-token/:token', async (req, res) => {
+  const { token } = req.params;
+  
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    const [tokens] = await connection.execute(
+      'SELECT * FROM tbl_password_reset_tokens WHERE token = ? AND usado = FALSE AND fecha_expiracion > NOW()',
+      [token]
+    );
+
+    await connection.end();
+
+    if (tokens.length === 0) {
+      return res.status(400).json({ message: 'Token inválido o expirado.' });
+    }
+
+    res.json({ message: 'Token válido.' });
+
+  } catch (error) {
+    console.error('Error verificando token:', error);
+    res.status(500).json({ message: 'Error interno del servidor.' });
   }
 });
 

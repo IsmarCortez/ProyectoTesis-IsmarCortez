@@ -19,13 +19,13 @@ function Usuarios() {
   const [editingId, setEditingId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   
-  // Estados para cambio de contraseña
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    contrasenia_usuario: '',
-    confirmar_contrasenia: ''
-  });
-  const [selectedUserId, setSelectedUserId] = useState(null);
+  // Estados para cambio de contraseña - DESHABILITADO
+  // const [showPasswordModal, setShowPasswordModal] = useState(false);
+  // const [passwordData, setPasswordData] = useState({
+  //   contrasenia_usuario: '',
+  //   confirmar_contrasenia: ''
+  // });
+  // const [selectedUserId, setSelectedUserId] = useState(null);
   
   // Estado para archivo de foto
   const [fotoFile, setFotoFile] = useState(null);
@@ -148,34 +148,35 @@ function Usuarios() {
     }
   };
 
-  const abrirModalContrasena = (usuario) => {
-    setSelectedUserId(usuario.pk_id_usuarios);
-    setPasswordData({ contrasenia_usuario: '', confirmar_contrasenia: '' });
-    setShowPasswordModal(true);
-  };
+  // Funciones de cambio de contraseña - DESHABILITADAS
+  // const abrirModalContrasena = (usuario) => {
+  //   setSelectedUserId(usuario.pk_id_usuarios);
+  //   setPasswordData({ contrasenia_usuario: '', confirmar_contrasenia: '' });
+  //   setShowPasswordModal(true);
+  // };
 
-  const cambiarContrasena = async () => {
-    if (passwordData.contrasenia_usuario !== passwordData.confirmar_contrasenia) {
-      setError('Las contraseñas no coinciden');
-      return;
-    }
+  // const cambiarContrasena = async () => {
+  //   if (passwordData.contrasenia_usuario !== passwordData.confirmar_contrasenia) {
+  //     setError('Las contraseñas no coinciden');
+  //     return;
+  //   }
 
-    if (passwordData.contrasenia_usuario.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
-      return;
-    }
+  //   if (passwordData.contrasenia_usuario.length < 6) {
+  //     setError('La contraseña debe tener al menos 6 caracteres');
+  //     return;
+  //   }
 
-    try {
-      await axios.put(`http://localhost:4000/api/usuarios/${selectedUserId}/cambiar-contrasena`, {
-        contrasenia_usuario: passwordData.contrasenia_usuario
-      });
-      setSuccessMessage('Contraseña actualizada correctamente');
-      setShowPasswordModal(false);
-      setError('');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error al cambiar la contraseña');
-    }
-  };
+  //   try {
+  //     await axios.put(`http://localhost:4000/api/usuarios/${selectedUserId}/cambiar-contrasena`, {
+  //       contrasenia_usuario: passwordData.contrasenia_usuario
+  //     });
+  //     setSuccessMessage('Contraseña actualizada correctamente');
+  //     setShowPasswordModal(false);
+  //     setError('');
+  //   } catch (err) {
+  //     setError(err.response?.data?.message || 'Error al cambiar la contraseña');
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -313,6 +314,19 @@ function Usuarios() {
                     <small className="form-text text-muted">
                       Mínimo 6 caracteres
                     </small>
+                    {isEditing && (
+                      <div className="alert alert-info mt-2" style={{
+                        fontSize: '0.85rem',
+                        padding: '8px 12px',
+                        marginBottom: '0',
+                        background: 'rgba(13, 202, 240, 0.1)',
+                        border: '1px solid rgba(13, 202, 240, 0.2)',
+                        color: '#0c5460',
+                        borderRadius: '6px'
+                      }}>
+                        <strong>ℹ️ Nota:</strong> Para cambiar contraseñas existentes, usa el sistema de recuperación de contraseñas desde el login.
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-6 mb-3">
                     <label className="form-label">Pregunta de Seguridad *</label>
@@ -448,7 +462,8 @@ function Usuarios() {
                               >
                                 ✏️
                               </button>
-                              <button
+                              {/* Botón de cambio de contraseña DESHABILITADO */}
+                              {/* <button
                                 className="btn btn-sm"
                                 onClick={() => abrirModalContrasena(usuario)}
                                 title="Cambiar Contraseña"
@@ -463,7 +478,7 @@ function Usuarios() {
                                 }}
                               >
                                 🔒
-                              </button>
+                              </button> */}
                               <button
                                 className="btn btn-sm"
                                 onClick={() => eliminarUsuario(usuario.pk_id_usuarios, usuario.nombre_usuario)}
@@ -491,8 +506,8 @@ function Usuarios() {
             </div>
           </div>
 
-      {/* Modal para cambiar contraseña */}
-      {showPasswordModal && (
+      {/* Modal para cambiar contraseña - DESHABILITADO */}
+      {/* {showPasswordModal && (
         <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
           <div className="modal-dialog">
             <div className="card-tecno">
@@ -567,10 +582,8 @@ function Usuarios() {
         </div>
       )}
 
-      {/* Overlay del modal */}
-      {showPasswordModal && (
-        <div className="modal-backdrop fade show"></div>
-      )}
+      <div className="modal-backdrop fade show"></div>
+      )} */}
       </div>
     </div>
   );

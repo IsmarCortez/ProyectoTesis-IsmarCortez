@@ -183,9 +183,10 @@ function Clientes() {
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="DPI a verificar" 
+                    placeholder="DPI a verificar (máx. 13 caracteres)" 
                     value={verificarDPI} 
                     onChange={e => setVerificarDPI(e.target.value)} 
+                    maxLength="13"
                   />
                   <button 
                     className="btn-tecno" 
@@ -218,7 +219,16 @@ function Clientes() {
                   </div>
                   <div className="mb-3">
                     <label className="form-label">DPI</label>
-                    <input type="text" className="form-control" name="dpi_cliente" value={form.dpi_cliente} onChange={handleChange} required />
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      name="dpi_cliente" 
+                      value={form.dpi_cliente} 
+                      onChange={handleChange} 
+                      maxLength="13"
+                      placeholder="Máximo 13 caracteres"
+                      required 
+                    />
                   </div>
                   <div className="mb-3">
                     <label className="form-label">NIT</label>
@@ -268,39 +278,63 @@ function Clientes() {
                         <th style={{ 
                           borderColor: 'var(--tecno-gray-light)',
                           color: 'var(--tecno-black)',
-                          fontWeight: '600'
+                          fontWeight: '600',
+                          minWidth: '50px'
                         }}>ID</th>
                         <th style={{ 
                           borderColor: 'var(--tecno-gray-light)',
                           color: 'var(--tecno-black)',
-                          fontWeight: '600'
+                          fontWeight: '600',
+                          minWidth: '120px'
                         }}>Nombre</th>
                         <th style={{ 
                           borderColor: 'var(--tecno-gray-light)',
                           color: 'var(--tecno-black)',
-                          fontWeight: '600'
+                          fontWeight: '600',
+                          minWidth: '120px'
                         }}>Apellido</th>
                         <th style={{ 
                           borderColor: 'var(--tecno-gray-light)',
                           color: 'var(--tecno-black)',
-                          fontWeight: '600'
+                          fontWeight: '600',
+                          minWidth: '100px'
                         }}>DPI</th>
                         <th style={{ 
                           borderColor: 'var(--tecno-gray-light)',
                           color: 'var(--tecno-black)',
-                          fontWeight: '600'
+                          fontWeight: '600',
+                          minWidth: '100px'
+                        }}>NIT</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600',
+                          minWidth: '100px'
                         }}>Teléfono</th>
                         <th style={{ 
                           borderColor: 'var(--tecno-gray-light)',
                           color: 'var(--tecno-black)',
-                          fontWeight: '600'
+                          fontWeight: '600',
+                          minWidth: '150px'
+                        }}>Correo</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600',
+                          minWidth: '100px'
+                        }}>Fecha Registro</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600',
+                          minWidth: '120px'
                         }}>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       {clientes.length === 0 ? (
                         <tr>
-                          <td colSpan="6" className="text-center" style={{ 
+                          <td colSpan="9" className="text-center" style={{ 
                             borderColor: 'var(--tecno-gray-light)',
                             color: 'var(--tecno-gray-dark)',
                             padding: '20px'
@@ -315,7 +349,20 @@ function Clientes() {
                             <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{cliente.nombre_cliente}</td>
                             <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{cliente.apellido_cliente}</td>
                             <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{cliente.dpi_cliente}</td>
-                            <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{cliente.telefono_cliente}</td>
+                            <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{cliente.NIT || '-'}</td>
+                            <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{cliente.telefono_cliente || '-'}</td>
+                            <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
+                              {cliente.correo_cliente ? (
+                                <a href={`mailto:${cliente.correo_cliente}`} style={{ color: 'var(--tecno-orange)', textDecoration: 'none' }}>
+                                  {cliente.correo_cliente}
+                                </a>
+                              ) : '-'}
+                            </td>
+                            <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
+                              {cliente.fecha_registro_cliente ? 
+                                new Date(cliente.fecha_registro_cliente).toLocaleDateString('es-GT') : '-'
+                              }
+                            </td>
                             <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
                               <div className="btn-group" role="group">
                                 <button 

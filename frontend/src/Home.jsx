@@ -12,6 +12,7 @@ function Home({ usuario, onLogout }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // Para el menú vertical
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // Para el menú móvil
   const navigate = useNavigate();
 
   if (!usuario) return <div className="container mt-5">No autenticado.</div>;
@@ -70,6 +71,7 @@ function Home({ usuario, onLogout }) {
   // Handlers de navegación para el menú
   const goTo = (ruta) => {
     setMenuOpen(false);
+    setMobileMenuOpen(false);
     navigate(ruta);
   };
 
@@ -77,11 +79,11 @@ function Home({ usuario, onLogout }) {
     <div style={{ minHeight: '100vh', position: 'relative' }}>
       {/* Header horizontal con menú fijo */}
       <header className="header-tecno" style={{
-        height: 70,
+        minHeight: 70,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 2rem',
+        padding: '16px 2rem',
         position: 'fixed',
         top: 0,
         left: 0,
@@ -89,7 +91,7 @@ function Home({ usuario, onLogout }) {
         zIndex: 1200,
         boxShadow: 'var(--shadow-medium)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="logo-container" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <img 
             src="/LogoTecnoAuto.jpg" 
             alt="Tecno Auto" 
@@ -111,6 +113,8 @@ function Home({ usuario, onLogout }) {
             Sistema de Gestión
           </span>
         </div>
+        
+        {/* Navegación desktop */}
         <nav className="nav-tecno">
           <button onClick={() => navigate('/home')} className="nav-link">🏠 Inicio</button>
           <button onClick={() => navigate('/dashboard')} className="nav-link">📊 Dashboard</button>
@@ -123,18 +127,26 @@ function Home({ usuario, onLogout }) {
           <button onClick={() => navigate('/ordenes')} className="nav-link">📝 Órdenes</button>
           <button onClick={() => navigate('/usuarios')} className="nav-link">👤 Usuarios</button>
         </nav>
+        
+        {/* Botón hamburguesa para móvil */}
+        <button 
+          className="hamburger-btn"
+          onClick={() => setMobileMenuOpen(true)}
+        >
+          ☰
+        </button>
       </header>
 
       {/* Espacio para el header */}
-      <div style={{ height: 70 }} />
+      <div style={{ height: 102 }} />
 
-      {/* Botón para abrir el menú lateral */}
+      {/* Botón para abrir el menú lateral - Solo visible en desktop */}
       <button
         onClick={() => setOpen(true)}
-        className="btn-tecno"
+        className="btn-tecno user-menu-btn"
         style={{
           position: 'absolute',
-          top: 90,
+          top: 120,
           left: 24,
           zIndex: 1001,
           padding: '12px 20px',
@@ -147,8 +159,9 @@ function Home({ usuario, onLogout }) {
         ☰ Menú Usuario
       </button>
 
-      {/* Drawer lateral (usuario) */}
+      {/* Drawer lateral (usuario) - SOLO PERFIL DE USUARIO */}
       <div
+        className="user-drawer"
         style={{
           position: 'fixed',
           top: 0,
@@ -195,6 +208,19 @@ function Home({ usuario, onLogout }) {
         >
           ×
         </button>
+        
+        {/* Header del drawer de usuario */}
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <h3 style={{ 
+            color: 'var(--tecno-orange)', 
+            marginBottom: '16px',
+            fontSize: '18px',
+            fontWeight: '600'
+          }}>
+            👤 Perfil de Usuario
+          </h3>
+        </div>
+        
         {previewFoto ? (
           <img
             src={previewFoto}
@@ -333,6 +359,77 @@ function Home({ usuario, onLogout }) {
         </button>
       </div>
 
+      {/* Menú móvil - Solo visible en móviles */}
+      <div className={`mobile-menu ${mobileMenuOpen ? 'open' : ''}`} style={{ display: 'none' }}>
+        <div className="mobile-menu-header">
+          <div>
+            <img 
+              src="/LogoTecnoAuto.jpg" 
+              alt="Tecno Auto" 
+              style={{ 
+                height: '32px', 
+                width: 'auto',
+                borderRadius: '4px',
+                marginRight: '12px'
+              }} 
+            />
+            <span style={{ fontWeight: '600', fontSize: '18px' }}>
+              Menú de Navegación
+            </span>
+          </div>
+          <button 
+            className="mobile-menu-close"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            ×
+          </button>
+        </div>
+        <div className="mobile-menu-body">
+          <button onClick={() => goTo('/home')} className="nav-link">🏠 Inicio</button>
+          <button onClick={() => goTo('/dashboard')} className="nav-link">📊 Dashboard</button>
+          <button onClick={() => goTo('/reportes')} className="nav-link">📄 Reportes</button>
+          <button onClick={() => goTo('/tracker')} className="nav-link">🔍 Tracker</button>
+          <button onClick={() => goTo('/clientes')} className="nav-link">👥 Clientes</button>
+          <button onClick={() => goTo('/vehiculos')} className="nav-link">🚗 Vehículos</button>
+          <button onClick={() => goTo('/servicios')} className="nav-link">🔧 Servicios</button>
+          <button onClick={() => goTo('/estados')} className="nav-link">📋 Estados</button>
+          <button onClick={() => goTo('/ordenes')} className="nav-link">📝 Órdenes</button>
+          <button onClick={() => goTo('/usuarios')} className="nav-link">👤 Usuarios</button>
+          
+          {/* Separador */}
+          <div style={{ 
+            height: '1px', 
+            background: 'var(--tecno-gray-light)', 
+            margin: '20px 0',
+            width: '100%'
+          }} />
+          
+          {/* Botón de menú usuario en móvil */}
+          <button 
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setOpen(true);
+            }} 
+            className="nav-link"
+            style={{
+              background: 'var(--tecno-orange)',
+              color: 'var(--tecno-white)',
+              fontWeight: '600',
+              border: '2px solid var(--tecno-orange)'
+            }}
+          >
+            👤 Mi Perfil
+          </button>
+        </div>
+      </div>
+
+      {/* Overlay para menú móvil - Solo visible en móviles */}
+      <div 
+        className={`mobile-menu-overlay ${mobileMenuOpen ? 'open' : ''}`}
+        onClick={() => setMobileMenuOpen(false)}
+        style={{ display: 'none' }}
+      />
+
       {/* Fondo oscuro cuando el Drawer está abierto */}
       {open && (
         <div
@@ -350,7 +447,7 @@ function Home({ usuario, onLogout }) {
       )}
 
       {/* Contenido principal */}
-      <main style={{ 
+      <main className="main-content" style={{ 
         display: 'flex', 
         flexDirection: 'column', 
         justifyContent: 'flex-start', 

@@ -167,6 +167,8 @@ function Vehiculos() {
                       name="placa_vehiculo"
                       value={form.placa_vehiculo}
                       onChange={handleChange}
+                      maxLength="7"
+                      placeholder="Máximo 7 caracteres"
                       required
                     />
                   </div>
@@ -181,6 +183,8 @@ function Vehiculos() {
                           name="marca_vehiculo"
                           value={form.marca_vehiculo}
                           onChange={handleChange}
+                          maxLength="50"
+                          placeholder="Máximo 50 caracteres"
                           required
                         />
                       </div>
@@ -194,6 +198,8 @@ function Vehiculos() {
                           name="modelo_vehiculo"
                           value={form.modelo_vehiculo}
                           onChange={handleChange}
+                          maxLength="50"
+                          placeholder="Máximo 50 caracteres"
                           required
                         />
                       </div>
@@ -224,6 +230,8 @@ function Vehiculos() {
                           name="color_vehiculo"
                           value={form.color_vehiculo}
                           onChange={handleChange}
+                          maxLength="30"
+                          placeholder="Máximo 30 caracteres"
                         />
                       </div>
                     </div>

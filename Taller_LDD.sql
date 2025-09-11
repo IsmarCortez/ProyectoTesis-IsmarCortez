@@ -93,6 +93,22 @@ CREATE TABLE tbl_usuarios (
   pregunta_seguridad_usuario VARCHAR(255)
 );
 
+-- Tabla para tokens de recuperación de contraseña
+CREATE TABLE tbl_password_reset_tokens (
+  pk_id_token INT AUTO_INCREMENT PRIMARY KEY,
+  fk_id_usuario INT NOT NULL,
+  token VARCHAR(255) NOT NULL UNIQUE,
+  email_usuario VARCHAR(100) NOT NULL,
+  fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+  fecha_expiracion DATETIME NOT NULL,
+  usado BOOLEAN DEFAULT FALSE,
+  FOREIGN KEY (fk_id_usuario) REFERENCES tbl_usuarios(pk_id_usuarios)
+    ON DELETE CASCADE,
+  INDEX idx_token (token),
+  INDEX idx_email (email_usuario),
+  INDEX idx_expiracion (fecha_expiracion)
+);
+
 INSERT INTO tbl_usuarios (nombre_usuario, email_usuario, contrasenia_usuario,foto_perfil_usuario,pregunta_seguridad_usuario )
 VALUES (
   'Admin',
