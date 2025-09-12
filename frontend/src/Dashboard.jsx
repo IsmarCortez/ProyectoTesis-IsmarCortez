@@ -31,8 +31,7 @@ const Dashboard = () => {
   const [estadisticas, setEstadisticas] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [periodoSeleccionado, setPeriodoSeleccionado] = useState('mes');
-
+  // const [periodoSeleccionado, setPeriodoSeleccionado] = useState('mes'); // Removido - no se usa
   useEffect(() => {
     cargarEstadisticas();
   }, []);
@@ -48,13 +47,10 @@ const Dashboard = () => {
         throw new Error('No hay token de autenticación');
       }
 
-      console.log('Intentando cargar estadísticas...');
       const response = await axios.get('http://localhost:4000/api/dashboard/estadisticas', {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000 // 10 segundos de timeout
+        headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('Estadísticas cargadas:', response.data);
       setEstadisticas(response.data);
     } catch (error) {
       console.error('Error cargando estadísticas:', error);
@@ -128,22 +124,23 @@ const Dashboard = () => {
     }
   };
 
-  const cargarEstadisticasPeriodo = async (periodo) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:4000/api/dashboard/estadisticas/${periodo}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setPeriodoSeleccionado(periodo);
-      setError(null);
-    } catch (error) {
-      console.error('Error cargando estadísticas del período:', error);
-      setError('Error al cargar las estadísticas del período');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Función removida - no se usa actualmente
+  // const cargarEstadisticasPeriodo = async (periodo) => {
+  //   try {
+  //     setLoading(true);
+  //     const token = localStorage.getItem('token');
+  //     const response = await axios.get(`http://localhost:4000/api/dashboard/estadisticas/${periodo}`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     setError(null);
+  //   } catch (error) {
+  //     console.error('Error cargando estadísticas del período:', error);
+  //     setError('Error al cargar las estadísticas del período');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
 
   // Configuración de colores para los gráficos con paleta Tecno Auto
   const colores = {
@@ -362,6 +359,7 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
 
         {/* Tarjetas de estadísticas generales */}
         <div className="row mb-4">

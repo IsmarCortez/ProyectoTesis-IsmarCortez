@@ -1414,7 +1414,7 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
     
-    // 1. Estadísticas de vehículos más ingresados (por modelo)
+    // 1. Vehículos más ingresados
     const [vehiculosStats] = await connection.execute(`
       SELECT 
         CONCAT(v.marca_vehiculo, ' ', v.modelo_vehiculo) as modelo_completo,
@@ -1428,7 +1428,7 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
       LIMIT 10
     `);
 
-    // 2. Clientes por mes (basado en órdenes)
+    // 2. Clientes por mes (últimos 12 meses)
     const [clientesPorMes] = await connection.execute(`
       SELECT 
         DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m') as mes,
@@ -1507,8 +1507,7 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
         (COUNT(*) * 500) as ingresos_estimados
       FROM tbl_ordenes o
       INNER JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
-      WHERE e.estado_orden = 'Finalizado' 
-        AND o.fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+      WHERE e.estado_orden = 'Finalizado'
       GROUP BY DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m')
       ORDER BY mes ASC
     `);

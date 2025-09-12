@@ -47,6 +47,7 @@ CREATE TABLE tbl_orden_estado (
 
 -- Tabla de órdenes de mantenimiento y reparación
 CREATE TABLE IF NOT EXISTS tbl_ordenes (
+    
     -- Encabezado -------------------------
     pk_id_orden INT AUTO_INCREMENT PRIMARY KEY,
 	fecha_ingreso_orden DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -108,7 +109,7 @@ CREATE TABLE tbl_password_reset_tokens (
   INDEX idx_email (email_usuario),
   INDEX idx_expiracion (fecha_expiracion)
 );
-
+select* from tbl_password_reset_tokens;
 INSERT INTO tbl_usuarios (nombre_usuario, email_usuario, contrasenia_usuario,foto_perfil_usuario,pregunta_seguridad_usuario )
 VALUES (
   'Admin',

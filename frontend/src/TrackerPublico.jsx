@@ -80,53 +80,26 @@ const TrackerPublico = () => {
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, var(--tecno-gray-very-light) 0%, var(--tecno-white) 100%)',
-      paddingTop: '90px'
-    }}>
-      <div className="container-fluid">
-        {/* Header */}
-        <div className="row mb-4">
-          <div className="col-12">
-            <div className="text-center">
-              <h1 style={{ 
-                fontSize: '2.5rem',
-                fontWeight: '700',
-                marginBottom: '16px',
-                background: 'linear-gradient(135deg, var(--tecno-orange), var(--tecno-orange-light))',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}>
-                🔍 Tracker Público de Órdenes
-              </h1>
-              <p style={{ 
-                color: 'var(--tecno-gray-dark)', 
-                fontSize: '1.2rem',
-                marginBottom: '8px'
-              }}>
-                Consulta el estado de tu orden de servicio
-              </p>
-              <p style={{ 
-                color: 'var(--tecno-gray)', 
-                fontSize: '1rem',
-                marginBottom: '0'
-              }}>
-                Taller Mecánico Tecno Auto - Repuestos Electrofrio
-              </p>
-            </div>
+    <div className="container-fluid mt-4">
+      {/* Header */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="text-center">
+            <h1 className="h2 mb-3">🔍 Tracker Público de Órdenes</h1>
+            <p className="lead text-muted">Consulta el estado de tu orden de servicio</p>
+            <p className="text-muted">Taller Mecánico Tecno Auto - Repuestos Electrofrio</p>
           </div>
         </div>
+      </div>
 
-        {/* Formulario de búsqueda */}
-        <div className="row justify-content-center mb-4">
-          <div className="col-lg-8">
-            <div className="card-tecno">
-              <div className="card-tecno-header">
-                🔍 Buscar Orden
-              </div>
-              <div className="card-tecno-body">
+      {/* Formulario de búsqueda */}
+      <div className="row justify-content-center mb-4">
+        <div className="col-lg-8">
+          <div className="card shadow">
+            <div className="card-header">
+              <h5 className="mb-0">🔍 Buscar Orden</h5>
+            </div>
+            <div className="card-body">
               <div className="row">
                 <div className="col-md-4">
                   <label className="form-label">Tipo de búsqueda</label>
@@ -154,7 +127,7 @@ const TrackerPublico = () => {
                 </div>
                 <div className="col-md-2 d-flex align-items-end">
                   <button 
-                    className="btn-tecno w-100"
+                    className="btn btn-primary w-100"
                     onClick={buscarOrden}
                     disabled={loading}
                   >
@@ -167,27 +140,27 @@ const TrackerPublico = () => {
         </div>
       </div>
 
-        {/* Mensaje de error */}
-        {error && (
-          <div className="row justify-content-center mb-4">
-            <div className="col-lg-8">
-              <div className="alert-tecno alert-tecno-danger" role="alert">
-                {error}
-              </div>
+      {/* Mensaje de error */}
+      {error && (
+        <div className="row justify-content-center mb-4">
+          <div className="col-lg-8">
+            <div className="alert alert-danger" role="alert">
+              {error}
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Resultados */}
-        {resultado && (
-          <div className="row justify-content-center">
-            <div className="col-lg-10">
-              {resultado.encontrado ? (
-                <div className="card-tecno">
-                  <div className="card-tecno-header" style={{ backgroundColor: 'var(--success)' }}>
-                    <h5 style={{ margin: '0', color: 'var(--tecno-white)' }}>✅ Órdenes Encontradas</h5>
-                  </div>
-                  <div className="card-tecno-body">
+      {/* Resultados */}
+      {resultado && (
+        <div className="row justify-content-center">
+          <div className="col-lg-10">
+            {resultado.encontrado ? (
+              <div className="card shadow">
+                <div className="card-header bg-success text-white">
+                  <h5 className="mb-0">✅ Órdenes Encontradas</h5>
+                </div>
+                <div className="card-body">
                   {resultado.ordenes ? (
                     // Múltiples órdenes (búsqueda por teléfono)
                     <div>
@@ -197,8 +170,8 @@ const TrackerPublico = () => {
                       <div className="row">
                         {resultado.ordenes.map((orden) => (
                           <div key={orden.pk_id_orden} className="col-md-6 mb-3">
-                            <div className="card-tecno">
-                              <div className="card-tecno-body">
+                            <div className="card border">
+                              <div className="card-body">
                                 <div className="d-flex justify-content-between align-items-start mb-2">
                                   <h6 className="card-title mb-0">Orden #{orden.pk_id_orden}</h6>
                                   <span className={`badge bg-${getEstadoColor(orden.estado_orden)}`}>
@@ -212,7 +185,7 @@ const TrackerPublico = () => {
                                   <strong>Fecha:</strong> {new Date(orden.fecha_ingreso_orden).toLocaleDateString('es-GT')}
                                 </p>
                                 <button 
-                                  className="btn-tecno-outline btn-sm"
+                                  className="btn btn-outline-primary btn-sm"
                                   onClick={() => verHistorial(orden.pk_id_orden)}
                                 >
                                   📋 Ver Historial
@@ -256,7 +229,7 @@ const TrackerPublico = () => {
                           </div>
                           <p className="text-muted small">{resultado.orden.descripcion_estado}</p>
                           <button 
-                            className="btn-tecno"
+                            className="btn btn-primary"
                             onClick={() => verHistorial(resultado.orden.pk_id_orden)}
                           >
                             📋 Ver Historial Completo
@@ -267,29 +240,29 @@ const TrackerPublico = () => {
                   )}
                 </div>
               </div>
-              ) : (
-                <div className="card-tecno">
-                  <div className="card-tecno-header" style={{ backgroundColor: 'var(--warning)' }}>
-                    <h5 style={{ margin: '0', color: 'var(--tecno-black)' }}>⚠️ No Encontrado</h5>
-                  </div>
-                  <div className="card-tecno-body text-center">
-                    <p style={{ margin: '0', color: 'var(--tecno-gray-dark)' }}>{resultado.mensaje}</p>
-                  </div>
+            ) : (
+              <div className="card shadow">
+                <div className="card-header bg-warning text-dark">
+                  <h5 className="mb-0">⚠️ No Encontrado</h5>
                 </div>
-              )}
+                <div className="card-body text-center">
+                  <p className="mb-0">{resultado.mensaje}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-        {/* Historial de la orden */}
-        {historial && historial.encontrado && (
-          <div className="row justify-content-center mt-4">
-            <div className="col-lg-8">
-              <div className="card-tecno">
-                <div className="card-tecno-header" style={{ backgroundColor: 'var(--info)' }}>
-                  <h5 style={{ margin: '0', color: 'var(--tecno-white)' }}>📋 Historial de la Orden #{ordenSeleccionada}</h5>
-                </div>
-                <div className="card-tecno-body">
+      {/* Historial de la orden */}
+      {historial && historial.encontrado && (
+        <div className="row justify-content-center mt-4">
+          <div className="col-lg-8">
+            <div className="card shadow">
+              <div className="card-header bg-info text-white">
+                <h5 className="mb-0">📋 Historial de la Orden #{ordenSeleccionada}</h5>
+              </div>
+              <div className="card-body">
                 <div className="timeline">
                   {historial.historial.map((item, index) => (
                     <div key={index} className={`timeline-item ${item.activo ? 'active' : ''}`}>
@@ -313,7 +286,7 @@ const TrackerPublico = () => {
                 </div>
                 <div className="mt-3 text-center">
                   <button 
-                    className="btn-tecno-outline"
+                    className="btn btn-outline-secondary"
                     onClick={() => {
                       setHistorial(null);
                       setOrdenSeleccionada(null);
@@ -328,69 +301,64 @@ const TrackerPublico = () => {
         </div>
       )}
 
-        {/* Información adicional */}
-        <div className="row justify-content-center mt-5">
-          <div className="col-lg-8">
-            <div className="card-tecno" style={{ backgroundColor: 'var(--tecno-gray-very-light)' }}>
-              <div className="card-tecno-body text-center">
-                <h6 style={{ color: 'var(--tecno-black)' }}>ℹ️ Información Importante</h6>
-                <p style={{ 
-                  color: 'var(--tecno-gray-dark)', 
-                  fontSize: '14px',
-                  marginBottom: '0'
-                }}>
-                  Este tracker público te permite consultar el estado de tu orden sin necesidad de crear una cuenta. 
-                  Si tienes alguna pregunta adicional, no dudes en contactarnos.
-                </p>
-              </div>
+      {/* Información adicional */}
+      <div className="row justify-content-center mt-5">
+        <div className="col-lg-8">
+          <div className="card border-0 bg-light">
+            <div className="card-body text-center">
+              <h6>ℹ️ Información Importante</h6>
+              <p className="small text-muted mb-0">
+                Este tracker público te permite consultar el estado de tu orden sin necesidad de crear una cuenta. 
+                Si tienes alguna pregunta adicional, no dudes en contactarnos.
+              </p>
             </div>
           </div>
         </div>
-
-        <style jsx>{`
-          .timeline {
-            position: relative;
-            padding-left: 30px;
-          }
-          
-          .timeline-item {
-            position: relative;
-            margin-bottom: 20px;
-          }
-          
-          .timeline-item:not(:last-child)::before {
-            content: '';
-            position: absolute;
-            left: -25px;
-            top: 30px;
-            width: 2px;
-            height: calc(100% + 10px);
-            background-color: var(--tecno-gray-light);
-          }
-          
-          .timeline-item.active:not(:last-child)::before {
-            background-color: var(--tecno-orange);
-          }
-          
-          .timeline-marker {
-            position: absolute;
-            left: -30px;
-            top: 0;
-          }
-          
-          .timeline-content {
-            background: var(--tecno-white);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid var(--tecno-gray-light);
-          }
-          
-          .timeline-item.active .timeline-content {
-            border-color: var(--tecno-orange);
-            background-color: var(--tecno-gray-very-light);
-          }
-        `}</style>
       </div>
+
+      <style jsx>{`
+        .timeline {
+          position: relative;
+          padding-left: 30px;
+        }
+        
+        .timeline-item {
+          position: relative;
+          margin-bottom: 20px;
+        }
+        
+        .timeline-item:not(:last-child)::before {
+          content: '';
+          position: absolute;
+          left: -25px;
+          top: 30px;
+          width: 2px;
+          height: calc(100% + 10px);
+          background-color: #dee2e6;
+        }
+        
+        .timeline-item.active:not(:last-child)::before {
+          background-color: #0d6efd;
+        }
+        
+        .timeline-marker {
+          position: absolute;
+          left: -30px;
+          top: 0;
+        }
+        
+        .timeline-content {
+          background: white;
+          padding: 15px;
+          border-radius: 8px;
+          border: 1px solid #dee2e6;
+        }
+        
+        .timeline-item.active .timeline-content {
+          border-color: #0d6efd;
+          background-color: #f8f9ff;
+        }
+      `}</style>
     </div>
   );
 };

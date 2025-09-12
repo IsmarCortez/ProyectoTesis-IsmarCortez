@@ -11,7 +11,7 @@ function Home({ usuario, onLogout }) {
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false); // Para el menú vertical
+  // const [menuOpen, setMenuOpen] = useState(false); // Para el menú vertical - removido, no se usa
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // Para el menú móvil
   const navigate = useNavigate();
 
@@ -70,7 +70,7 @@ function Home({ usuario, onLogout }) {
 
   // Handlers de navegación para el menú
   const goTo = (ruta) => {
-    setMenuOpen(false);
+    // setMenuOpen(false); // Removido - variable no existe
     setMobileMenuOpen(false);
     navigate(ruta);
   };
