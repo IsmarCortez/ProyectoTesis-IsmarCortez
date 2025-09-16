@@ -31,8 +31,7 @@ const Dashboard = () => {
   const [estadisticas, setEstadisticas] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [periodoSeleccionado, setPeriodoSeleccionado] = useState('mes');
-
+  // const [periodoSeleccionado, setPeriodoSeleccionado] = useState('mes'); // Removido - no se usa
   useEffect(() => {
     cargarEstadisticas();
   }, []);
@@ -48,13 +47,10 @@ const Dashboard = () => {
         throw new Error('No hay token de autenticación');
       }
 
-      console.log('Intentando cargar estadísticas...');
       const response = await axios.get('http://localhost:4000/api/dashboard/estadisticas', {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000 // 10 segundos de timeout
+        headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('Estadísticas cargadas:', response.data);
       setEstadisticas(response.data);
     } catch (error) {
       console.error('Error cargando estadísticas:', error);
@@ -128,32 +124,33 @@ const Dashboard = () => {
     }
   };
 
-  const cargarEstadisticasPeriodo = async (periodo) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:4000/api/dashboard/estadisticas/${periodo}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setPeriodoSeleccionado(periodo);
-      setError(null);
-    } catch (error) {
-      console.error('Error cargando estadísticas del período:', error);
-      setError('Error al cargar las estadísticas del período');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Función removida - no se usa actualmente
+  // const cargarEstadisticasPeriodo = async (periodo) => {
+  //   try {
+  //     setLoading(true);
+  //     const token = localStorage.getItem('token');
+  //     const response = await axios.get(`http://localhost:4000/api/dashboard/estadisticas/${periodo}`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     setError(null);
+  //   } catch (error) {
+  //     console.error('Error cargando estadísticas del período:', error);
+  //     setError('Error al cargar las estadísticas del período');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  // Configuración de colores para los gráficos
+
+  // Configuración de colores para los gráficos con paleta Tecno Auto
   const colores = {
-    primario: '#007bff',
+    primario: '#F26522', // Naranja Tecno Auto
     secundario: '#28a745',
     advertencia: '#ffc107',
     peligro: '#dc3545',
     info: '#17a2b8',
-    oscuro: '#343a40',
-    colores: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997']
+    oscuro: '#6E6E6E', // Gris oscuro Tecno Auto
+    colores: ['#F26522', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6E6E6E', '#FF7A3D', '#20c997']
   };
 
   // Gráfico de vehículos más ingresados
@@ -272,10 +269,21 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="container mt-4">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Cargando...</span>
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, var(--tecno-gray-very-light) 0%, var(--tecno-white) 100%)',
+        paddingTop: '90px'
+      }}>
+        <div className="container">
+          <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
+            <div className="card-tecno" style={{ padding: '40px', textAlign: 'center' }}>
+              <div className="spinner-border text-tecno-orange" role="status" style={{ color: 'var(--tecno-orange)' }}>
+                <span className="visually-hidden">Cargando...</span>
+              </div>
+              <p style={{ marginTop: '20px', color: 'var(--tecno-gray-dark)', fontWeight: '500' }}>
+                Cargando estadísticas del dashboard...
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -284,363 +292,476 @@ const Dashboard = () => {
 
   if (!estadisticas) {
     return (
-      <div className="container mt-4">
-        <div className="alert alert-warning" role="alert">
-          No se pudieron cargar las estadísticas.
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, var(--tecno-gray-very-light) 0%, var(--tecno-white) 100%)',
+        paddingTop: '90px'
+      }}>
+        <div className="container">
+          <div className="alert-tecno alert-tecno-warning" role="alert">
+            No se pudieron cargar las estadísticas.
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid mt-4">
-      {/* Header del Dashboard */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
-              <h1 className="h3 mb-0">📊 Dashboard de Estadísticas</h1>
-              <p className="text-muted">Resumen general del taller mecánico</p>
-              {error && (
-                <div className="alert alert-warning alert-sm" role="alert">
-                  <small>{error}</small>
-                </div>
-              )}
-            </div>
-            <div>
-              <button className="btn btn-outline-primary me-2" onClick={cargarEstadisticas}>
-                🔄 Actualizar
-              </button>
-              <button className="btn btn-outline-success me-2" onClick={() => window.open('/reportes', '_blank')}>
-                📊 Generar Reportes
-              </button>
-              <button className="btn btn-outline-info me-2" onClick={() => window.open('/tracker', '_blank')}>
-                🔍 Tracker Público
-              </button>
-              <button className="btn btn-outline-secondary" onClick={() => window.history.back()}>
-                ← Volver al Menú Principal
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tarjetas de estadísticas generales */}
-      <div className="row mb-4">
-        <div className="col-xl-3 col-md-6 mb-4">
-          <div className="card border-left-primary shadow h-100 py-2">
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                    Total Clientes
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, var(--tecno-gray-very-light) 0%, var(--tecno-white) 100%)',
+      paddingTop: '90px'
+    }}>
+      <div className="container-fluid">
+        {/* Header del Dashboard */}
+        <div className="row mb-4">
+          <div className="col-12">
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h1 style={{ 
+                  fontSize: '2.5rem',
+                  fontWeight: '700',
+                  marginBottom: '8px',
+                  background: 'linear-gradient(135deg, var(--tecno-orange), var(--tecno-orange-light))',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
+                  📊 Dashboard de Estadísticas
+                </h1>
+                <p style={{ 
+                  color: 'var(--tecno-gray-dark)', 
+                  fontSize: '1.1rem',
+                  marginBottom: '0'
+                }}>
+                  Resumen general del taller mecánico Tecno Auto
+                </p>
+                {error && (
+                  <div className="alert-tecno alert-tecno-warning" style={{ marginTop: '16px' }}>
+                    <small>{error}</small>
                   </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {estadisticas.estadisticas_generales.total_clientes}
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="fas fa-users fa-2x text-gray-300">👥</i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-md-6 mb-4">
-          <div className="card border-left-success shadow h-100 py-2">
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-success text-uppercase mb-1">
-                    Total Vehículos
-                  </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {estadisticas.estadisticas_generales.total_vehiculos}
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="fas fa-car fa-2x text-gray-300">🚗</i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-md-6 mb-4">
-          <div className="card border-left-info shadow h-100 py-2">
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-info text-uppercase mb-1">
-                    Total Órdenes
-                  </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {estadisticas.estadisticas_generales.total_ordenes}
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="fas fa-clipboard-list fa-2x text-gray-300">📋</i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-md-6 mb-4">
-          <div className="card border-left-warning shadow h-100 py-2">
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                    Órdenes Este Mes
-                  </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {estadisticas.estadisticas_generales.ordenes_mes_actual}
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="fas fa-calendar fa-2x text-gray-300">📅</i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tarjetas de estado de órdenes */}
-      <div className="row mb-4">
-        <div className="col-xl-4 col-md-6 mb-4">
-          <div className="card border-left-success shadow h-100 py-2">
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-success text-uppercase mb-1">
-                    Órdenes Completadas
-                  </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {estadisticas.estadisticas_generales.ordenes_completadas}
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="fas fa-check-circle fa-2x text-gray-300">✅</i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-4 col-md-6 mb-4">
-          <div className="card border-left-warning shadow h-100 py-2">
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                    Órdenes Pendientes
-                  </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {estadisticas.estadisticas_generales.ordenes_pendientes}
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="fas fa-clock fa-2x text-gray-300">⏳</i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-4 col-md-6 mb-4">
-          <div className="card border-left-info shadow h-100 py-2">
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-info text-uppercase mb-1">
-                    Tasa de Completado
-                  </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {estadisticas.estadisticas_generales.total_ordenes > 0 
-                      ? Math.round((estadisticas.estadisticas_generales.ordenes_completadas / estadisticas.estadisticas_generales.total_ordenes) * 100)
-                      : 0}%
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="fas fa-percentage fa-2x text-gray-300">📊</i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Gráficos principales */}
-      <div className="row mb-4">
-        {/* Gráfico de vehículos más ingresados */}
-        <div className="col-xl-6 col-lg-12 mb-4">
-          <div className="card shadow">
-            <div className="card-header py-3">
-              <h6 className="m-0 font-weight-bold text-primary">🚗 Vehículos Más Ingresados</h6>
-            </div>
-            <div className="card-body">
-              <div style={{ height: '300px' }}>
-                {datosVehiculos && (
-                  <Bar data={datosVehiculos} options={opcionesGenerales} />
                 )}
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Gráfico de servicios más solicitados */}
-        <div className="col-xl-6 col-lg-12 mb-4">
-          <div className="card shadow">
-            <div className="card-header py-3">
-              <h6 className="m-0 font-weight-bold text-primary">🔧 Servicios Más Solicitados</h6>
-            </div>
-            <div className="card-body">
-              <div style={{ height: '300px' }}>
-                {datosServicios && (
-                  <Doughnut data={datosServicios} options={opcionesDona} />
-                )}
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button className="btn-tecno" onClick={cargarEstadisticas}>
+                  🔄 Actualizar
+                </button>
+                <button className="btn-tecno-secondary" onClick={() => window.open('/reportes', '_blank')}>
+                  📊 Generar Reportes
+                </button>
+                <button className="btn-tecno-outline" onClick={() => window.open('/tracker', '_blank')}>
+                  🔍 Tracker Público
+                </button>
+                <button className="btn-tecno-outline" onClick={() => window.history.back()}>
+                  ← Volver al Menú
+                </button>
               </div>
             </div>
           </div>
         </div>
+
+
+        {/* Tarjetas de estadísticas generales */}
+        <div className="row mb-4">
+          <div className="col-xl-3 col-md-6 mb-4">
+            <div className="card-tecno h-100">
+              <div className="card-tecno-header">
+                👥 Total Clientes
+              </div>
+              <div className="card-tecno-body text-center">
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: 'var(--tecno-orange)',
+                  marginBottom: '8px'
+                }}>
+                  {estadisticas.estadisticas_generales.total_clientes}
+                </div>
+                <p style={{ 
+                  color: 'var(--tecno-gray-dark)', 
+                  margin: '0',
+                  fontSize: '14px'
+                }}>
+                  Clientes registrados
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-xl-3 col-md-6 mb-4">
+            <div className="card-tecno h-100">
+              <div className="card-tecno-header">
+                🚗 Total Vehículos
+              </div>
+              <div className="card-tecno-body text-center">
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: 'var(--success)',
+                  marginBottom: '8px'
+                }}>
+                  {estadisticas.estadisticas_generales.total_vehiculos}
+                </div>
+                <p style={{ 
+                  color: 'var(--tecno-gray-dark)', 
+                  margin: '0',
+                  fontSize: '14px'
+                }}>
+                  Vehículos registrados
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-xl-3 col-md-6 mb-4">
+            <div className="card-tecno h-100">
+              <div className="card-tecno-header">
+                📋 Total Órdenes
+              </div>
+              <div className="card-tecno-body text-center">
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: 'var(--info)',
+                  marginBottom: '8px'
+                }}>
+                  {estadisticas.estadisticas_generales.total_ordenes}
+                </div>
+                <p style={{ 
+                  color: 'var(--tecno-gray-dark)', 
+                  margin: '0',
+                  fontSize: '14px'
+                }}>
+                  Órdenes totales
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-xl-3 col-md-6 mb-4">
+            <div className="card-tecno h-100">
+              <div className="card-tecno-header">
+                📅 Órdenes Este Mes
+              </div>
+              <div className="card-tecno-body text-center">
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: 'var(--warning)',
+                  marginBottom: '8px'
+                }}>
+                  {estadisticas.estadisticas_generales.ordenes_mes_actual}
+                </div>
+                <p style={{ 
+                  color: 'var(--tecno-gray-dark)', 
+                  margin: '0',
+                  fontSize: '14px'
+                }}>
+                  Órdenes del mes actual
+                </p>
+              </div>
+            </div>
+          </div>
       </div>
 
-      <div className="row mb-4">
-        {/* Gráfico de estados de órdenes */}
-        <div className="col-xl-6 col-lg-12 mb-4">
-          <div className="card shadow">
-            <div className="card-header py-3">
-              <h6 className="m-0 font-weight-bold text-primary">📊 Estados de Órdenes</h6>
+        {/* Tarjetas de estado de órdenes */}
+        <div className="row mb-4">
+          <div className="col-xl-4 col-md-6 mb-4">
+            <div className="card-tecno h-100">
+              <div className="card-tecno-header">
+                ✅ Órdenes Completadas
+              </div>
+              <div className="card-tecno-body text-center">
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: 'var(--success)',
+                  marginBottom: '8px'
+                }}>
+                  {estadisticas.estadisticas_generales.ordenes_completadas}
+                </div>
+                <p style={{ 
+                  color: 'var(--tecno-gray-dark)', 
+                  margin: '0',
+                  fontSize: '14px'
+                }}>
+                  Órdenes finalizadas
+                </p>
+              </div>
             </div>
-            <div className="card-body">
-              <div style={{ height: '300px' }}>
-                {datosEstados && (
-                  <Doughnut data={datosEstados} options={opcionesDona} />
-                )}
+          </div>
+
+          <div className="col-xl-4 col-md-6 mb-4">
+            <div className="card-tecno h-100">
+              <div className="card-tecno-header">
+                ⏳ Órdenes Pendientes
+              </div>
+              <div className="card-tecno-body text-center">
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: 'var(--warning)',
+                  marginBottom: '8px'
+                }}>
+                  {estadisticas.estadisticas_generales.ordenes_pendientes}
+                </div>
+                <p style={{ 
+                  color: 'var(--tecno-gray-dark)', 
+                  margin: '0',
+                  fontSize: '14px'
+                }}>
+                  Órdenes en espera
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-xl-4 col-md-6 mb-4">
+            <div className="card-tecno h-100">
+              <div className="card-tecno-header">
+                📊 Tasa de Completado
+              </div>
+              <div className="card-tecno-body text-center">
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: 'var(--info)',
+                  marginBottom: '8px'
+                }}>
+                  {estadisticas.estadisticas_generales.total_ordenes > 0 
+                    ? Math.round((estadisticas.estadisticas_generales.ordenes_completadas / estadisticas.estadisticas_generales.total_ordenes) * 100)
+                    : 0}%
+                </div>
+                <p style={{ 
+                  color: 'var(--tecno-gray-dark)', 
+                  margin: '0',
+                  fontSize: '14px'
+                }}>
+                  Eficiencia del taller
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Gráfico de marcas populares */}
-        <div className="col-xl-6 col-lg-12 mb-4">
-          <div className="card shadow">
-            <div className="card-header py-3">
-              <h6 className="m-0 font-weight-bold text-primary">🏆 Marcas Más Populares</h6>
+        {/* Gráficos principales */}
+        <div className="row mb-4">
+          {/* Gráfico de vehículos más ingresados */}
+          <div className="col-xl-6 col-lg-12 mb-4">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                🚗 Vehículos Más Ingresados
+              </div>
+              <div className="card-tecno-body">
+                <div style={{ height: '300px' }}>
+                  {datosVehiculos && (
+                    <Bar data={datosVehiculos} options={opcionesGenerales} />
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="card-body">
-              <div style={{ height: '300px' }}>
-                {datosMarcas && (
-                  <Bar data={datosMarcas} options={opcionesGenerales} />
-                )}
+          </div>
+
+          {/* Gráfico de servicios más solicitados */}
+          <div className="col-xl-6 col-lg-12 mb-4">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                🔧 Servicios Más Solicitados
+              </div>
+              <div className="card-tecno-body">
+                <div style={{ height: '300px' }}>
+                  {datosServicios && (
+                    <Doughnut data={datosServicios} options={opcionesDona} />
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Gráficos de tendencias temporales */}
-      <div className="row mb-4">
-        {/* Gráfico de órdenes por mes */}
-        <div className="col-xl-6 col-lg-12 mb-4">
-          <div className="card shadow">
-            <div className="card-header py-3">
-              <h6 className="m-0 font-weight-bold text-primary">📈 Órdenes por Mes</h6>
+        <div className="row mb-4">
+          {/* Gráfico de estados de órdenes */}
+          <div className="col-xl-6 col-lg-12 mb-4">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                📊 Estados de Órdenes
+              </div>
+              <div className="card-tecno-body">
+                <div style={{ height: '300px' }}>
+                  {datosEstados && (
+                    <Doughnut data={datosEstados} options={opcionesDona} />
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="card-body">
-              <div style={{ height: '300px' }}>
-                {datosOrdenesMes && (
-                  <Line data={datosOrdenesMes} options={opcionesGenerales} />
-                )}
+          </div>
+
+          {/* Gráfico de marcas populares */}
+          <div className="col-xl-6 col-lg-12 mb-4">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                🏆 Marcas Más Populares
+              </div>
+              <div className="card-tecno-body">
+                <div style={{ height: '300px' }}>
+                  {datosMarcas && (
+                    <Bar data={datosMarcas} options={opcionesGenerales} />
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Gráfico de clientes por mes */}
-        <div className="col-xl-6 col-lg-12 mb-4">
-          <div className="card shadow">
-            <div className="card-header py-3">
-              <h6 className="m-0 font-weight-bold text-primary">👥 Clientes por Mes</h6>
+        {/* Gráficos de tendencias temporales */}
+        <div className="row mb-4">
+          {/* Gráfico de órdenes por mes */}
+          <div className="col-xl-6 col-lg-12 mb-4">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                📈 Órdenes por Mes
+              </div>
+              <div className="card-tecno-body">
+                <div style={{ height: '300px' }}>
+                  {datosOrdenesMes && (
+                    <Line data={datosOrdenesMes} options={opcionesGenerales} />
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="card-body">
-              <div style={{ height: '300px' }}>
-                {datosClientesMes && (
-                  <Line data={datosClientesMes} options={opcionesGenerales} />
-                )}
+          </div>
+
+          {/* Gráfico de clientes por mes */}
+          <div className="col-xl-6 col-lg-12 mb-4">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                👥 Clientes por Mes
+              </div>
+              <div className="card-tecno-body">
+                <div style={{ height: '300px' }}>
+                  {datosClientesMes && (
+                    <Line data={datosClientesMes} options={opcionesGenerales} />
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Gráfico de ingresos */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card shadow">
-            <div className="card-header py-3">
-              <h6 className="m-0 font-weight-bold text-primary">💰 Ingresos Estimados por Mes</h6>
-              <small className="text-muted">*Basado en órdenes completadas (estimación: Q500 por orden)</small>
-            </div>
-            <div className="card-body">
-              <div style={{ height: '300px' }}>
-                {datosIngresos && (
-                  <Line data={datosIngresos} options={opcionesGenerales} />
-                )}
+        {/* Gráfico de ingresos */}
+        <div className="row mb-4">
+          <div className="col-12">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                💰 Ingresos Estimados por Mes
+              </div>
+              <div className="card-tecno-body">
+                <p style={{ 
+                  color: 'var(--tecno-gray-dark)', 
+                  fontSize: '14px',
+                  marginBottom: '16px',
+                  fontStyle: 'italic'
+                }}>
+                  *Basado en órdenes completadas (estimación: Q500 por orden)
+                </p>
+                <div style={{ height: '300px' }}>
+                  {datosIngresos && (
+                    <Line data={datosIngresos} options={opcionesGenerales} />
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Tabla de resumen de servicios */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card shadow">
-            <div className="card-header py-3">
-              <h6 className="m-0 font-weight-bold text-primary">📋 Resumen Detallado de Servicios</h6>
-            </div>
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-bordered">
-                  <thead>
-                    <tr>
-                      <th>Servicio</th>
-                      <th>Cantidad de Órdenes</th>
-                      <th>Porcentaje</th>
-                      <th>Barra de Progreso</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {estadisticas.servicios_mas_solicitados.map((servicio, index) => (
-                      <tr key={index}>
-                        <td>{servicio.servicio}</td>
-                        <td>{servicio.cantidad_ordenes}</td>
-                        <td>{servicio.porcentaje}%</td>
-                        <td>
-                          <div className="progress">
-                            <div 
-                              className="progress-bar" 
-                              role="progressbar" 
-                              style={{ 
-                                width: `${servicio.porcentaje}%`,
-                                backgroundColor: colores.colores[index % colores.colores.length]
-                              }}
-                              aria-valuenow={servicio.porcentaje}
-                              aria-valuemin="0" 
-                              aria-valuemax="100"
-                            >
-                              {servicio.porcentaje}%
-                            </div>
-                          </div>
-                        </td>
+        {/* Tabla de resumen de servicios */}
+        <div className="row mb-4">
+          <div className="col-12">
+            <div className="card-tecno">
+              <div className="card-tecno-header">
+                📋 Resumen Detallado de Servicios
+              </div>
+              <div className="card-tecno-body">
+                <div className="table-responsive">
+                  <table className="table table-bordered" style={{ marginBottom: '0' }}>
+                    <thead style={{ backgroundColor: 'var(--tecno-gray-very-light)' }}>
+                      <tr>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>
+                          Servicio
+                        </th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>
+                          Cantidad de Órdenes
+                        </th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>
+                          Porcentaje
+                        </th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>
+                          Barra de Progreso
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {estadisticas.servicios_mas_solicitados.map((servicio, index) => (
+                        <tr key={index}>
+                          <td style={{ 
+                            borderColor: 'var(--tecno-gray-light)',
+                            color: 'var(--tecno-black)'
+                          }}>
+                            {servicio.servicio}
+                          </td>
+                          <td style={{ 
+                            borderColor: 'var(--tecno-gray-light)',
+                            color: 'var(--tecno-black)',
+                            fontWeight: '600'
+                          }}>
+                            {servicio.cantidad_ordenes}
+                          </td>
+                          <td style={{ 
+                            borderColor: 'var(--tecno-gray-light)',
+                            color: 'var(--tecno-orange)',
+                            fontWeight: '600'
+                          }}>
+                            {servicio.porcentaje}%
+                          </td>
+                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
+                            <div className="progress" style={{ height: '20px' }}>
+                              <div 
+                                className="progress-bar" 
+                                role="progressbar" 
+                                style={{ 
+                                  width: `${servicio.porcentaje}%`,
+                                  backgroundColor: colores.colores[index % colores.colores.length],
+                                  borderRadius: '4px'
+                                }}
+                                aria-valuenow={servicio.porcentaje}
+                                aria-valuemin="0" 
+                                aria-valuemax="100"
+                              >
+                                {servicio.porcentaje}%
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

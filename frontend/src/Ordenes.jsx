@@ -38,6 +38,23 @@ const Ordenes = () => {
     cargarEstados();
   }, []);
 
+  // Función para cerrar modales con tecla Escape
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        if (mostrarModal) {
+          setMostrarModal(false);
+        }
+        if (mostrarImpresion) {
+          setMostrarImpresion(false);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [mostrarModal, mostrarImpresion]);
+
   const cargarOrdenes = async () => {
     try {
       const response = await fetch('http://localhost:4000/api/ordenes');
@@ -277,25 +294,47 @@ const Ordenes = () => {
   };
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Gestión de Órdenes</h2>
-        <button 
-          className="btn btn-secondary" 
-          onClick={() => navigate('/home')}
-        >
-          ← Volver al Menú Principal
-        </button>
-      </div>
-
-      {/* Formulario */}
-      <div className="card mb-4">
-        <div className="card-header">
-          <h5 className="mb-0">
-            {editando ? '✏️ Editando Orden' : '➕ Nueva Orden'}
-          </h5>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, var(--tecno-gray-very-light) 0%, var(--tecno-white) 100%)',
+      paddingTop: '90px'
+    }}>
+      <div className="container">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1 style={{ 
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              marginBottom: '8px',
+              background: 'linear-gradient(135deg, var(--tecno-orange), var(--tecno-orange-light))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              📝 Gestión de Órdenes
+            </h1>
+            <p style={{ 
+              color: 'var(--tecno-gray-dark)', 
+              fontSize: '1.1rem',
+              marginBottom: '0'
+            }}>
+              Administra las órdenes de servicio del taller
+            </p>
+          </div>
+          <button 
+            className="btn-tecno-outline" 
+            onClick={() => navigate('/home')}
+          >
+            ← Volver al Menú Principal
+          </button>
         </div>
-        <div className="card-body">
+
+        {/* Formulario */}
+        <div className="card-tecno mb-4">
+          <div className="card-tecno-header">
+            {editando ? '✏️ Editando Orden' : '➕ Nueva Orden'}
+          </div>
+          <div className="card-tecno-body">
           <form onSubmit={handleSubmit}>
             <div className="row">
               {/* Cliente */}
@@ -502,13 +541,13 @@ const Ordenes = () => {
 
             {/* Botones */}
             <div className="d-flex gap-2">
-              <button type="submit" className="btn btn-primary">
+              <button type="submit" className="btn-tecno">
                 {editando ? '✏️ Actualizar Orden' : '➕ Registrar Orden'}
               </button>
               {editando && (
                 <button 
                   type="button" 
-                  className="btn btn-warning"
+                  className="btn-tecno-secondary"
                   onClick={limpiarFormulario}
                 >
                   ❌ Cancelar Edición
@@ -519,28 +558,68 @@ const Ordenes = () => {
         </div>
       </div>
 
-      {/* Tabla de Órdenes */}
-      <div className="card">
-        <div className="card-header">
-          <h5 className="mb-0">Órdenes Registradas</h5>
-        </div>
-        <div className="card-body">
-          <div className="table-responsive">
-            <table className="table table-striped">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Fecha</th>
-                  <th>Cliente</th>
-                  <th>Vehículo</th>
-                  <th>Servicio</th>
-                  <th>Estado</th>
-                  <th>Combustible</th>
-                  <th>Odómetro</th>
-                  <th>Multimedia</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
+        {/* Tabla de Órdenes */}
+        <div className="card-tecno">
+          <div className="card-tecno-header">
+            📋 Órdenes Registradas
+          </div>
+          <div className="card-tecno-body">
+            <div className="table-responsive">
+              <table className="table table-bordered" style={{ marginBottom: '0' }}>
+                <thead style={{ backgroundColor: 'var(--tecno-gray-very-light)' }}>
+                  <tr>
+                    <th style={{ 
+                      borderColor: 'var(--tecno-gray-light)',
+                      color: 'var(--tecno-black)',
+                      fontWeight: '600'
+                    }}>ID</th>
+                    <th style={{ 
+                      borderColor: 'var(--tecno-gray-light)',
+                      color: 'var(--tecno-black)',
+                      fontWeight: '600'
+                    }}>Fecha</th>
+                    <th style={{ 
+                      borderColor: 'var(--tecno-gray-light)',
+                      color: 'var(--tecno-black)',
+                      fontWeight: '600'
+                    }}>Cliente</th>
+                    <th style={{ 
+                      borderColor: 'var(--tecno-gray-light)',
+                      color: 'var(--tecno-black)',
+                      fontWeight: '600'
+                    }}>Vehículo</th>
+                    <th style={{ 
+                      borderColor: 'var(--tecno-gray-light)',
+                      color: 'var(--tecno-black)',
+                      fontWeight: '600'
+                    }}>Servicio</th>
+                    <th style={{ 
+                      borderColor: 'var(--tecno-gray-light)',
+                      color: 'var(--tecno-black)',
+                      fontWeight: '600'
+                    }}>Estado</th>
+                    <th style={{ 
+                      borderColor: 'var(--tecno-gray-light)',
+                      color: 'var(--tecno-black)',
+                      fontWeight: '600'
+                    }}>Combustible</th>
+                    <th style={{ 
+                      borderColor: 'var(--tecno-gray-light)',
+                      color: 'var(--tecno-black)',
+                      fontWeight: '600'
+                    }}>Odómetro</th>
+                    <th style={{ 
+                      borderColor: 'var(--tecno-gray-light)',
+                      color: 'var(--tecno-black)',
+                      fontWeight: '600'
+                    }}>Multimedia</th>
+                    <th style={{ 
+                      borderColor: 'var(--tecno-gray-light)',
+                      color: 'var(--tecno-black)',
+                      fontWeight: '600'
+                    }}>Acciones</th>
+                  </tr>
+                </thead>
               <tbody>
                 {ordenes.map(orden => (
                   <tr key={orden.pk_id_orden}>
@@ -569,37 +648,69 @@ const Ordenes = () => {
                     </td>
                     <td>{orden.nivel_combustible_orden}</td>
                     <td>{orden.odometro_auto_cliente_orden ? `${orden.odometro_auto_cliente_orden} km` : '-'}</td>
-                    <td>
+                    <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
                       <div className="btn-group" role="group">
                         <button
-                          className="btn btn-sm btn-outline-primary"
+                          className="btn btn-sm"
                           onClick={() => verMultimedia(orden)}
                           title="Ver multimedia"
+                          style={{
+                            backgroundColor: 'var(--info)',
+                            color: 'var(--tecno-white)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '4px 8px',
+                            fontSize: '12px'
+                          }}
                         >
                           📷
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-success"
+                          className="btn btn-sm"
                           onClick={() => imprimirOrden(orden)}
                           title="Imprimir orden"
+                          style={{
+                            backgroundColor: 'var(--success)',
+                            color: 'var(--tecno-white)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '4px 8px',
+                            fontSize: '12px'
+                          }}
                         >
                           🖨️
                         </button>
                       </div>
                     </td>
-                    <td>
+                    <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
                       <div className="btn-group" role="group">
                         <button
-                          className="btn btn-sm btn-warning"
+                          className="btn btn-sm"
                           onClick={() => editarOrden(orden)}
                           title="Editar"
+                          style={{
+                            backgroundColor: 'var(--warning)',
+                            color: 'var(--tecno-white)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '4px 8px',
+                            fontSize: '12px'
+                          }}
                         >
                           ✏️
                         </button>
                         <button
-                          className="btn btn-sm btn-danger"
+                          className="btn btn-sm"
                           onClick={() => eliminarOrden(orden.pk_id_orden)}
                           title="Eliminar"
+                          style={{
+                            backgroundColor: 'var(--danger)',
+                            color: 'var(--tecno-white)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '4px 8px',
+                            fontSize: '12px'
+                          }}
                         >
                           🗑️
                         </button>
@@ -613,22 +724,22 @@ const Ordenes = () => {
         </div>
       </div>
 
-      {/* Modal de Multimedia */}
-      {mostrarModal && ordenSeleccionada && (
-        <div className="modal fade show" style={{ display: 'block' }}>
-          <div className="modal-dialog modal-xl">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  Multimedia - Orden #{ordenSeleccionada.pk_id_orden}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setMostrarModal(false)}
-                />
-              </div>
-              <div className="modal-body">
+        {/* Modal de Multimedia */}
+        {mostrarModal && ordenSeleccionada && (
+          <div className="modal fade show" style={{ display: 'block' }}>
+            <div className="modal-dialog modal-xl">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    📷 Multimedia - Orden #{ordenSeleccionada.pk_id_orden}
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setMostrarModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
                 <div className="row mb-3">
                   <div className="col-md-6">
                     <strong>Cliente:</strong> {ordenSeleccionada.nombre_cliente} {ordenSeleccionada.apellido_cliente}
@@ -708,55 +819,56 @@ const Ordenes = () => {
                   </div>
                 )}
               </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setMostrarModal(false)}
-                >
-                  Cerrar
-                </button>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setMostrarModal(false)}
+                  >
+                    Cerrar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Overlay del modal */}
       {mostrarModal && (
         <div className="modal-backdrop fade show" />
       )}
 
-      {/* Componente de Impresión */}
-      {mostrarImpresion && ordenParaImprimir && (
-        <div className="modal fade show" style={{ display: 'block' }}>
-          <div className="modal-dialog modal-xl">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  🖨️ Imprimir Orden #{ordenParaImprimir.pk_id_orden}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setMostrarImpresion(false)}
-                />
-              </div>
-              <div className="modal-body p-0">
-                <ImprimirOrden 
-                  orden={ordenParaImprimir} 
-                  onClose={() => setMostrarImpresion(false)}
-                />
+        {/* Componente de Impresión */}
+        {mostrarImpresion && ordenParaImprimir && (
+          <div className="modal fade show" style={{ display: 'block' }}>
+            <div className="modal-dialog modal-xl">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    🖨️ Imprimir Orden #{ordenParaImprimir.pk_id_orden}
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setMostrarImpresion(false)}
+                  ></button>
+                </div>
+                <div className="modal-body" style={{ padding: '0' }}>
+                  <ImprimirOrden 
+                    orden={ordenParaImprimir} 
+                    onClose={() => setMostrarImpresion(false)}
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Overlay del modal de impresión */}
-      {mostrarImpresion && (
-        <div className="modal-backdrop fade show" />
-      )}
+        {/* Overlay del modal de impresión */}
+        {mostrarImpresion && (
+          <div className="modal-backdrop fade show" />
+        )}
+      </div>
     </div>
   );
 };

@@ -534,6 +534,218 @@ class EmailService {
     
     return phone; // Retornar original si no se puede formatear
   }
+
+  /**
+   * Envía email de recuperación de contraseña
+   * @param {string} email - Email del usuario
+   * @param {string} nombreUsuario - Nombre del usuario
+   * @param {string} resetLink - Enlace de recuperación
+   * @returns {Promise<Object>} - Resultado del envío
+   */
+  async sendPasswordResetEmail(email, nombreUsuario, resetLink) {
+    if (!this.isInitialized) {
+      throw new Error('Email service not initialized');
+    }
+
+    if (!this.config.enabled) {
+      throw new Error('Email service is disabled');
+    }
+
+    try {
+      const { nombre: empresa } = config.empresa;
+      
+      const mailOptions = {
+        from: `"${empresa}" <${this.config.user}>`,
+        to: email,
+        subject: `🔐 Recuperación de Contraseña - ${empresa}`,
+        html: this.generatePasswordResetEmailContent(nombreUsuario, resetLink, empresa)
+      };
+
+      const result = await this.transporter.sendMail(mailOptions);
+      
+      console.log(`✅ Password reset email sent to ${email}:`, result.messageId);
+      
+      return {
+        success: true,
+        messageId: result.messageId,
+        email: email
+      };
+
+    } catch (error) {
+      console.error('❌ Error sending password reset email:', error);
+      throw new Error(`Failed to send password reset email: ${error.message}`);
+    }
+  }
+
+  /**
+   * Genera el contenido HTML del email de recuperación de contraseña
+   * @param {string} nombreUsuario - Nombre del usuario
+   * @param {string} resetLink - Enlace de recuperación
+   * @param {string} empresa - Nombre de la empresa
+   * @returns {string} - Contenido HTML del email
+   */
+  generatePasswordResetEmailContent(nombreUsuario, resetLink, empresa) {
+    return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Recuperación de Contraseña</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f4f4f4;
+            }
+            .container {
+                background-color: #ffffff;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                border-bottom: 3px solid #f26522;
+            }
+            .logo {
+                font-size: 24px;
+                font-weight: bold;
+                color: #f26522;
+                margin-bottom: 10px;
+            }
+            .title {
+                color: #2c3e50;
+                font-size: 28px;
+                margin: 0;
+            }
+            .content {
+                margin-bottom: 30px;
+            }
+            .greeting {
+                font-size: 18px;
+                color: #2c3e50;
+                margin-bottom: 20px;
+            }
+            .message {
+                font-size: 16px;
+                margin-bottom: 25px;
+                color: #555;
+            }
+            .reset-button {
+                display: inline-block;
+                background: linear-gradient(135deg, #f26522, #e55a1a);
+                color: white;
+                padding: 15px 30px;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 16px;
+                text-align: center;
+                margin: 20px 0;
+                box-shadow: 0 4px 15px rgba(242, 101, 34, 0.3);
+                transition: all 0.3s ease;
+            }
+            .reset-button:hover {
+                background: linear-gradient(135deg, #e55a1a, #d14e12);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(242, 101, 34, 0.4);
+            }
+            .warning {
+                background-color: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 8px;
+                padding: 15px;
+                margin: 20px 0;
+                color: #856404;
+            }
+            .warning-icon {
+                color: #f39c12;
+                font-weight: bold;
+            }
+            .footer {
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+                text-align: center;
+                color: #666;
+                font-size: 14px;
+            }
+            .contact-info {
+                background-color: #f8f9fa;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 20px 0;
+                text-align: center;
+            }
+            .contact-info p {
+                margin: 5px 0;
+                color: #555;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">${empresa}</div>
+                <h1 class="title">🔐 Recuperación de Contraseña</h1>
+            </div>
+            
+            <div class="content">
+                <div class="greeting">Hola ${nombreUsuario},</div>
+                
+                <div class="message">
+                    Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en nuestro sistema de gestión del taller.
+                </div>
+                
+                <div class="message">
+                    Si solicitaste este cambio, haz clic en el botón de abajo para crear una nueva contraseña:
+                </div>
+                
+                <div style="text-align: center;">
+                    <a href="${resetLink}" class="reset-button">🔄 Restablecer Contraseña</a>
+                </div>
+                
+                <div class="warning">
+                    <span class="warning-icon">⚠️ Importante:</span>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Este enlace expirará en 1 hora por seguridad</li>
+                        <li>Si no solicitaste este cambio, puedes ignorar este email</li>
+                        <li>Tu contraseña actual seguirá funcionando hasta que la cambies</li>
+                    </ul>
+                </div>
+                
+                <div class="message">
+                    Si el botón no funciona, puedes copiar y pegar este enlace en tu navegador:
+                </div>
+                <div style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; word-break: break-all; font-family: monospace; font-size: 12px; color: #666;">
+                    ${resetLink}
+                </div>
+            </div>
+            
+            <div class="contact-info">
+                <p><strong>¿Necesitas ayuda?</strong></p>
+                <p>Si tienes problemas con tu cuenta, contáctanos:</p>
+                <p>📧 Email: telectrofrio@gmail.com</p>
+                <p>📞 Teléfono: +502 7844 4001</p>
+            </div>
+            
+            <div class="footer">
+                <p>Este email fue enviado automáticamente por el sistema de gestión del taller.</p>
+                <p>Por favor, no respondas a este email.</p>
+                <p><strong>${empresa}</strong> - Sistema de Gestión de Taller Mecánico</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+  }
 }
 
 module.exports = new EmailService();

@@ -359,6 +359,42 @@ class NotificationService {
   }
 
   /**
+   * Envía email de recuperación de contraseña
+   * @param {string} email - Email del usuario
+   * @param {string} nombreUsuario - Nombre del usuario
+   * @param {string} resetLink - Enlace de recuperación
+   * @returns {Promise<Object>} - Resultado del envío
+   */
+  async sendPasswordResetEmail(email, nombreUsuario, resetLink) {
+    const startTime = Date.now();
+    const results = {
+      email,
+      timestamp: new Date().toISOString(),
+      processingTime: 0,
+      success: false,
+      error: null
+    };
+
+    try {
+      console.log(`🔐 Enviando email de recuperación de contraseña a ${email}...`);
+
+      await this.emailService.sendPasswordResetEmail(email, nombreUsuario, resetLink);
+      
+      results.success = true;
+      results.processingTime = Date.now() - startTime;
+      console.log('✅ Email de recuperación de contraseña enviado exitosamente');
+
+      return results;
+
+    } catch (error) {
+      results.processingTime = Date.now() - startTime;
+      results.error = error.message;
+      console.error('❌ Error enviando email de recuperación:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Cierra todos los servicios
    */
   async destroy() {

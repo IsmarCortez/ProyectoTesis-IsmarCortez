@@ -4,6 +4,8 @@ import Login from './Login';
 import Home from './Home';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import RecuperarContrasena from './RecuperarContrasena';
+import ForgotPassword from './ForgotPassword';
+import ResetPassword from './ResetPassword';
 import Clientes from './Clientes';
 import Vehiculos from './Vehiculos';
 import Servicios from './Servicios';
@@ -45,6 +47,8 @@ function App() {
         <Route path="/reportes" element={usuario ? <Reportes /> : <Navigate to="/" />} />
         <Route path="/tracker" element={<TrackerPublico />} />
         <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </Router>
   );

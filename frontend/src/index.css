@@ -1,3 +1,40 @@
+/* ===== VARIABLES DE COLOR TECNO AUTO ===== */
+:root {
+  /* Colores principales */
+  --tecno-orange: #F26522;
+  --tecno-black: #000000;
+  --tecno-gray-dark: #6E6E6E;
+  --tecno-gray-light: #CFCFCF;
+  --tecno-white: #FFFFFF;
+  
+  /* Colores derivados */
+  --tecno-orange-hover: #E55A1A;
+  --tecno-orange-light: #FF7A3D;
+  --tecno-gray-medium: #9E9E9E;
+  --tecno-gray-very-light: #F5F5F5;
+  
+  /* Colores de estado */
+  --success: #28a745;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  --info: #17a2b8;
+  
+  /* Sombras */
+  --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.15);
+  --shadow-heavy: 0 8px 16px rgba(0, 0, 0, 0.2);
+  
+  /* Transiciones */
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* ===== RESET Y ESTILOS BASE ===== */
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,9 +42,619 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--tecno-gray-very-light);
+  color: var(--tecno-black);
+  line-height: 1.6;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* ===== COMPONENTES REUTILIZABLES ===== */
+
+/* Botones Tecno Auto */
+.btn-tecno {
+  background-color: var(--tecno-orange);
+  color: var(--tecno-white);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  box-shadow: var(--shadow-light);
+}
+
+.btn-tecno:hover {
+  background-color: var(--tecno-orange-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+  color: var(--tecno-white);
+  text-decoration: none;
+}
+
+.btn-tecno:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-light);
+}
+
+.btn-tecno-secondary {
+  background-color: var(--tecno-gray-dark);
+  color: var(--tecno-white);
+}
+
+.btn-tecno-secondary:hover {
+  background-color: var(--tecno-black);
+  color: var(--tecno-white);
+}
+
+.btn-tecno-outline {
+  background-color: transparent;
+  color: var(--tecno-orange);
+  border: 2px solid var(--tecno-orange);
+}
+
+.btn-tecno-outline:hover {
+  background-color: var(--tecno-orange);
+  color: var(--tecno-white);
+}
+
+/* Cards Tecno Auto */
+.card-tecno {
+  background-color: var(--tecno-white);
+  border-radius: 12px;
+  box-shadow: var(--shadow-medium);
+  border: 1px solid var(--tecno-gray-light);
+  overflow: hidden;
+  transition: all var(--transition-medium);
+}
+
+.card-tecno:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-heavy);
+}
+
+.card-tecno-header {
+  background: linear-gradient(135deg, var(--tecno-orange), var(--tecno-orange-light));
+  color: var(--tecno-white);
+  padding: 20px;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.card-tecno-body {
+  padding: 24px;
+}
+
+/* Formularios Tecno Auto */
+.form-tecno {
+  background-color: var(--tecno-white);
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-medium);
+  border: 1px solid var(--tecno-gray-light);
+}
+
+.form-tecno .form-label {
+  color: var(--tecno-black);
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.form-tecno .form-control {
+  border: 2px solid var(--tecno-gray-light);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  transition: all var(--transition-fast);
+  background-color: var(--tecno-white);
+}
+
+.form-tecno .form-control:focus {
+  border-color: var(--tecno-orange);
+  box-shadow: 0 0 0 3px rgba(242, 101, 34, 0.1);
+  outline: none;
+}
+
+/* Comboboxes Tecno Auto - Selectores más específicos */
+.form-select,
+select.form-select,
+.card-tecno .form-select,
+.card-tecno select.form-select,
+.row .form-select,
+.row select.form-select,
+.col-md-4 .form-select,
+.col-md-4 select.form-select,
+.col-md-6 .form-select,
+.col-md-6 select.form-select {
+  border: 2px solid var(--tecno-gray-light) !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  font-size: 16px !important;
+  transition: all var(--transition-fast) !important;
+  background-color: var(--tecno-white) !important;
+  color: var(--tecno-black) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 16px 12px !important;
+  padding-right: 40px !important;
+}
+
+.form-select:focus,
+select.form-select:focus,
+.card-tecno .form-select:focus,
+.card-tecno select.form-select:focus,
+.row .form-select:focus,
+.row select.form-select:focus,
+.col-md-4 .form-select:focus,
+.col-md-4 select.form-select:focus,
+.col-md-6 .form-select:focus,
+.col-md-6 select.form-select:focus {
+  border-color: var(--tecno-orange) !important;
+  box-shadow: 0 0 0 3px rgba(242, 101, 34, 0.1) !important;
+  outline: none !important;
+}
+
+.form-select-sm,
+select.form-select-sm {
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  padding-right: 36px !important;
+}
+
+/* Header Tecno Auto */
+.header-tecno {
+  background: linear-gradient(135deg, var(--tecno-black), var(--tecno-gray-dark));
+  color: var(--tecno-white);
+  padding: 16px 0;
+  box-shadow: var(--shadow-medium);
+}
+
+/* Navegación Tecno Auto */
+.nav-tecno {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Botón hamburguesa - oculto por defecto en desktop */
+.hamburger-btn {
+  display: none;
+}
+
+/* Menú móvil - oculto por defecto en desktop */
+.mobile-menu {
+  display: none;
+}
+
+.mobile-menu-overlay {
+  display: none;
+}
+
+.nav-tecno .nav-link {
+  color: var(--tecno-white);
+  text-decoration: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.nav-tecno .nav-link:hover {
+  background-color: rgba(242, 101, 34, 0.1);
+  border-color: var(--tecno-orange);
+  color: var(--tecno-white);
+  text-decoration: none;
+}
+
+.nav-tecno .nav-link.active {
+  background-color: var(--tecno-orange);
+  color: var(--tecno-white);
+}
+
+/* Alertas Tecno Auto */
+.alert-tecno {
+  padding: 16px 20px;
+  border-radius: 8px;
+  border-left: 4px solid;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.alert-tecno-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  border-left-color: var(--success);
+  color: var(--success);
+}
+
+.alert-tecno-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-left-color: var(--danger);
+  color: var(--danger);
+}
+
+.alert-tecno-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  border-left-color: var(--warning);
+  color: #856404;
+}
+
+.alert-tecno-info {
+  background-color: rgba(23, 162, 184, 0.1);
+  border-left-color: var(--info);
+  color: var(--info);
+}
+
+/* Utilidades */
+.text-tecno-orange { color: var(--tecno-orange); }
+.text-tecno-black { color: var(--tecno-black); }
+.text-tecno-gray { color: var(--tecno-gray-dark); }
+.bg-tecno-orange { background-color: var(--tecno-orange); }
+.bg-tecno-black { background-color: var(--tecno-black); }
+.bg-tecno-gray { background-color: var(--tecno-gray-light); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .btn-tecno {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  
+  .card-tecno-body {
+    padding: 20px;
+  }
+  
+  .form-tecno {
+    padding: 24px;
+  }
+  
+  /* Navegación responsive */
+  .nav-tecno {
+    display: none;
+  }
+  
+  .nav-tecno-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    padding: 20px;
+  }
+  
+  .nav-tecno-mobile .nav-link {
+    width: 100%;
+    text-align: center;
+    padding: 12px 16px;
+    font-size: 16px;
+  }
+  
+  /* Header responsive */
+  .header-tecno {
+    padding: 16px 16px;
+    height: auto;
+    min-height: 70px;
+  }
+  
+  .header-tecno .logo-container {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .header-tecno .logo-container span {
+    font-size: 16px;
+  }
+  
+  .header-tecno .logo-container img {
+    height: 32px;
+  }
+  
+  /* Botón hamburguesa */
+  .hamburger-btn {
+    display: block !important;
+    background: none;
+    border: none;
+    color: var(--tecno-white);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all var(--transition-fast);
+  }
+  
+  .hamburger-btn:hover {
+    background-color: rgba(242, 101, 34, 0.1);
+  }
+  
+  /* Menú móvil */
+  .mobile-menu {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 280px;
+    height: 100vh;
+    background: var(--tecno-white);
+    box-shadow: var(--shadow-heavy);
+    transition: left var(--transition-medium);
+    z-index: 2000;
+    overflow-y: auto;
+    display: block !important;
+  }
+  
+  .mobile-menu.open {
+    left: 0;
+  }
+  
+  .mobile-menu-header {
+    background: linear-gradient(135deg, var(--tecno-orange), var(--tecno-orange-light));
+    color: var(--tecno-white);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .mobile-menu-close {
+    background: none;
+    border: none;
+    color: var(--tecno-white);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all var(--transition-fast);
+  }
+  
+  .mobile-menu-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .mobile-menu-body {
+    padding: 20px;
+  }
+  
+  .mobile-menu .nav-link {
+    display: block;
+    color: var(--tecno-black);
+    text-decoration: none;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+    border: 1px solid transparent;
+  }
+  
+  .mobile-menu .nav-link:hover {
+    background-color: var(--tecno-gray-very-light);
+    border-color: var(--tecno-orange);
+    color: var(--tecno-orange);
+  }
+  
+  /* Botón de perfil en menú móvil */
+  .mobile-menu .nav-link[style*="background: var(--tecno-orange)"]:hover {
+    background-color: var(--tecno-orange-hover) !important;
+    border-color: var(--tecno-orange-hover) !important;
+    color: var(--tecno-white) !important;
+  }
+  
+  /* Overlay para menú móvil */
+  .mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1500;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-medium);
+    display: block !important;
+  }
+  
+  .mobile-menu-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  /* Botón de menú usuario responsive - Oculto en móviles */
+  .user-menu-btn {
+    display: none !important;
+  }
+  
+  /* Drawer de usuario responsive */
+  .user-drawer {
+    width: 100vw;
+    max-width: 320px;
+  }
+  
+  /* Contenido principal responsive */
+  .main-content {
+    padding-top: 20px;
+  }
+  
+  .main-content h1 {
+    font-size: 2rem;
+  }
+  
+  .main-content .container {
+    padding: 0 16px;
+  }
+  
+  /* Cards responsive */
+  .card-tecno {
+    margin-bottom: 20px;
+  }
+  
+  .card-tecno-header {
+    padding: 16px;
+    font-size: 16px;
+  }
+  
+  /* Botones responsive */
+  .btn-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .btn-group .btn {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+  
+  /* Comboboxes responsive - Selectores más específicos */
+  .form-select,
+  select.form-select,
+  .card-tecno .form-select,
+  .card-tecno select.form-select,
+  .row .form-select,
+  .row select.form-select,
+  .col-md-4 .form-select,
+  .col-md-4 select.form-select,
+  .col-md-6 .form-select,
+  .col-md-6 select.form-select {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 16px !important;
+    padding: 12px 16px !important;
+    padding-right: 40px !important;
+    border-radius: 8px !important;
+    border: 2px solid var(--tecno-gray-light) !important;
+    background-color: var(--tecno-white) !important;
+    color: var(--tecno-black) !important;
+    box-sizing: border-box !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+  }
+  
+  .form-select:focus,
+  select.form-select:focus,
+  .card-tecno .form-select:focus,
+  .card-tecno select.form-select:focus,
+  .row .form-select:focus,
+  .row select.form-select:focus,
+  .col-md-4 .form-select:focus,
+  .col-md-4 select.form-select:focus,
+  .col-md-6 .form-select:focus,
+  .col-md-6 select.form-select:focus {
+    border-color: var(--tecno-orange) !important;
+    box-shadow: 0 0 0 3px rgba(242, 101, 34, 0.1) !important;
+    outline: none !important;
+  }
+  
+  .form-select-sm,
+  select.form-select-sm {
+    font-size: 14px !important;
+    padding: 10px 14px !important;
+    padding-right: 36px !important;
+  }
+  
+  /* Contenedores de comboboxes responsive */
+  .col-md-4,
+  .col-md-6,
+  .col-md-3,
+  .col-md-2 {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-bottom: 15px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-tecno {
+    padding: 8px 12px;
+    min-height: 50px;
+  }
+  
+  .header-tecno .logo-container span {
+    font-size: 14px;
+  }
+  
+  .header-tecno .logo-container img {
+    height: 28px;
+  }
+  
+  .user-menu-btn {
+    top: 60px;
+    left: 12px;
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+  
+  .main-content {
+    padding-top: 15px;
+  }
+  
+  .main-content h1 {
+    font-size: 1.8rem;
+  }
+  
+  .card-tecno-header {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  .card-tecno-body {
+    padding: 16px;
+  }
+  
+  /* Comboboxes en móviles pequeños - Selectores más específicos */
+  .form-select,
+  select.form-select,
+  .card-tecno .form-select,
+  .card-tecno select.form-select,
+  .row .form-select,
+  .row select.form-select,
+  .col-md-4 .form-select,
+  .col-md-4 select.form-select,
+  .col-md-6 .form-select,
+  .col-md-6 select.form-select {
+    font-size: 16px !important;
+    padding: 14px 16px !important;
+    padding-right: 40px !important;
+    min-height: 48px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  .form-select-sm,
+  select.form-select-sm {
+    font-size: 14px !important;
+    padding: 12px 14px !important;
+    padding-right: 36px !important;
+    min-height: 44px !important;
+  }
+  
+  /* Contenedores de comboboxes responsive */
+  .col-md-4,
+  .col-md-6,
+  .col-md-3,
+  .col-md-2 {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-bottom: 15px !important;
+  }
+}
+
