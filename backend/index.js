@@ -383,6 +383,27 @@ app.get('/api/clientes/dpi/:dpi', async (req, res) => {
   }
 });
 
+// Endpoint para buscar cliente por NIT
+app.get('/api/clientes/nit/:nit', async (req, res) => {
+  const { nit } = req.params;
+  console.log('🔍 Buscando cliente por NIT:', nit);
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT * FROM tbl_clientes WHERE NIT = ?', [nit]);
+    console.log('📊 Resultados de la búsqueda:', rows);
+    await connection.end();
+    if (rows.length === 0) {
+      console.log('❌ No se encontró cliente con NIT:', nit);
+      return res.status(404).json({ message: 'No existe un cliente con ese NIT.' });
+    }
+    console.log('✅ Cliente encontrado:', rows[0]);
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Error en búsqueda por NIT:', error);
+    res.status(500).json({ message: 'Error al buscar el cliente.' });
+  }
+});
+
 // Endpoint para actualizar un cliente
 app.put('/api/clientes/:id', async (req, res) => {
   const { id } = req.params;
@@ -744,7 +765,9 @@ app.get('/api/ordenes', async (req, res) => {
           o.imagen_4,
           o.video,
           o.observaciones_orden,
+          o.estado_vehiculo,
           c.dpi_cliente,
+          c.NIT,
           c.nombre_cliente,
           c.apellido_cliente,
           c.telefono_cliente,
@@ -779,6 +802,26 @@ app.get('/api/ordenes/buscar-cliente/:dpi', async (req, res) => {
     const [rows] = await connection.execute(
       'SELECT PK_id_cliente, dpi_cliente, nombre_cliente, apellido_cliente FROM tbl_clientes WHERE dpi_cliente = ?',
       [dpi]
+    );
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Cliente no encontrado.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al buscar el cliente.' });
+  }
+});
+
+// Endpoint para buscar cliente por NIT
+app.get('/api/ordenes/buscar-cliente-nit/:nit', async (req, res) => {
+  const { nit } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      'SELECT PK_id_cliente, NIT, nombre_cliente, apellido_cliente FROM tbl_clientes WHERE NIT = ?',
+      [nit]
     );
     await connection.end();
     if (rows.length === 0) {
@@ -827,12 +870,13 @@ app.post('/api/ordenes', upload.fields([
     nivel_combustible_orden,
     odometro_auto_cliente_orden,
     fk_id_estado_orden,
-    observaciones_orden
+    observaciones_orden,
+    estado_vehiculo
   } = req.body;
 
-  // Validaciones
-  if (!fk_id_cliente || !fk_id_vehiculo || !fk_id_servicio || !fk_id_estado_orden) {
-    return res.status(400).json({ message: 'Cliente, vehículo, servicio y estado son requeridos.' });
+  // Validaciones (fk_id_cliente puede ser null para Consumidor Final)
+  if (!fk_id_vehiculo || !fk_id_servicio || !fk_id_estado_orden) {
+    return res.status(400).json({ message: 'Vehículo, servicio y estado son requeridos.' });
   }
 
   try {
@@ -845,16 +889,29 @@ app.post('/api/ordenes', upload.fields([
     const imagen_4 = req.files.imagen_4 ? req.files.imagen_4[0].filename : 'sin_imagen.jpg';
     const video = req.files.video ? req.files.video[0].filename : 'sin_video.mp4';
 
+    // Asegurar que estado_vehiculo tenga un valor por defecto
+    const estadoVehiculo = estado_vehiculo || 'Bueno';
+
+    // Debug: verificar si es Consumidor Final
+    console.log('🔍 Creando orden - fk_id_cliente:', fk_id_cliente);
+    
+    // Convertir valores vacíos o 'null' a null real para MySQL
+    const fk_id_cliente_final = (fk_id_cliente === 'null' || fk_id_cliente === null || fk_id_cliente === '' || fk_id_cliente === undefined) ? null : fk_id_cliente;
+    
+    if (fk_id_cliente_final === null) {
+      console.log('📝 Orden para Consumidor Final (sin cliente específico)');
+    }
+
     const [result] = await connection.execute(
       `INSERT INTO tbl_ordenes (
         fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
         nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
-        observaciones_orden, imagen_1, imagen_2, imagen_3, imagen_4, video
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        observaciones_orden, estado_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
+        fk_id_cliente_final, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
         nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
-        observaciones_orden, imagen_1, imagen_2, imagen_3, imagen_4, video
+        observaciones_orden, estadoVehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video
       ]
     );
     
@@ -936,6 +993,7 @@ app.get('/api/ordenes/:id/pdf', async (req, res) => {
       `SELECT 
         o.*,
         c.dpi_cliente,
+        c.NIT,
         c.nombre_cliente,
         c.apellido_cliente,
         c.correo_cliente,
@@ -1001,7 +1059,8 @@ app.put('/api/ordenes/:id', upload.fields([
     nivel_combustible_orden,
     odometro_auto_cliente_orden,
     fk_id_estado_orden,
-    observaciones_orden
+    observaciones_orden,
+    estado_vehiculo
   } = req.body;
 
   try {
@@ -1030,16 +1089,22 @@ app.put('/api/ordenes/:id', upload.fields([
     const imagen_4 = req.files.imagen_4 ? req.files.imagen_4[0].filename : currentOrder[0].imagen_4;
     const video = req.files.video ? req.files.video[0].filename : currentOrder[0].video;
 
+    // Asegurar que estado_vehiculo tenga un valor por defecto
+    const estadoVehiculo = estado_vehiculo || 'Bueno';
+
+    // Convertir valores vacíos o 'null' a null real para MySQL
+    const fk_id_cliente_final = (fk_id_cliente === 'null' || fk_id_cliente === null || fk_id_cliente === '' || fk_id_cliente === undefined) ? null : fk_id_cliente;
+
     const [result] = await connection.execute(
       `UPDATE tbl_ordenes SET 
         fk_id_cliente = ?, fk_id_vehiculo = ?, fk_id_servicio = ?, comentario_cliente_orden = ?,
         nivel_combustible_orden = ?, odometro_auto_cliente_orden = ?, fk_id_estado_orden = ?,
-        observaciones_orden = ?, imagen_1 = ?, imagen_2 = ?, imagen_3 = ?, imagen_4 = ?, video = ?
+        observaciones_orden = ?, estado_vehiculo = ?, imagen_1 = ?, imagen_2 = ?, imagen_3 = ?, imagen_4 = ?, video = ?
       WHERE pk_id_orden = ?`,
       [
-        fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
+        fk_id_cliente_final, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
         nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
-        observaciones_orden, imagen_1, imagen_2, imagen_3, imagen_4, video, id
+        observaciones_orden, estadoVehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video, id
       ]
     );
     

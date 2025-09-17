@@ -105,8 +105,8 @@ module.exports = {
                 <span class="value">${data.clienteNombre} ${data.clienteApellido}</span>
               </div>
               <div class="info-row">
-                <span class="label">DPI:</span>
-                <span class="value">${data.clienteDpi}</span>
+                <span class="label">NIT:</span>
+                <span class="value">${data.clienteNit}</span>
               </div>
               <div class="info-row">
                 <span class="label">Teléfono:</span>
@@ -129,6 +129,10 @@ module.exports = {
               <div class="info-row">
                 <span class="label">Color:</span>
                 <span class="value">${data.vehiculoColor}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Estado del Vehículo:</span>
+                <span class="value">${data.vehiculoEstado}</span>
               </div>
               
               <h3>Servicio Solicitado:</h3>
@@ -174,7 +178,7 @@ module.exports = {
 
 👤 *CLIENTE:*
 • Nombre: ${data.clienteNombre} ${data.clienteApellido}
-• DPI: ${data.clienteDpi}
+• NIT: ${data.clienteNit}
 • Teléfono: ${data.clienteTelefono}
 
 🚙 *VEHÍCULO:*
@@ -182,6 +186,7 @@ module.exports = {
 • Marca/Modelo: ${data.vehiculoMarca} ${data.vehiculoModelo}
 • Año: ${data.vehiculoAnio}
 • Color: ${data.vehiculoColor}
+• Estado: ${data.vehiculoEstado}
 
 🔧 *SERVICIO:*
 • Tipo: ${data.servicio}

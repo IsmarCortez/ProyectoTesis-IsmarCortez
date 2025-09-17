@@ -139,7 +139,7 @@ const ImprimirOrden = ({ orden, onClose }) => {
               <strong>Nombre:</strong> {orden.nombre_cliente} {orden.apellido_cliente}
             </div>
             <div className="col-6">
-              <strong>DPI:</strong> {orden.dpi_cliente}
+              <strong>NIT:</strong> {orden.NIT}
             </div>
           </div>
           {orden.telefono_cliente && (
@@ -170,6 +170,13 @@ const ImprimirOrden = ({ orden, onClose }) => {
               <strong>Año:</strong> {orden.anio_vehiculo}
             </div>
           </div>
+          {orden.estado_vehiculo && (
+            <div className="row mt-1">
+              <div className="col-12">
+                <strong>Estado del Vehículo:</strong> {orden.estado_vehiculo}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Servicio y detalles técnicos */}

@@ -18,7 +18,7 @@ function Clientes() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [verificarDPI, setVerificarDPI] = useState('');
+  const [verificarNIT, setVerificarNIT] = useState('');
   const [verificacion, setVerificacion] = useState(null);
 
   // Cargar clientes al iniciar
@@ -102,21 +102,32 @@ function Clientes() {
     }
   };
 
-  const handleVerificarDPI = async () => {
+  const handleVerificarNIT = async () => {
     setVerificacion(null);
     setError('');
-    if (!verificarDPI) {
-      setError('Ingresa un DPI para verificar.');
+    if (!verificarNIT) {
+      setError('Ingresa un NIT para verificar.');
       return;
     }
+    console.log('🔍 Frontend: Verificando NIT:', verificarNIT);
     try {
-      const res = await axios.get(`http://localhost:4000/api/clientes/dpi/${verificarDPI}`);
-      setVerificacion(res.data);
-    } catch (err) {
-      if (err.response && err.response.status === 404) {
-        setVerificacion('No existe un cliente con ese DPI.');
+      const res = await axios.get(`http://localhost:4000/api/clientes/nit/${verificarNIT}`);
+      console.log('✅ Frontend: Cliente encontrado:', res.data);
+      console.log('📊 Frontend: Tipo de respuesta:', typeof res.data);
+      console.log('📊 Frontend: Contenido de respuesta:', JSON.stringify(res.data));
+      
+      if (res.data && res.data.nombre_cliente) {
+        setVerificacion(res.data);
       } else {
-        setError('Error al verificar el DPI.');
+        console.log('⚠️ Frontend: Datos del cliente incompletos');
+        setVerificacion('Cliente encontrado pero con datos incompletos.');
+      }
+    } catch (err) {
+      console.log('❌ Frontend: Error en verificación:', err.response?.data);
+      if (err.response && err.response.status === 404) {
+        setVerificacion('No existe un cliente con ese NIT.');
+      } else {
+        setError('Error al verificar el NIT.');
       }
     }
   };
@@ -176,22 +187,22 @@ function Clientes() {
           <div className="col-md-5">
             <div className="card-tecno mb-4">
               <div className="card-tecno-header">
-                🔍 Verificar Cliente por DPI
+                🔍 Verificar Cliente por NIT
               </div>
               <div className="card-tecno-body">
                 <div className="input-group mb-3">
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="DPI a verificar (máx. 13 caracteres)" 
-                    value={verificarDPI} 
-                    onChange={e => setVerificarDPI(e.target.value)} 
-                    maxLength="13"
+                    placeholder="NIT a verificar (máx. 9 caracteres)" 
+                    value={verificarNIT} 
+                    onChange={e => setVerificarNIT(e.target.value)} 
+                    maxLength="9"
                   />
                   <button 
                     className="btn-tecno" 
                     type="button" 
-                    onClick={handleVerificarDPI}
+                    onClick={handleVerificarNIT}
                   >
                     Verificar
                   </button>
@@ -199,7 +210,13 @@ function Clientes() {
                 {verificacion && (
                   typeof verificacion === 'string' ?
                     <div className="alert-tecno alert-tecno-warning">{verificacion}</div> :
-                    <div className="alert-tecno alert-tecno-success">Cliente: {verificacion.nombre_cliente} ({verificacion.dpi_cliente})</div>
+                    <div className="alert-tecno alert-tecno-success">
+                      <strong>✅ Cliente encontrado:</strong><br/>
+                      <strong>Nombre:</strong> {verificacion.nombre_cliente} {verificacion.apellido_cliente}<br/>
+                      <strong>NIT:</strong> {verificacion.NIT}<br/>
+                      {verificacion.telefono_cliente && <><strong>Teléfono:</strong> {verificacion.telefono_cliente}<br/></>}
+                      {verificacion.correo_cliente && <><strong>Correo:</strong> {verificacion.correo_cliente}<br/></>}
+                    </div>
                 )}
               </div>
             </div>
@@ -210,11 +227,11 @@ function Clientes() {
               <div className="card-tecno-body">
                 <form onSubmit={handleSubmit}>
                   <div className="mb-3">
-                    <label className="form-label">Nombre</label>
+                    <label className="form-label">Nombre *</label>
                     <input type="text" className="form-control" name="nombre_cliente" value={form.nombre_cliente} onChange={handleChange} required />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Apellido</label>
+                    <label className="form-label">Apellido *</label>
                     <input type="text" className="form-control" name="apellido_cliente" value={form.apellido_cliente} onChange={handleChange} required />
                   </div>
                   <div className="mb-3">
@@ -226,13 +243,21 @@ function Clientes() {
                       value={form.dpi_cliente} 
                       onChange={handleChange} 
                       maxLength="13"
-                      placeholder="Máximo 13 caracteres"
-                      required 
+                      placeholder="Máximo 13 caracteres (opcional)"
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">NIT</label>
-                    <input type="text" className="form-control" name="NIT" value={form.NIT} onChange={handleChange} />
+                    <label className="form-label">NIT *</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      name="NIT" 
+                      value={form.NIT} 
+                      onChange={handleChange} 
+                      maxLength="9"
+                      placeholder="Máximo 9 caracteres"
+                      required 
+                    />
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Teléfono</label>

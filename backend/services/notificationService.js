@@ -139,7 +139,9 @@ class NotificationService {
           o.nivel_combustible_orden,
           o.odometro_auto_cliente_orden,
           o.observaciones_orden,
+          o.estado_vehiculo,
           c.dpi_cliente,
+          c.NIT,
           c.nombre_cliente,
           c.apellido_cliente,
           c.telefono_cliente,
@@ -162,7 +164,16 @@ class NotificationService {
       const [rows] = await connection.execute(query, [orderId]);
       await connection.end();
       
-      return rows.length > 0 ? rows[0] : null;
+      if (rows.length > 0) {
+        console.log('🔍 Datos de la orden obtenidos para notificaciones:', {
+          NIT: rows[0].NIT,
+          estado_vehiculo: rows[0].estado_vehiculo,
+          nombre_cliente: rows[0].nombre_cliente
+        });
+        return rows[0];
+      }
+      
+      return null;
       
     } catch (error) {
       console.error('❌ Error getting order data:', error.message);
