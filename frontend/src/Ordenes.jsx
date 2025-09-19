@@ -17,7 +17,7 @@ const Ordenes = () => {
   const [ordenParaImprimir, setOrdenParaImprimir] = useState(null);
 
   const [form, setForm] = useState({
-    dpi_cliente: '',
+    nit_cliente: '',
     placa_vehiculo: '',
     fk_id_servicio: '',
     comentario_cliente_orden: '',
@@ -25,6 +25,7 @@ const Ordenes = () => {
     odometro_auto_cliente_orden: '',
     fk_id_estado_orden: '',
     observaciones_orden: '',
+    estado_vehiculo: 'Bueno',
     imagen_1: null,
     imagen_2: null,
     imagen_3: null,
@@ -91,14 +92,27 @@ const Ordenes = () => {
     }
   };
 
-  const buscarCliente = async (dpi) => {
-    if (dpi.length < 3) {
+  const buscarCliente = async (nit) => {
+    // Si es "CF" (Consumidor Final), no buscar cliente
+    if (nit.toUpperCase() === 'CF') {
+      setClienteEncontrado({
+        nombre_cliente: 'Consumidor Final',
+        apellido_cliente: '',
+        NIT: 'CF',
+        PK_id_cliente: null
+      });
+      setForm(prev => ({ ...prev, fk_id_cliente: null }));
+      return;
+    }
+    
+    if (nit.length < 3) {
       setClienteEncontrado(null);
+      setForm(prev => ({ ...prev, fk_id_cliente: '' }));
       return;
     }
     
     try {
-      const response = await fetch(`http://localhost:4000/api/ordenes/buscar-cliente/${dpi}`);
+      const response = await fetch(`http://localhost:4000/api/ordenes/buscar-cliente-nit/${nit}`);
       if (response.ok) {
         const cliente = await response.json();
         setClienteEncontrado(cliente);
@@ -110,6 +124,7 @@ const Ordenes = () => {
     } catch (error) {
       console.error('Error al buscar cliente:', error);
       setClienteEncontrado(null);
+      setForm(prev => ({ ...prev, fk_id_cliente: '' }));
     }
   };
 
@@ -144,7 +159,7 @@ const Ordenes = () => {
       setForm(prev => ({ ...prev, [name]: value }));
       
       // Búsqueda automática
-      if (name === 'dpi_cliente') {
+      if (name === 'nit_cliente') {
         buscarCliente(value);
       } else if (name === 'placa_vehiculo') {
         buscarVehiculo(value);
@@ -154,7 +169,7 @@ const Ordenes = () => {
 
   const limpiarFormulario = () => {
     setForm({
-      dpi_cliente: '',
+      nit_cliente: '',
       placa_vehiculo: '',
       fk_id_servicio: '',
       comentario_cliente_orden: '',
@@ -162,6 +177,7 @@ const Ordenes = () => {
       odometro_auto_cliente_orden: '',
       fk_id_estado_orden: '',
       observaciones_orden: '',
+      estado_vehiculo: 'Bueno',
       imagen_1: null,
       imagen_2: null,
       imagen_3: null,
@@ -177,13 +193,19 @@ const Ordenes = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!form.fk_id_cliente || !form.fk_id_vehiculo || !form.fk_id_servicio || !form.fk_id_estado_orden) {
+    // Validar campos requeridos (fk_id_cliente puede ser null para CF)
+    if ((form.fk_id_cliente === '' || form.fk_id_cliente === undefined) && form.nit_cliente?.toUpperCase() !== 'CF') {
+      alert('Por favor ingrese un NIT válido o "CF" para Consumidor Final');
+      return;
+    }
+    
+    if (!form.fk_id_vehiculo || !form.fk_id_servicio || !form.fk_id_estado_orden) {
       alert('Por favor complete todos los campos requeridos');
       return;
     }
 
     const formData = new FormData();
-    formData.append('fk_id_cliente', form.fk_id_cliente);
+    formData.append('fk_id_cliente', form.fk_id_cliente || '');
     formData.append('fk_id_vehiculo', form.fk_id_vehiculo);
     formData.append('fk_id_servicio', form.fk_id_servicio);
     formData.append('comentario_cliente_orden', form.comentario_cliente_orden);
@@ -191,6 +213,10 @@ const Ordenes = () => {
     formData.append('odometro_auto_cliente_orden', form.odometro_auto_cliente_orden);
     formData.append('fk_id_estado_orden', form.fk_id_estado_orden);
     formData.append('observaciones_orden', form.observaciones_orden);
+    formData.append('estado_vehiculo', form.estado_vehiculo);
+    
+    // Debug: verificar qué se está enviando
+    console.log('🔍 Estado del vehículo que se envía:', form.estado_vehiculo);
     
     if (form.imagen_1) formData.append('imagen_1', form.imagen_1);
     if (form.imagen_2) formData.append('imagen_2', form.imagen_2);
@@ -226,12 +252,15 @@ const Ordenes = () => {
   };
 
   const editarOrden = (orden) => {
+    // Debug: verificar el valor de estado_vehiculo
+    console.log('🔍 Estado del vehículo en la orden:', orden.estado_vehiculo);
+    
     // Buscar los IDs correctos basándose en los nombres
     const servicioEncontrado = servicios.find(s => s.servicio === orden.servicio);
     const estadoEncontrado = estados.find(e => e.estado_orden === orden.estado_orden);
     
     setForm({
-      dpi_cliente: orden.dpi_cliente || '',
+      nit_cliente: orden.NIT || '',
       placa_vehiculo: orden.placa_vehiculo || '',
       fk_id_servicio: servicioEncontrado ? servicioEncontrado.pk_id_servicio : '',
       comentario_cliente_orden: orden.comentario_cliente_orden || '',
@@ -239,6 +268,7 @@ const Ordenes = () => {
       odometro_auto_cliente_orden: orden.odometro_auto_cliente_orden || '',
       fk_id_estado_orden: estadoEncontrado ? estadoEncontrado.pk_id_estado : '',
       observaciones_orden: orden.observaciones_orden || '',
+      estado_vehiculo: orden.estado_vehiculo ? orden.estado_vehiculo : 'Bueno',
       imagen_1: null,
       imagen_2: null,
       imagen_3: null,
@@ -247,8 +277,8 @@ const Ordenes = () => {
     });
     
     // Buscar cliente y vehículo para mostrar información
-    if (orden.dpi_cliente) {
-      buscarCliente(orden.dpi_cliente);
+    if (orden.NIT) {
+      buscarCliente(orden.NIT);
     }
     if (orden.placa_vehiculo) {
       buscarVehiculo(orden.placa_vehiculo);
@@ -339,14 +369,15 @@ const Ordenes = () => {
             <div className="row">
               {/* Cliente */}
               <div className="col-md-6 mb-3">
-                <label className="form-label">DPI del Cliente *</label>
+                <label className="form-label">NIT del Cliente *</label>
                 <input
                   type="text"
-                  className={`form-control ${clienteEncontrado ? 'is-valid' : form.dpi_cliente && !clienteEncontrado ? 'is-invalid' : ''}`}
-                  name="dpi_cliente"
-                  value={form.dpi_cliente}
+                  className={`form-control ${clienteEncontrado ? 'is-valid' : form.nit_cliente && !clienteEncontrado ? 'is-invalid' : ''}`}
+                  name="nit_cliente"
+                  value={form.nit_cliente}
                   onChange={handleInputChange}
-                  placeholder="Ingrese DPI del cliente"
+                  placeholder="Ingrese NIT del cliente o 'CF' para Consumidor Final"
+                  maxLength="13"
                   required
                 />
                 {clienteEncontrado && (
@@ -354,7 +385,7 @@ const Ordenes = () => {
                     ✅ Cliente: {clienteEncontrado.nombre_cliente} {clienteEncontrado.apellido_cliente}
                   </div>
                 )}
-                {form.dpi_cliente && !clienteEncontrado && (
+                {form.nit_cliente && !clienteEncontrado && (
                   <div className="invalid-feedback">
                     ❌ Cliente no encontrado
                   </div>
@@ -455,6 +486,20 @@ const Ordenes = () => {
                   value={form.odometro_auto_cliente_orden}
                   onChange={handleInputChange}
                   placeholder="Kilometraje actual"
+                />
+              </div>
+
+              {/* Estado del Vehículo */}
+              <div className="col-md-4 mb-3">
+                <label className="form-label">Estado del Vehículo *</label>
+                <textarea
+                  className="form-control"
+                  name="estado_vehiculo"
+                  value={form.estado_vehiculo}
+                  onChange={handleInputChange}
+                  rows="3"
+                  maxLength="200"
+                  required
                 />
               </div>
             </div>
@@ -628,7 +673,7 @@ const Ordenes = () => {
                     <td>
                       {orden.nombre_cliente} {orden.apellido_cliente}
                       <br />
-                      <small className="text-muted">DPI: {orden.dpi_cliente}</small>
+                      <small className="text-muted">NIT: {orden.NIT}</small>
                     </td>
                     <td>
                       {orden.placa_vehiculo}
@@ -744,7 +789,7 @@ const Ordenes = () => {
                   <div className="col-md-6">
                     <strong>Cliente:</strong> {ordenSeleccionada.nombre_cliente} {ordenSeleccionada.apellido_cliente}
                     <br />
-                    <strong>DPI:</strong> {ordenSeleccionada.dpi_cliente}
+                    <strong>NIT:</strong> {ordenSeleccionada.NIT}
                   </div>
                   <div className="col-md-6">
                     <strong>Vehículo:</strong> {ordenSeleccionada.placa_vehiculo}
@@ -765,6 +810,13 @@ const Ordenes = () => {
                     <strong>Odómetro:</strong> {ordenSeleccionada.odometro_auto_cliente_orden ? `${ordenSeleccionada.odometro_auto_cliente_orden} km` : 'No especificado'}
                   </div>
                 </div>
+
+                {ordenSeleccionada.estado_vehiculo && (
+                  <div className="mb-3">
+                    <strong>Estado del Vehículo:</strong>
+                    <p className="mt-1">{ordenSeleccionada.estado_vehiculo}</p>
+                  </div>
+                )}
 
                 {ordenSeleccionada.comentario_cliente_orden && (
                   <div className="mb-3">

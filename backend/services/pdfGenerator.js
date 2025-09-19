@@ -101,7 +101,7 @@ class PDFGenerator {
 
     const clientInfo = [
       { label: 'Nombre:', value: `${orderData.nombre_cliente} ${orderData.apellido_cliente}` },
-      { label: 'DPI:', value: orderData.dpi_cliente || 'No especificado' },
+      { label: 'NIT:', value: orderData.NIT || 'No especificado' },
       { label: 'Teléfono:', value: orderData.telefono_cliente || 'No especificado' },
       { label: 'Correo:', value: orderData.correo_cliente || 'No especificado' }
     ];
@@ -123,6 +123,7 @@ class PDFGenerator {
       { label: 'Modelo:', value: orderData.modelo_vehiculo },
       { label: 'Año:', value: orderData.anio_vehiculo || 'No especificado' },
       { label: 'Color:', value: orderData.color_vehiculo || 'No especificado' },
+      { label: 'Estado del Vehículo:', value: orderData.estado_vehiculo || 'No especificado' },
       { label: 'Nivel de Combustible:', value: orderData.nivel_combustible_orden },
       { label: 'Odómetro:', value: orderData.odometro_auto_cliente_orden ? `${orderData.odometro_auto_cliente_orden} km` : 'No especificado' }
     ];

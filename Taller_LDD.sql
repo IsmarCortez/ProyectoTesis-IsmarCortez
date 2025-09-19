@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS tbl_ordenes (
     fk_id_estado_orden int not null,
     observaciones_orden varchar(100),
 	-- ----------------------------------------    
+
     FOREIGN KEY (fk_id_vehiculo) REFERENCES tbl_vehiculos(pk_id_vehiculo)
         ON DELETE CASCADE,
 	FOREIGN KEY (fk_id_cliente) REFERENCES tbl_clientes(PK_id_cliente)
@@ -314,5 +315,15 @@ BENEFICIOS:
 - Información de usuarios responsables
 - Optimización de consultas
 */
+
+-- ========================================
+-- ALTER TABLE para agregar campo estado_vehiculo
+-- ========================================
+-- Ejecutar este comando si la tabla tbl_ordenes ya existe
+ALTER TABLE tbl_ordenes 
+ADD COLUMN estado_vehiculo VARCHAR(200)
+AFTER observaciones_orden;
+
+select* from tbl_ordenes ;
 
 
