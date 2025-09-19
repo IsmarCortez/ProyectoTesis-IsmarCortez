@@ -11,14 +11,17 @@ const multer = require('multer'); //s <-- Importar multer para manejo de archivo
 // ==================== SISTEMA DE NOTIFICACIONES ====================
 const NotificationService = require('./services/notificationService');
 
+// ==================== SISTEMA DE CLOUDINARY ====================
+const { upload: cloudinaryUpload, isConfigured: cloudinaryConfigured } = require('./services/cloudinaryService');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Servir carpeta uploads como estática para acceder a imágenes
+// Servir carpeta uploads como estática para acceder a imágenes (fallback)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configuración de almacenamiento para multer
+// Configuración de almacenamiento para multer (fallback local)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join(__dirname, 'uploads'));
@@ -29,7 +32,40 @@ const storage = multer.diskStorage({
     cb(null, uniqueName);
   }
 });
-const upload = multer({ storage });
+
+// Usar Cloudinary si está configurado, sino usar almacenamiento local
+const upload = cloudinaryConfigured() ? cloudinaryUpload : multer({ 
+  storage,
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB máximo (límite de Cloudinary para videos)
+    files: 5 // Máximo 5 archivos por request
+  },
+  onError: (err, next) => {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      const error = new Error('Archivo demasiado grande. Límites: Imágenes 10MB, Videos 100MB');
+      error.status = 413;
+      return next(error);
+    }
+    next(err);
+  }
+});
+
+// Función helper para procesar archivos (Cloudinary o local)
+const processFiles = (files, fieldName) => {
+  if (!files || !files[fieldName] || files[fieldName].length === 0) {
+    return cloudinaryConfigured() ? null : 'sin_imagen.jpg';
+  }
+  
+  const file = files[fieldName][0];
+  
+  if (cloudinaryConfigured()) {
+    // Cloudinary devuelve la URL completa
+    return file.path || file.secure_url;
+  } else {
+    // Almacenamiento local devuelve el filename
+    return file.filename;
+  }
+};
 
 const dbConfig = {
   host: process.env.DB_HOST,
@@ -861,7 +897,30 @@ app.post('/api/ordenes', upload.fields([
   { name: 'imagen_3', maxCount: 1 },
   { name: 'imagen_4', maxCount: 1 },
   { name: 'video', maxCount: 1 }
-]), async (req, res) => {
+]), (err, req, res, next) => {
+  // Manejar errores de Multer
+  if (err) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ 
+        message: 'Archivo demasiado grande. Límites: Imágenes 10MB, Videos 100MB' 
+      });
+    }
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      return res.status(413).json({ 
+        message: 'Demasiados archivos. Máximo 5 archivos por orden' 
+      });
+    }
+    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({ 
+        message: 'Campo de archivo no esperado' 
+      });
+    }
+    return res.status(400).json({ 
+      message: 'Error al procesar archivos: ' + err.message 
+    });
+  }
+  next();
+}, async (req, res) => {
   const {
     fk_id_cliente,
     fk_id_vehiculo,
@@ -882,12 +941,12 @@ app.post('/api/ordenes', upload.fields([
   try {
     const connection = await mysql.createConnection(dbConfig);
     
-    // Procesar archivos
-    const imagen_1 = req.files.imagen_1 ? req.files.imagen_1[0].filename : 'sin_imagen.jpg';
-    const imagen_2 = req.files.imagen_2 ? req.files.imagen_2[0].filename : 'sin_imagen.jpg';
-    const imagen_3 = req.files.imagen_3 ? req.files.imagen_3[0].filename : 'sin_imagen.jpg';
-    const imagen_4 = req.files.imagen_4 ? req.files.imagen_4[0].filename : 'sin_imagen.jpg';
-    const video = req.files.video ? req.files.video[0].filename : 'sin_video.mp4';
+    // Procesar archivos (Cloudinary o local)
+    const imagen_1 = processFiles(req.files, 'imagen_1');
+    const imagen_2 = processFiles(req.files, 'imagen_2');
+    const imagen_3 = processFiles(req.files, 'imagen_3');
+    const imagen_4 = processFiles(req.files, 'imagen_4');
+    const video = processFiles(req.files, 'video');
 
     // Asegurar que estado_vehiculo tenga un valor por defecto
     const estadoVehiculo = estado_vehiculo || 'Bueno';
@@ -1049,7 +1108,30 @@ app.put('/api/ordenes/:id', upload.fields([
   { name: 'imagen_3', maxCount: 1 },
   { name: 'imagen_4', maxCount: 1 },
   { name: 'video', maxCount: 1 }
-]), async (req, res) => {
+]), (err, req, res, next) => {
+  // Manejar errores de Multer
+  if (err) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ 
+        message: 'Archivo demasiado grande. Límites: Imágenes 10MB, Videos 100MB' 
+      });
+    }
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      return res.status(413).json({ 
+        message: 'Demasiados archivos. Máximo 5 archivos por orden' 
+      });
+    }
+    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({ 
+        message: 'Campo de archivo no esperado' 
+      });
+    }
+    return res.status(400).json({ 
+      message: 'Error al procesar archivos: ' + err.message 
+    });
+  }
+  next();
+}, async (req, res) => {
   const { id } = req.params;
   const {
     fk_id_cliente,
@@ -1082,12 +1164,12 @@ app.put('/api/ordenes/:id', upload.fields([
     const estadoNuevo = parseInt(fk_id_estado_orden);
     const estadoCambio = estadoAnterior !== estadoNuevo;
 
-    // Procesar archivos nuevos o mantener existentes
-    const imagen_1 = req.files.imagen_1 ? req.files.imagen_1[0].filename : currentOrder[0].imagen_1;
-    const imagen_2 = req.files.imagen_2 ? req.files.imagen_2[0].filename : currentOrder[0].imagen_2;
-    const imagen_3 = req.files.imagen_3 ? req.files.imagen_3[0].filename : currentOrder[0].imagen_3;
-    const imagen_4 = req.files.imagen_4 ? req.files.imagen_4[0].filename : currentOrder[0].imagen_4;
-    const video = req.files.video ? req.files.video[0].filename : currentOrder[0].video;
+    // Procesar archivos nuevos o mantener existentes (Cloudinary o local)
+    const imagen_1 = processFiles(req.files, 'imagen_1') || currentOrder[0].imagen_1;
+    const imagen_2 = processFiles(req.files, 'imagen_2') || currentOrder[0].imagen_2;
+    const imagen_3 = processFiles(req.files, 'imagen_3') || currentOrder[0].imagen_3;
+    const imagen_4 = processFiles(req.files, 'imagen_4') || currentOrder[0].imagen_4;
+    const video = processFiles(req.files, 'video') || currentOrder[0].video;
 
     // Asegurar que estado_vehiculo tenga un valor por defecto
     const estadoVehiculo = estado_vehiculo || 'Bueno';
