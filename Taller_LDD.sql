@@ -324,4 +324,6 @@ ALTER TABLE tbl_ordenes
 ADD COLUMN estado_vehiculo VARCHAR(200)
 AFTER observaciones_orden;
 
+select* from tbl_ordenes ;
+
 
