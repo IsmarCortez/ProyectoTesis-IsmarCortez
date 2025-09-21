@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ImprimirOrden from './ImprimirOrden';
+import { getFileUrl } from './config/cloudinary';
 
 const Ordenes = () => {
   const navigate = useNavigate();
@@ -837,18 +838,19 @@ const Ordenes = () => {
                   <div className="col-12">
                     <h6>Imágenes:</h6>
                   </div>
-                  {[ordenSeleccionada.imagen_1, ordenSeleccionada.imagen_2, ordenSeleccionada.imagen_3, ordenSeleccionada.imagen_4].map((imagen, index) => (
-                    imagen && imagen !== 'sin_imagen.jpg' ? (
+                  {[ordenSeleccionada.imagen_1, ordenSeleccionada.imagen_2, ordenSeleccionada.imagen_3, ordenSeleccionada.imagen_4].map((imagen, index) => {
+                    const imageUrl = getFileUrl(imagen);
+                    return imageUrl ? (
                       <div key={index} className="col-md-6 mb-2">
                         <img
-                          src={`http://localhost:4000/uploads/${imagen}`}
+                          src={imageUrl}
                           alt={`Imagen ${index + 1}`}
                           className="img-fluid rounded"
                           style={{ maxHeight: '200px', width: '100%', objectFit: 'cover' }}
                         />
                       </div>
-                    ) : null
-                  ))}
+                    ) : null;
+                  })}
                   {[ordenSeleccionada.imagen_1, ordenSeleccionada.imagen_2, ordenSeleccionada.imagen_3, ordenSeleccionada.imagen_4].every(img => !img || img === 'sin_imagen.jpg') && (
                     <div className="col-12">
                       <p className="text-muted">No hay imágenes registradas</p>
@@ -857,19 +859,22 @@ const Ordenes = () => {
                 </div>
 
                 {/* Video */}
-                {ordenSeleccionada.video && ordenSeleccionada.video !== 'sin_video.mp4' && (
-                  <div className="mb-3">
-                    <h6>Video:</h6>
-                    <video
-                      controls
-                      className="w-100"
-                      style={{ maxHeight: '400px' }}
-                    >
-                      <source src={`http://localhost:4000/uploads/${ordenSeleccionada.video}`} type="video/mp4" />
-                      Tu navegador no soporta el elemento de video.
-                    </video>
-                  </div>
-                )}
+                {(() => {
+                  const videoUrl = getFileUrl(ordenSeleccionada.video);
+                  return videoUrl ? (
+                    <div className="mb-3">
+                      <h6>Video:</h6>
+                      <video
+                        controls
+                        className="w-100"
+                        style={{ maxHeight: '400px' }}
+                      >
+                        <source src={videoUrl} type="video/mp4" />
+                        Tu navegador no soporta el elemento de video.
+                      </video>
+                    </div>
+                  ) : null;
+                })()}
               </div>
                 <div className="modal-footer">
                   <button

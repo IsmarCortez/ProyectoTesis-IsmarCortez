@@ -1,0 +1,79 @@
+{
+  "timestamp": "2025-09-19T01:26:46.625Z",
+  "duration": "72.621s",
+  "totalFiles": 10,
+  "successful": 10,
+  "failed": 0,
+  "migrations": [
+    {
+      "orderId": 18,
+      "field": "imagen_1",
+      "oldFilename": "1757390516253-337413484.jpg",
+      "newUrl": "https://res.cloudinary.com/dseu2xtum/image/upload/v1758245135/taller-mecanico/ordenes/orden-18/orden-18-imagen_1-1758245134587.jpg",
+      "publicId": "taller-mecanico/ordenes/orden-18/orden-18-imagen_1-1758245134587"
+    },
+    {
+      "orderId": 18,
+      "field": "imagen_2",
+      "oldFilename": "1757390516268-218568648.avif",
+      "newUrl": "https://res.cloudinary.com/dseu2xtum/image/upload/v1758245137/taller-mecanico/ordenes/orden-18/orden-18-imagen_2-1758245136421.jpg",
+      "publicId": "taller-mecanico/ordenes/orden-18/orden-18-imagen_2-1758245136421"
+    },
+    {
+      "orderId": 18,
+      "field": "imagen_3",
+      "oldFilename": "1757390516268-587431308.jpg",
+      "newUrl": "https://res.cloudinary.com/dseu2xtum/image/upload/v1758245137/taller-mecanico/ordenes/orden-18/orden-18-imagen_3-1758245137127.jpg",
+      "publicId": "taller-mecanico/ordenes/orden-18/orden-18-imagen_3-1758245137127"
+    },
+    {
+      "orderId": 18,
+      "field": "imagen_4",
+      "oldFilename": "1757390516277-353362797.jpg",
+      "newUrl": "https://res.cloudinary.com/dseu2xtum/image/upload/v1758245138/taller-mecanico/ordenes/orden-18/orden-18-imagen_4-1758245138050.jpg",
+      "publicId": "taller-mecanico/ordenes/orden-18/orden-18-imagen_4-1758245138050"
+    },
+    {
+      "orderId": 18,
+      "field": "video",
+      "oldFilename": "1757390516282-485964261.mp4",
+      "newUrl": "https://res.cloudinary.com/dseu2xtum/video/upload/v1758245158/taller-mecanico/ordenes/orden-18/orden-18-video-1758245139026.mp4",
+      "publicId": "taller-mecanico/ordenes/orden-18/orden-18-video-1758245139026"
+    },
+    {
+      "orderId": 21,
+      "field": "imagen_1",
+      "oldFilename": "1757784272516-86576205.jpg",
+      "newUrl": "https://res.cloudinary.com/dseu2xtum/image/upload/v1758245188/taller-mecanico/ordenes/orden-21/orden-21-imagen_1-1758245187506.jpg",
+      "publicId": "taller-mecanico/ordenes/orden-21/orden-21-imagen_1-1758245187506"
+    },
+    {
+      "orderId": 21,
+      "field": "imagen_2",
+      "oldFilename": "1757784272531-478063968.jpeg",
+      "newUrl": "https://res.cloudinary.com/dseu2xtum/image/upload/v1758245189/taller-mecanico/ordenes/orden-21/orden-21-imagen_2-1758245189190.jpg",
+      "publicId": "taller-mecanico/ordenes/orden-21/orden-21-imagen_2-1758245189190"
+    },
+    {
+      "orderId": 21,
+      "field": "imagen_3",
+      "oldFilename": "1757784272544-25648286.jpg",
+      "newUrl": "https://res.cloudinary.com/dseu2xtum/image/upload/v1758245191/taller-mecanico/ordenes/orden-21/orden-21-imagen_3-1758245190507.jpg",
+      "publicId": "taller-mecanico/ordenes/orden-21/orden-21-imagen_3-1758245190507"
+    },
+    {
+      "orderId": 21,
+      "field": "imagen_4",
+      "oldFilename": "1757784272550-678957917.jpg",
+      "newUrl": "https://res.cloudinary.com/dseu2xtum/image/upload/v1758245193/taller-mecanico/ordenes/orden-21/orden-21-imagen_4-1758245192524.jpg",
+      "publicId": "taller-mecanico/ordenes/orden-21/orden-21-imagen_4-1758245192524"
+    },
+    {
+      "orderId": 21,
+      "field": "video",
+      "oldFilename": "1757784272559-618791486.mp4",
+      "newUrl": "https://res.cloudinary.com/dseu2xtum/video/upload/v1758245198/taller-mecanico/ordenes/orden-21/orden-21-video-1758245194024.mp4",
+      "publicId": "taller-mecanico/ordenes/orden-21/orden-21-video-1758245194024"
+    }
+  ]
+}
