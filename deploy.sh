@@ -17,3 +17,4 @@ ls -la frontend/build/
 
 echo "🎯 Listo para desplegar en Railway!"
 echo "📝 Recuerda configurar las variables de entorno en Railway"
+
