@@ -2218,9 +2218,29 @@ async function initializeServices() {
   }
 }
 
+// Servir archivos estáticos del frontend en producción
+if (process.env.NODE_ENV === 'production') {
+  console.log('🌐 Configurando para servir frontend en producción...');
+  
+  // Servir archivos estáticos del frontend
+  app.use(express.static(path.join(__dirname, '../frontend/build')));
+  
+  // Manejar rutas de React (SPA) - debe ir al final
+  app.get('*', (req, res) => {
+    // Si es una ruta de API, no servir el frontend
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ message: 'API endpoint not found' });
+    }
+    
+    // Para todas las demás rutas, servir el frontend
+    res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+  });
+}
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, async () => {
-  console.log(`🟢 Servidor backend escuchando en puerto ${PORT}`);
+  console.log(`🟢 Servidor escuchando en puerto ${PORT}`);
+  console.log(`🌐 Frontend disponible en: http://localhost:${PORT}`);
   
   // Inicializar servicios de notificación
   await initializeServices();
