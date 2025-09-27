@@ -9,10 +9,13 @@ const missingVars = requiredVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
   console.error('❌ Variables de entorno faltantes:', missingVars);
+  console.log('🔍 Variables disponibles:', Object.keys(process.env).filter(key => key.startsWith('DB_')));
   process.exit(1);
 }
 
 console.log('✅ Variables de entorno verificadas');
+console.log('🔍 Puerto:', process.env.PORT);
+console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
 
 // Iniciar el servidor
 try {

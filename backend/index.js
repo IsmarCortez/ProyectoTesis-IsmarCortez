@@ -15,7 +15,18 @@ const NotificationService = require('./services/notificationService');
 const { upload: cloudinaryUpload, isConfigured: cloudinaryConfigured } = require('./services/cloudinaryService');
 
 const app = express();
-app.use(cors());
+// Configurar CORS para Railway
+app.use(cors({
+  origin: [
+    'http://localhost:3000', 
+    'http://localhost:3001',
+    'https://healthcheck.railway.app', // Para health checks de Railway
+    /\.railway\.app$/, // Para dominios de Railway
+    /\.vercel\.app$/, // Para dominios de Vercel
+    /\.netlify\.app$/ // Para dominios de Netlify
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // Servir carpeta uploads como estática para acceder a imágenes (fallback)
@@ -2211,15 +2222,20 @@ app.get('/api/tracker/estadisticas-historial', async (req, res) => {
 // Endpoint de health check para Railway
 app.get('/api/health', (req, res) => {
   try {
-    res.json({ 
+    console.log('🔍 Health check solicitado desde:', req.get('host'));
+    console.log('🔍 User-Agent:', req.get('user-agent'));
+    
+    res.status(200).json({ 
       status: 'OK', 
       timestamp: new Date().toISOString(),
       version: '1.0.0',
       environment: process.env.NODE_ENV || 'development',
       uptime: process.uptime(),
-      port: process.env.PORT || 4000
+      port: process.env.PORT || 4000,
+      host: req.get('host')
     });
   } catch (error) {
+    console.error('❌ Error en health check:', error);
     res.status(500).json({ 
       status: 'ERROR', 
       error: error.message,
@@ -2268,9 +2284,11 @@ console.log('PORT:', PORT);
 console.log('DB_HOST:', process.env.DB_HOST ? 'Configurado' : 'No configurado');
 console.log('DB_USER:', process.env.DB_USER ? 'Configurado' : 'No configurado');
 
-app.listen(PORT, async () => {
+// Asegurar que el servidor escuche en el puerto correcto
+const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🟢 Servidor backend escuchando en puerto ${PORT}`);
-  console.log(`🌐 Health check disponible en: http://localhost:${PORT}/api/health`);
+  console.log(`🌐 Health check disponible en: http://0.0.0.0:${PORT}/api/health`);
+  console.log(`🌐 Servidor disponible en: http://0.0.0.0:${PORT}`);
   
   // Inicializar servicios de notificación
   try {
@@ -2279,4 +2297,10 @@ app.listen(PORT, async () => {
   } catch (error) {
     console.error('❌ Error inicializando servicios:', error);
   }
+});
+
+// Manejar errores del servidor
+server.on('error', (error) => {
+  console.error('❌ Error del servidor:', error);
+  process.exit(1);
 });
