@@ -10,7 +10,7 @@ class GmailApiService {
     this.config = {
       clientId: process.env.GMAIL_CLIENT_ID,
       clientSecret: process.env.GMAIL_CLIENT_SECRET,
-      redirectUri: process.env.GMAIL_REDIRECT_URI || 'urn:ietf:wg:oauth:2.0:oob',
+      redirectUri: process.env.GMAIL_REDIRECT_URI || 'http://localhost:8080/api/gmail/callback',
       refreshToken: process.env.GMAIL_REFRESH_TOKEN,
       fromEmail: process.env.EMAIL_FROM || process.env.EMAIL_USER
     };
