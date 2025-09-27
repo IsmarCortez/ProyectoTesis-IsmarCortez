@@ -1,20 +1,13 @@
-# Dockerfile personalizado para Railway
+# Dockerfile ultra simple para Railway
 FROM node:18-alpine
 
-# Crear directorio de trabajo
 WORKDIR /app
 
-# Copiar archivos de dependencias
-COPY package*.json ./
-
-# Instalar dependencias
-RUN npm ci
-
-# Copiar código fuente
-COPY . .
+# Copiar solo lo necesario
+COPY minimal.js ./
 
 # Exponer puerto
 EXPOSE 8080
 
-# Comando de inicio
-CMD ["npm", "run", "start:production"]
+# Comando de inicio directo
+CMD ["node", "minimal.js"]
