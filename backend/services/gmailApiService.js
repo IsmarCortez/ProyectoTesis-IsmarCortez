@@ -50,8 +50,17 @@ class GmailApiService {
 
   // Método para obtener URL de autorización (solo la primera vez)
   getAuthUrl() {
+    // Crear cliente OAuth2 si no existe
     if (!this.oauth2Client) {
-      throw new Error('OAuth2 client not initialized');
+      if (!this.config.clientId || !this.config.clientSecret) {
+        throw new Error('Gmail API credentials not configured (clientId or clientSecret missing)');
+      }
+      
+      this.oauth2Client = new google.auth.OAuth2(
+        this.config.clientId,
+        this.config.clientSecret,
+        this.config.redirectUri
+      );
     }
 
     const scopes = ['https://www.googleapis.com/auth/gmail.send'];
@@ -66,6 +75,19 @@ class GmailApiService {
   // Método para intercambiar código por tokens (solo la primera vez)
   async getTokensFromCode(code) {
     try {
+      // Crear cliente OAuth2 si no existe
+      if (!this.oauth2Client) {
+        if (!this.config.clientId || !this.config.clientSecret) {
+          throw new Error('Gmail API credentials not configured');
+        }
+        
+        this.oauth2Client = new google.auth.OAuth2(
+          this.config.clientId,
+          this.config.clientSecret,
+          this.config.redirectUri
+        );
+      }
+      
       const { tokens } = await this.oauth2Client.getToken(code);
       this.oauth2Client.setCredentials(tokens);
       
