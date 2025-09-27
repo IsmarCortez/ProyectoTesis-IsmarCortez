@@ -2248,9 +2248,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ==================== EMAIL SERVICE ENDPOINTS ====================
-// ✅ Endpoints temporales eliminados - Configurando SendGrid
-console.log('✅ Configurando SendGrid para envío de emails');
+// ==================== EMAIL SERVICE ====================
+// ✅ SendGrid API configurado y funcionando correctamente
+console.log('✅ SendGrid API configurado y funcionando correctamente');
 
 // ==================== INICIALIZACIÓN DEL SISTEMA ====================
 

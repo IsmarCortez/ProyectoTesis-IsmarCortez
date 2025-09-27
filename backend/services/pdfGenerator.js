@@ -293,12 +293,15 @@ class PDFGenerator {
   formatDate(date) {
     if (!date) return 'No especificada';
     const d = new Date(date);
-    return d.toLocaleDateString('es-GT', {
+    // Convertir a zona horaria de Guatemala (GMT-6)
+    const guatemalaTime = new Date(d.getTime() - (6 * 60 * 60 * 1000));
+    return guatemalaTime.toLocaleDateString('es-GT', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'America/Guatemala'
     });
   }
 

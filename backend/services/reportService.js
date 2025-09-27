@@ -187,7 +187,7 @@ class ReportService {
 
         // Fecha de generación
         doc.fontSize(10)
-           .text(`Generado el: ${new Date().toLocaleDateString('es-GT')}`, { align: 'right' })
+           .text(`Generado el: ${this.formatDate(new Date())}`, { align: 'right' })
            .moveDown();
 
         // Filtros aplicados
@@ -248,7 +248,7 @@ class ReportService {
     data.forEach((orden, index) => {
       doc.fontSize(10)
          .text(`Orden #${orden.pk_id_orden}`, { underline: true })
-         .text(`Fecha: ${new Date(orden.fecha_ingreso_orden).toLocaleDateString('es-GT')}`)
+         .text(`Fecha: ${this.formatDate(new Date(orden.fecha_ingreso_orden))}`)
          .text(`Cliente: ${orden.cliente} (DPI: ${orden.dpi_cliente})`)
          .text(`Teléfono: ${orden.telefono_cliente || 'No registrado'}`)
          .text(`Vehículo: ${orden.vehiculo} - Placa: ${orden.placa_vehiculo}`)
@@ -284,7 +284,7 @@ class ReportService {
          .text(`Teléfono: ${cliente.telefono_cliente || 'No registrado'}`)
          .text(`Email: ${cliente.correo_cliente || 'No registrado'}`)
          .text(`Dirección: ${cliente.direccion_cliente || 'No registrada'}`)
-         .text(`Fecha de registro: ${new Date(cliente.fecha_registro_cliente).toLocaleDateString('es-GT')}`)
+         .text(`Fecha de registro: ${this.formatDate(new Date(cliente.fecha_registro_cliente))}`)
          .text(`Total de órdenes: ${cliente.total_ordenes}`);
       
       doc.moveDown();
@@ -308,7 +308,7 @@ class ReportService {
          .text(`Total de órdenes: ${vehiculo.total_ordenes}`);
       
       if (vehiculo.ultima_orden) {
-        doc.text(`Última orden: ${new Date(vehiculo.ultima_orden).toLocaleDateString('es-GT')}`);
+        doc.text(`Última orden: ${this.formatDate(new Date(vehiculo.ultima_orden))}`);
       }
       
       doc.moveDown();
@@ -366,7 +366,7 @@ class ReportService {
     worksheet.getCell('A2').font = { size: 14, bold: true };
     worksheet.getCell('A2').alignment = { horizontal: 'center' };
 
-    worksheet.getCell('A3').value = `Generado el: ${new Date().toLocaleDateString('es-GT')}`;
+    worksheet.getCell('A3').value = `Generado el: ${this.formatDate(new Date())}`;
     worksheet.getCell('A3').font = { size: 10 };
     worksheet.getCell('A3').alignment = { horizontal: 'right' };
 
@@ -376,6 +376,21 @@ class ReportService {
     // Generar buffer
     const buffer = await workbook.xlsx.writeBuffer();
     return buffer;
+  }
+
+  formatDate(date) {
+    if (!date) return 'No especificada';
+    const d = new Date(date);
+    // Convertir a zona horaria de Guatemala (GMT-6)
+    const guatemalaTime = new Date(d.getTime() - (6 * 60 * 60 * 1000));
+    return guatemalaTime.toLocaleDateString('es-GT', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'America/Guatemala'
+    });
   }
 
   // Agregar contenido específico al Excel
@@ -419,7 +434,7 @@ class ReportService {
     data.forEach((orden, rowIndex) => {
       const row = startRow + 1 + rowIndex;
       worksheet.getCell(row, 1).value = orden.pk_id_orden;
-      worksheet.getCell(row, 2).value = new Date(orden.fecha_ingreso_orden).toLocaleDateString('es-GT');
+      worksheet.getCell(row, 2).value = this.formatDate(new Date(orden.fecha_ingreso_orden));
       worksheet.getCell(row, 3).value = orden.cliente;
       worksheet.getCell(row, 4).value = orden.dpi_cliente;
       worksheet.getCell(row, 5).value = orden.telefono_cliente || '';
@@ -459,7 +474,7 @@ class ReportService {
       worksheet.getCell(row, 6).value = cliente.telefono_cliente || '';
       worksheet.getCell(row, 7).value = cliente.correo_cliente || '';
       worksheet.getCell(row, 8).value = cliente.direccion_cliente || '';
-      worksheet.getCell(row, 9).value = new Date(cliente.fecha_registro_cliente).toLocaleDateString('es-GT');
+      worksheet.getCell(row, 9).value = this.formatDate(new Date(cliente.fecha_registro_cliente));
       worksheet.getCell(row, 10).value = cliente.total_ordenes;
     });
 
@@ -490,7 +505,7 @@ class ReportService {
       worksheet.getCell(row, 6).value = vehiculo.color_vehiculo || '';
       worksheet.getCell(row, 7).value = vehiculo.total_ordenes;
       worksheet.getCell(row, 8).value = vehiculo.ultima_orden ? 
-        new Date(vehiculo.ultima_orden).toLocaleDateString('es-GT') : '';
+        this.formatDate(new Date(vehiculo.ultima_orden)) : '';
     });
 
     worksheet.columns.forEach(column => {
