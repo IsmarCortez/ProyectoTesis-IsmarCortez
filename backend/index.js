@@ -57,7 +57,8 @@ const upload = cloudinaryConfigured() ? cloudinaryUpload : multer({
 // Función helper para procesar archivos (Cloudinary o local)
 const processFiles = (files, fieldName) => {
   if (!files || !files[fieldName] || files[fieldName].length === 0) {
-    return cloudinaryConfigured() ? null : 'sin_imagen.jpg';
+    // Siempre devolver valores por defecto, nunca null
+    return fieldName === 'video' ? 'sin_video.mp4' : 'sin_imagen.jpg';
   }
   
   const file = files[fieldName][0];
