@@ -2248,6 +2248,35 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ==================== GMAIL API ENDPOINTS ====================
+
+// Ruta de prueba para Gmail API
+app.get('/api/test-gmail', (req, res) => {
+  console.log('🔍 Endpoint /api/test-gmail llamado');
+  res.json({
+    message: 'Gmail API test endpoint working',
+    timestamp: new Date().toISOString(),
+    status: 'OK'
+  });
+});
+
+// Ruta temporal para configurar Gmail API (SOLO USAR UNA VEZ)
+app.get('/api/gmail/setup', (req, res) => {
+  console.log('🔍 Endpoint /api/gmail/setup llamado');
+  res.json({
+    message: 'Gmail API Setup - Endpoint funcionando',
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    instructions: [
+      '1. Endpoint funcionando correctamente',
+      '2. Próximo paso: configurar Gmail API',
+      '3. Variables necesarias en Railway'
+    ]
+  });
+});
+
+console.log('✅ Endpoints Gmail API registrados correctamente');
+
 // ==================== INICIALIZACIÓN DEL SISTEMA ====================
 
 // Inicializar servicios de notificación al arrancar el servidor
@@ -2288,27 +2317,6 @@ console.log('🔍 DB_HOST:', process.env.DB_HOST);
 console.log('🔍 DB_PORT:', process.env.DB_PORT);
 console.log('🔍 DB_NAME:', process.env.DB_NAME);
 
-// Ruta de prueba
-app.get('/api/test-gmail', (req, res) => {
-  res.json({
-    message: 'Gmail API test endpoint working',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Ruta temporal para configurar Gmail API (SOLO USAR UNA VEZ)
-app.get('/api/gmail/setup', (req, res) => {
-  res.json({
-    message: 'Gmail API Setup - Endpoint funcionando',
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    instructions: [
-      '1. Endpoint funcionando correctamente',
-      '2. Próximo paso: configurar Gmail API',
-      '3. Variables necesarias en Railway'
-    ]
-  });
-});
 
 // Ruta temporal para obtener refresh token
 app.post('/api/gmail/token', async (req, res) => {
