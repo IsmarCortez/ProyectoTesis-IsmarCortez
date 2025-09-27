@@ -2221,27 +2221,10 @@ app.get('/api/tracker/estadisticas-historial', async (req, res) => {
 
 // Endpoint de health check para Railway
 app.get('/api/health', (req, res) => {
-  try {
-    console.log('🔍 Health check solicitado desde:', req.get('host'));
-    console.log('🔍 User-Agent:', req.get('user-agent'));
-    
-    res.status(200).json({ 
-      status: 'OK', 
-      timestamp: new Date().toISOString(),
-      version: '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-      uptime: process.uptime(),
-      port: process.env.PORT || 4000,
-      host: req.get('host')
-    });
-  } catch (error) {
-    console.error('❌ Error en health check:', error);
-    res.status(500).json({ 
-      status: 'ERROR', 
-      error: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString()
+  });
 });
 
 // ==================== INICIALIZACIÓN DEL SISTEMA ====================
@@ -2277,30 +2260,11 @@ if (process.env.NODE_ENV === 'production') {
 
 const PORT = process.env.PORT || 4000;
 
-// Añadir logs de debug
-console.log('🔍 Variables de entorno:');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('PORT:', PORT);
-console.log('DB_HOST:', process.env.DB_HOST ? 'Configurado' : 'No configurado');
-console.log('DB_USER:', process.env.DB_USER ? 'Configurado' : 'No configurado');
+console.log('🚀 Iniciando servidor...');
+console.log('🔍 Puerto:', PORT);
+console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
 
-// Asegurar que el servidor escuche en el puerto correcto
-const server = app.listen(PORT, '0.0.0.0', async () => {
-  console.log(`🟢 Servidor backend escuchando en puerto ${PORT}`);
-  console.log(`🌐 Health check disponible en: http://0.0.0.0:${PORT}/api/health`);
-  console.log(`🌐 Servidor disponible en: http://0.0.0.0:${PORT}`);
-  
-  // Inicializar servicios de notificación
-  try {
-    await initializeServices();
-    console.log('✅ Servicios inicializados correctamente');
-  } catch (error) {
-    console.error('❌ Error inicializando servicios:', error);
-  }
-});
-
-// Manejar errores del servidor
-server.on('error', (error) => {
-  console.error('❌ Error del servidor:', error);
-  process.exit(1);
+app.listen(PORT, () => {
+  console.log(`🟢 Servidor escuchando en puerto ${PORT}`);
+  console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
 });
