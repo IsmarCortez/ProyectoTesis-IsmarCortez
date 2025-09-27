@@ -2249,8 +2249,68 @@ app.get('/api/health', (req, res) => {
 });
 
 // ==================== GMAIL API ENDPOINTS ====================
-// ✅ Endpoints temporales eliminados - Gmail API configurado correctamente
-console.log('✅ Gmail API configurado y funcionando');
+// Endpoint temporal para regenerar refresh token
+app.get('/api/gmail/regenerate', async (req, res) => {
+  try {
+    const GmailApiService = require('./services/gmailApiService');
+    const gmailService = new GmailApiService();
+    
+    const authUrl = gmailService.getAuthUrl();
+    
+    res.json({
+      message: 'Regenerar Refresh Token de Gmail API',
+      status: 'READY_FOR_AUTH',
+      timestamp: new Date().toISOString(),
+      authUrl: authUrl,
+      instructions: [
+        '1. Ve a esta URL para autorizar:',
+        authUrl,
+        '2. Copia el código de autorización',
+        '3. Envía POST a /api/gmail/token con el código',
+        '4. Reemplaza GMAIL_REFRESH_TOKEN en Railway'
+      ]
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Error generando URL de autorización',
+      message: error.message
+    });
+  }
+});
+
+app.post('/api/gmail/token', async (req, res) => {
+  try {
+    const { code } = req.body;
+    
+    if (!code) {
+      return res.status(400).json({
+        error: 'Código de autorización requerido'
+      });
+    }
+    
+    const GmailApiService = require('./services/gmailApiService');
+    const gmailService = new GmailApiService();
+    
+    const tokens = await gmailService.getTokensFromCode(code);
+    
+    res.json({
+      success: true,
+      message: 'Tokens obtenidos exitosamente',
+      refreshToken: tokens.refresh_token,
+      instructions: [
+        'Guarda este refresh_token en Railway como GMAIL_REFRESH_TOKEN',
+        'Elimina estos endpoints temporales después'
+      ]
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Error obteniendo tokens',
+      message: error.message
+    });
+  }
+});
+
+console.log('✅ Gmail API endpoints temporales agregados para regenerar token');
 
 // ==================== INICIALIZACIÓN DEL SISTEMA ====================
 
