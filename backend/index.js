@@ -87,6 +87,16 @@ console.log('🔍 DB Config Railway:', {
   port: dbConfig.port
 });
 
+console.log('🔍 JWT Config:', {
+  jwt_secret: process.env.JWT_SECRET ? 'Configurado' : 'Usando fallback',
+  jwt_value: process.env.JWT_SECRET ? process.env.JWT_SECRET.substring(0, 5) + '...' : 'undefined'
+});
+
+console.log('🔍 Todas las variables JWT:', {
+  JWT_SECRET: process.env.JWT_SECRET,
+  JWT_SECRET_LENGTH: process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 'undefined'
+});
+
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -111,6 +121,8 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ message: 'Credenciales inválidas.' });
     }
 
+    console.log('🔍 Generando JWT con secret:', process.env.JWT_SECRET ? 'Configurado' : 'Fallback');
+    
     const token = jwt.sign(
       {
         id: usuario.pk_id_usuarios,
@@ -118,7 +130,7 @@ app.post('/api/login', async (req, res) => {
         email: usuario.email_usuario,
         foto: usuario.foto_perfil_usuario,
       },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'secret_key_default_railway',
       { expiresIn: '8h' }
     );
 
