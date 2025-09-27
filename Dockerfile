@@ -6,14 +6,17 @@ WORKDIR /app
 # Copiar archivos de dependencias
 COPY package*.json ./
 COPY frontend/package*.json ./frontend/
+COPY backend/package*.json ./backend/
 
 # Instalar dependencias
 RUN npm ci
 RUN cd frontend && npm ci
+RUN cd backend && npm ci
 
 # Copiar código fuente
 COPY frontend/ ./frontend/
-COPY full-stack-server.js ./
+COPY backend/ ./backend/
+COPY complete-full-stack-server.js ./
 
 # Construir frontend
 RUN cd frontend && npm run build
@@ -22,4 +25,4 @@ RUN cd frontend && npm run build
 EXPOSE 8080
 
 # Comando de inicio
-CMD ["node", "full-stack-server.js"]
+CMD ["node", "complete-full-stack-server.js"]
