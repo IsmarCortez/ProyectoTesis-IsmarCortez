@@ -1810,6 +1810,7 @@ app.get('/api/dashboard/estadisticas/:periodo', async (req, res) => {
 // ==================== ENDPOINTS DE REPORTES ====================
 
 const ReportService = require('./services/reportService');
+const reportService = new ReportService();
 
 // Endpoint para generar reportes en PDF
 app.get('/api/reportes/pdf/:tipo', async (req, res) => {
@@ -1819,7 +1820,7 @@ app.get('/api/reportes/pdf/:tipo', async (req, res) => {
     
     console.log(`📄 Generando reporte PDF: ${tipo}`, filtros);
     
-    const pdfBuffer = await ReportService.generatePDFReport(tipo, filtros);
+    const pdfBuffer = await reportService.generatePDFReport(tipo, filtros);
     
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="reporte_${tipo}_${new Date().toISOString().split('T')[0]}.pdf"`);
@@ -1839,7 +1840,7 @@ app.get('/api/reportes/excel/:tipo', async (req, res) => {
     
     console.log(`📊 Generando reporte Excel: ${tipo}`, filtros);
     
-    const excelBuffer = await ReportService.generateExcelReport(tipo, filtros);
+    const excelBuffer = await reportService.generateExcelReport(tipo, filtros);
     
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="reporte_${tipo}_${new Date().toISOString().split('T')[0]}.xlsx"`);
