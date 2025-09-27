@@ -1,7 +1,7 @@
 // Configuración de API para desarrollo y producción
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? '' // En producción, usar rutas relativas
-  : 'http://localhost:4000'; // En desarrollo, usar el backend local
+  : 'http://localhost:8080'; // En desarrollo, usar el backend local
 
 export const API_ENDPOINTS = {
   LOGIN: `${API_BASE_URL}/api/login`,
