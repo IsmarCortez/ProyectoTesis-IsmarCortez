@@ -2288,6 +2288,14 @@ console.log('🔍 DB_HOST:', process.env.DB_HOST);
 console.log('🔍 DB_PORT:', process.env.DB_PORT);
 console.log('🔍 DB_NAME:', process.env.DB_NAME);
 
+// Ruta de prueba
+app.get('/api/test-gmail', (req, res) => {
+  res.json({
+    message: 'Gmail API test endpoint working',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Ruta temporal para configurar Gmail API (SOLO USAR UNA VEZ)
 app.get('/api/gmail/setup', async (req, res) => {
   try {
