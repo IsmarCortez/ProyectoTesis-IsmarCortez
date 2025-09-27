@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const GmailApiService = require('./gmailApiService');
 const config = require('../config/notifications');
 
 class EmailService {
@@ -6,6 +7,8 @@ class EmailService {
     this.config = config.email;
     this.transporter = null;
     this.isInitialized = false;
+    this.gmailApiService = new GmailApiService();
+    this.useGmailApi = false;
   }
 
   /**
@@ -20,30 +23,63 @@ class EmailService {
         return;
       }
 
+      // Verificar si tenemos configuración de Gmail API
+      if (this.config.service === 'gmail' && process.env.GMAIL_CLIENT_ID) {
+        console.log('📧 Usando Gmail API para envío de emails');
+        this.useGmailApi = true;
+        const initialized = await this.gmailApiService.initialize();
+        if (initialized) {
+          this.isInitialized = true;
+          console.log('✅ Gmail API service initialized successfully');
+          return;
+        } else {
+          console.log('⚠️ Gmail API falló, intentando con SMTP...');
+        }
+      }
+
+      // Fallback a SMTP si Gmail API no está disponible
       if (!this.config.user || !this.config.pass) {
         throw new Error('Email credentials not configured');
       }
 
-      // Configurar el transportador
-      this.transporter = nodemailer.createTransport({
-        service: this.config.service,
-        host: this.config.host || 'smtp.gmail.com',
-        port: this.config.port || 587,
-        secure: this.config.secure || false,
-        auth: {
-          user: this.config.user,
-          pass: this.config.pass
-        },
-        tls: {
-          rejectUnauthorized: false
-        },
-        connectionTimeout: 60000, // 60 segundos
-        greetingTimeout: 30000,   // 30 segundos
-        socketTimeout: 60000,     // 60 segundos
-        pool: true,
-        maxConnections: 1,
-        maxMessages: 100
-      });
+      // Configurar el transportador según el servicio
+      if (this.config.service === 'sendgrid') {
+        // Configuración para SendGrid
+        this.transporter = nodemailer.createTransport({
+          host: 'smtp.sendgrid.net',
+          port: 587,
+          secure: false,
+          auth: {
+            user: 'apikey',
+            pass: this.config.pass || this.config.apiKey
+          },
+          tls: {
+            rejectUnauthorized: false
+          }
+        });
+      } else {
+        // Configuración especial para Gmail en Railway
+        this.transporter = nodemailer.createTransport({
+          service: 'gmail',
+          host: 'smtp.gmail.com',
+          port: 465, // Puerto SSL en lugar de 587
+          secure: true, // SSL en lugar de TLS
+          auth: {
+            user: this.config.user,
+            pass: this.config.pass
+          },
+          tls: {
+            rejectUnauthorized: false,
+            ciphers: 'SSLv3'
+          },
+          connectionTimeout: 30000,
+          greetingTimeout: 15000,
+          socketTimeout: 30000,
+          pool: false, // Desactivar pooling
+          maxConnections: 1,
+          maxMessages: 1
+        });
+      }
 
       // Verificar conexión
       await this.transporter.verify();
@@ -71,6 +107,26 @@ class EmailService {
         return {
           success: false,
           error: 'Email service not available'
+        };
+      }
+
+      // Usar Gmail API si está disponible
+      if (this.useGmailApi && this.gmailApiService.isAvailable()) {
+        const templateData = this.prepareTemplateData(orderData);
+        const emailContent = this.generateEmailContent(templateData);
+        
+        const result = await this.gmailApiService.sendEmail(
+          orderData.correo_cliente,
+          emailContent.subject,
+          emailContent.html
+        );
+        
+        console.log(`📧 Email sent via Gmail API to ${orderData.correo_cliente}`);
+        return {
+          success: true,
+          messageId: result.messageId,
+          recipient: orderData.correo_cliente,
+          method: 'Gmail API'
         };
       }
 

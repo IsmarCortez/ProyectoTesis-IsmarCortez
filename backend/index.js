@@ -2288,6 +2288,65 @@ console.log('🔍 DB_HOST:', process.env.DB_HOST);
 console.log('🔍 DB_PORT:', process.env.DB_PORT);
 console.log('🔍 DB_NAME:', process.env.DB_NAME);
 
+// Ruta temporal para configurar Gmail API (SOLO USAR UNA VEZ)
+app.get('/api/gmail/setup', async (req, res) => {
+  try {
+    const GmailApiService = require('./services/gmailApiService');
+    const gmailService = new GmailApiService();
+    
+    const authUrl = gmailService.getAuthUrl();
+    
+    res.json({
+      message: 'Configuración de Gmail API',
+      instructions: [
+        '1. Ve a esta URL para autorizar:',
+        authUrl,
+        '2. Copia el código de autorización',
+        '3. Envía POST a /api/gmail/token con el código'
+      ],
+      authUrl: authUrl
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Error configurando Gmail API',
+      message: error.message
+    });
+  }
+});
+
+// Ruta temporal para obtener refresh token
+app.post('/api/gmail/token', async (req, res) => {
+  try {
+    const { code } = req.body;
+    
+    if (!code) {
+      return res.status(400).json({
+        error: 'Código de autorización requerido'
+      });
+    }
+    
+    const GmailApiService = require('./services/gmailApiService');
+    const gmailService = new GmailApiService();
+    
+    const tokens = await gmailService.getTokensFromCode(code);
+    
+    res.json({
+      success: true,
+      message: 'Tokens obtenidos exitosamente',
+      refreshToken: tokens.refresh_token,
+      instructions: [
+        'Guarda este refresh_token en Railway como GMAIL_REFRESH_TOKEN',
+        'Luego elimina estas rutas temporales por seguridad'
+      ]
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Error obteniendo tokens',
+      message: error.message
+    });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🟢 Servidor escuchando en puerto ${PORT}`);
   console.log(`🌐 Health check: http://0.0.0.0:${PORT}/api/health`);

@@ -11,13 +11,14 @@ module.exports = {
 
   // Configuración de Email
   email: {
-    enabled: process.env.EMAIL_ENABLED === 'true',
+    enabled: true, // Habilitado para probar Gmail mejorado
     service: process.env.EMAIL_SERVICE || 'gmail',
     host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT || 587,
-    secure: process.env.EMAIL_SECURE === 'true',
+    port: process.env.EMAIL_PORT || 465, // Puerto SSL por defecto
+    secure: process.env.EMAIL_SECURE === 'true' || true, // SSL por defecto
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
+    apiKey: process.env.EMAIL_API_KEY, // Para SendGrid
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER
   },
 
