@@ -666,7 +666,11 @@ class EmailService {
    */
   async sendPasswordResetEmail(email, nombreUsuario, resetLink) {
     if (!this.isInitialized) {
-      throw new Error('Email service not initialized');
+      await this.initialize();
+    }
+
+    if (!this.isInitialized) {
+      throw new Error('Email service not available');
     }
 
     if (!this.config.enabled) {
@@ -676,22 +680,48 @@ class EmailService {
     try {
       const { nombre: empresa } = config.empresa;
       
-      const mailOptions = {
-        from: `"${empresa}" <${this.config.user}>`,
-        to: email,
-        subject: `🔐 Recuperación de Contraseña - ${empresa}`,
-        html: this.generatePasswordResetEmailContent(nombreUsuario, resetLink, empresa)
-      };
+      // Usar SendGrid API si está configurado
+      if (this.config.service === 'sendgrid' && this.isInitialized) {
+        const msg = {
+          to: email,
+          from: this.config.from,
+          subject: `🔐 Recuperación de Contraseña - ${empresa}`,
+          html: this.generatePasswordResetEmailContent(nombreUsuario, resetLink, empresa)
+        };
+        
+        const result = await sgMail.send(msg);
+        
+        console.log(`✅ Password reset email sent via SendGrid API to ${email}`);
+        return {
+          success: true,
+          messageId: result[0].headers['x-message-id'],
+          email: email,
+          method: 'SendGrid API'
+        };
+      }
 
-      const result = await this.transporter.sendMail(mailOptions);
-      
-      console.log(`✅ Password reset email sent to ${email}:`, result.messageId);
-      
-      return {
-        success: true,
-        messageId: result.messageId,
-        email: email
-      };
+      // Fallback a SMTP si está disponible
+      if (this.transporter) {
+        const mailOptions = {
+          from: `"${empresa}" <${this.config.user}>`,
+          to: email,
+          subject: `🔐 Recuperación de Contraseña - ${empresa}`,
+          html: this.generatePasswordResetEmailContent(nombreUsuario, resetLink, empresa)
+        };
+
+        const result = await this.transporter.sendMail(mailOptions);
+        
+        console.log(`✅ Password reset email sent to ${email}:`, result.messageId);
+        
+        return {
+          success: true,
+          messageId: result.messageId,
+          email: email,
+          method: 'SMTP'
+        };
+      }
+
+      throw new Error('No email transport method available');
 
     } catch (error) {
       console.error('❌ Error sending password reset email:', error);
