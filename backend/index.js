@@ -2210,13 +2210,22 @@ app.get('/api/tracker/estadisticas-historial', async (req, res) => {
 
 // Endpoint de health check para Railway
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    uptime: process.uptime()
-  });
+  try {
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      environment: process.env.NODE_ENV || 'development',
+      uptime: process.uptime(),
+      port: process.env.PORT || 4000
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'ERROR', 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // ==================== INICIALIZACIÓN DEL SISTEMA ====================
@@ -2251,10 +2260,23 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const PORT = process.env.PORT || 4000;
+
+// Añadir logs de debug
+console.log('🔍 Variables de entorno:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', PORT);
+console.log('DB_HOST:', process.env.DB_HOST ? 'Configurado' : 'No configurado');
+console.log('DB_USER:', process.env.DB_USER ? 'Configurado' : 'No configurado');
+
 app.listen(PORT, async () => {
-  console.log(`🟢 Servidor escuchando en puerto ${PORT}`);
-  console.log(`🌐 Frontend disponible en: http://localhost:${PORT}`);
+  console.log(`🟢 Servidor backend escuchando en puerto ${PORT}`);
+  console.log(`🌐 Health check disponible en: http://localhost:${PORT}/api/health`);
   
   // Inicializar servicios de notificación
-  await initializeServices();
+  try {
+    await initializeServices();
+    console.log('✅ Servicios inicializados correctamente');
+  } catch (error) {
+    console.error('❌ Error inicializando servicios:', error);
+  }
 });
