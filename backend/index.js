@@ -2297,29 +2297,17 @@ app.get('/api/test-gmail', (req, res) => {
 });
 
 // Ruta temporal para configurar Gmail API (SOLO USAR UNA VEZ)
-app.get('/api/gmail/setup', async (req, res) => {
-  try {
-    const GmailApiService = require('./services/gmailApiService');
-    const gmailService = new GmailApiService();
-    
-    const authUrl = gmailService.getAuthUrl();
-    
-    res.json({
-      message: 'Configuración de Gmail API',
-      instructions: [
-        '1. Ve a esta URL para autorizar:',
-        authUrl,
-        '2. Copia el código de autorización',
-        '3. Envía POST a /api/gmail/token con el código'
-      ],
-      authUrl: authUrl
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Error configurando Gmail API',
-      message: error.message
-    });
-  }
+app.get('/api/gmail/setup', (req, res) => {
+  res.json({
+    message: 'Gmail API Setup - Endpoint funcionando',
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    instructions: [
+      '1. Endpoint funcionando correctamente',
+      '2. Próximo paso: configurar Gmail API',
+      '3. Variables necesarias en Railway'
+    ]
+  });
 });
 
 // Ruta temporal para obtener refresh token
