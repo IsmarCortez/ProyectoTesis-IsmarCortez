@@ -1391,6 +1391,26 @@ app.get('/api/usuarios/:id', async (req, res) => {
   }
 });
 
+// Endpoint para obtener usuario por email (para perfil)
+app.get('/api/usuario/:email', async (req, res) => {
+  const { email } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      'SELECT pk_id_usuarios, nombre_usuario, email_usuario, foto_perfil_usuario, pregunta_seguridad_usuario FROM tbl_usuarios WHERE email_usuario = ?',
+      [email]
+    );
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener el usuario.' });
+  }
+});
+
 // Endpoint para registrar un nuevo usuario
 app.post('/api/usuarios', upload.single('foto'), async (req, res) => {
   const { nombre_usuario, email_usuario, contrasenia_usuario, pregunta_seguridad_usuario } = req.body;
@@ -1496,13 +1516,20 @@ app.put('/api/usuarios/:id', upload.single('foto'), async (req, res) => {
       return res.status(409).json({ message: 'El email ya está registrado por otro usuario.' });
     }
 
-    // Procesar foto si se subió
+    // Procesar foto si se subió usando Cloudinary
     let query = 'UPDATE tbl_usuarios SET nombre_usuario = ?, email_usuario = ?, pregunta_seguridad_usuario = ?';
     let params = [nombre_usuario, email_usuario, pregunta_seguridad_usuario];
     
     if (req.file) {
+      let fotoUrl = '';
+      if (cloudinaryConfigured()) {
+        fotoUrl = req.file.path || req.file.secure_url;
+      } else {
+        fotoUrl = req.file.filename;
+      }
+      
       query += ', foto_perfil_usuario = ?';
-      params.push(req.file.filename);
+      params.push(fotoUrl);
     }
     
     query += ' WHERE pk_id_usuarios = ?';

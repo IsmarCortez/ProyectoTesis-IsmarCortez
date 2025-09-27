@@ -17,8 +17,20 @@ function Home({ usuario, onLogout }) {
 
   if (!usuario) return <div className="container mt-5">No autenticado.</div>;
 
-  // Construye la URL para la imagen usando la ruta estática del backend
-  const urlFoto = usuario.foto ? `/uploads/${usuario.foto}` : null;
+  // Helper para construir la URL de la foto (Cloudinary o local)
+  const getFotoUrl = (foto) => {
+    if (!foto) return null;
+    
+    // Si es una URL completa de Cloudinary, usarla directamente
+    if (foto.startsWith('http')) {
+      return foto;
+    }
+    
+    // Si es un nombre de archivo local, usar la ruta estática
+    return `/uploads/${foto}`;
+  };
+  
+  const urlFoto = getFotoUrl(usuario.foto);
 
   const handleLogout = () => {
     onLogout();

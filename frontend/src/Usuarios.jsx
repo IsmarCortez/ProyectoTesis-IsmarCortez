@@ -429,7 +429,9 @@ function Usuarios() {
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
                             {usuario.foto_perfil_usuario ? (
                               <img
-                                src={`/uploads/${usuario.foto_perfil_usuario}`}
+                                src={usuario.foto_perfil_usuario.startsWith('http') 
+                                  ? usuario.foto_perfil_usuario 
+                                  : `/uploads/${usuario.foto_perfil_usuario}`}
                                 alt="Foto de perfil"
                                 className="rounded-circle"
                                 style={{ width: '40px', height: '40px', objectFit: 'cover' }}
