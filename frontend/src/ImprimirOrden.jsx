@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getFileUrl } from './config/cloudinary';
+// import { getFileUrl } from './config/cloudinary';
 
 const ImprimirOrden = ({ orden, onClose }) => {
   const [descargando, setDescargando] = useState(false);
