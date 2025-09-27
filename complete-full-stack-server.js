@@ -175,18 +175,18 @@ app.post('/api/login', async (req, res) => {
       id: usuario.pk_id_usuarios,
       email: usuario.email_usuario,
       nombre: usuario.nombre_usuario,
-      password_hash: usuario.password_usuario ? '[PRESENTE]' : '[VACÍO]'
+      password_hash: usuario.contrasenia_usuario ? '[PRESENTE]' : '[VACÍO]'
     });
 
     // Hasheamos la contraseña ingresada para compararla con la almacenada
     const hashPassword = crypto.createHash('sha256').update(password).digest('hex');
     console.log('🔍 LOGIN DEBUG - Hash de contraseña ingresada:', hashPassword);
-    console.log('🔍 LOGIN DEBUG - Hash de contraseña almacenada:', usuario.password_usuario);
+    console.log('🔍 LOGIN DEBUG - Hash de contraseña almacenada:', usuario.contrasenia_usuario);
     
-    if (hashPassword !== usuario.password_usuario) {
+    if (hashPassword !== usuario.contrasenia_usuario) {
       console.log('❌ LOGIN DEBUG - Contraseñas no coinciden');
       console.log('❌ LOGIN DEBUG - Hash ingresado:', hashPassword);
-      console.log('❌ LOGIN DEBUG - Hash almacenado:', usuario.password_usuario);
+      console.log('❌ LOGIN DEBUG - Hash almacenado:', usuario.contrasenia_usuario);
       return res.status(401).json({ message: 'Credenciales inválidas.' });
     }
 
@@ -228,7 +228,7 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/debug/usuarios', async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
-    const [rows] = await connection.execute('SELECT pk_id_usuarios, email_usuario, nombre_usuario FROM tbl_usuarios');
+    const [rows] = await connection.execute('SELECT pk_id_usuarios, email_usuario, nombre_usuario, contrasenia_usuario FROM tbl_usuarios');
     await connection.end();
     
     console.log('🔍 DEBUG - Usuarios en la base de datos:', rows.length);
@@ -237,12 +237,46 @@ app.get('/api/debug/usuarios', async (req, res) => {
       usuarios: rows.map(u => ({
         id: u.pk_id_usuarios,
         email: u.email_usuario,
-        nombre: u.nombre_usuario
+        nombre: u.nombre_usuario,
+        password_hash: u.contrasenia_usuario ? '[PRESENTE]' : '[VACÍO]'
       }))
     });
   } catch (error) {
     console.error('Error obteniendo usuarios:', error);
     res.status(500).json({ message: 'Error obteniendo usuarios' });
+  }
+});
+
+// Endpoint temporal para actualizar contraseña (SOLO PARA DIAGNÓSTICO)
+app.post('/api/debug/update-password', async (req, res) => {
+  const { email, newPassword } = req.body;
+  
+  if (!email || !newPassword) {
+    return res.status(400).json({ message: 'Email y nueva contraseña requeridos' });
+  }
+  
+  try {
+    const hashPassword = crypto.createHash('sha256').update(newPassword).digest('hex');
+    
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      'UPDATE tbl_usuarios SET contrasenia_usuario = ? WHERE email_usuario = ?',
+      [hashPassword, email]
+    );
+    
+    await connection.end();
+    
+    console.log('🔍 DEBUG - Contraseña actualizada para:', email);
+    console.log('🔍 DEBUG - Hash generado:', hashPassword);
+    
+    res.json({
+      message: 'Contraseña actualizada exitosamente',
+      email: email,
+      hash: hashPassword
+    });
+  } catch (error) {
+    console.error('Error actualizando contraseña:', error);
+    res.status(500).json({ message: 'Error actualizando contraseña' });
   }
 });
 
@@ -274,7 +308,7 @@ app.post('/api/usuarios', async (req, res) => {
     
     const connection = await mysql.createConnection(dbConfig);
     const [result] = await connection.execute(
-      'INSERT INTO tbl_usuarios (nombre_usuario, email_usuario, password_usuario, foto_perfil_usuario) VALUES (?, ?, ?, ?)',
+      'INSERT INTO tbl_usuarios (nombre_usuario, email_usuario, contrasenia_usuario, foto_perfil_usuario) VALUES (?, ?, ?, ?)',
       [nombre_usuario, email_usuario, hashPassword, foto_perfil_usuario || null]
     );
     await connection.end();
