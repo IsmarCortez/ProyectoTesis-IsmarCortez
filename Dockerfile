@@ -1,13 +1,19 @@
-# Dockerfile ultra simple para Railway
+# Dockerfile para servidor de producción
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Copiar solo lo necesario
-COPY hello.js ./
+# Copiar archivos de dependencias
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm ci
+
+# Copiar código fuente
+COPY production-server.js ./
 
 # Exponer puerto
 EXPOSE 8080
 
-# Comando de inicio directo
-CMD ["node", "hello.js"]
+# Comando de inicio
+CMD ["node", "production-server.js"]
