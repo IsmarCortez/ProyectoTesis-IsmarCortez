@@ -2216,11 +2216,13 @@ app.get('/api/tracker/estadisticas-historial', async (req, res) => {
 app.get('/api/health', (req, res) => {
   console.log('🔍 Health check desde:', req.get('host'));
   console.log('🔍 User-Agent:', req.get('user-agent'));
+  console.log('🔍 Puerto del servidor:', process.env.PORT || 8080);
   
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    port: process.env.PORT || 4000
+    port: process.env.PORT || 8080,
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -2255,13 +2257,15 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 8080;
 
 console.log('🚀 Iniciando servidor...');
 console.log('🔍 Puerto:', PORT);
 console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
+console.log('🔍 Variables de entorno disponibles:', Object.keys(process.env).filter(key => key.includes('PORT') || key.includes('DB_')));
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🟢 Servidor escuchando en puerto ${PORT}`);
-  console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🌐 Health check: http://0.0.0.0:${PORT}/api/health`);
+  console.log(`🌐 Servidor disponible en: http://0.0.0.0:${PORT}`);
 });
