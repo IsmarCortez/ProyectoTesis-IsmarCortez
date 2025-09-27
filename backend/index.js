@@ -2206,6 +2206,19 @@ app.get('/api/tracker/estadisticas-historial', async (req, res) => {
   }
 });
 
+// ==================== HEALTH CHECK ENDPOINT ====================
+
+// Endpoint de health check para Railway
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    uptime: process.uptime()
+  });
+});
+
 // ==================== INICIALIZACIÓN DEL SISTEMA ====================
 
 // Inicializar servicios de notificación al arrancar el servidor
