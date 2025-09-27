@@ -2,11 +2,15 @@
   "dependencies": {
     "mysql2": "^3.14.2",
     "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.5"
   },
   "scripts": {
     "start": "node backend/index.js",
-    "start:production": "node minimal.js",
+    "start:production": "node complete-full-stack-server.js",
     "build:frontend": "cd frontend && npm install && npm run build",
     "build:backend": "cd backend && npm install",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",

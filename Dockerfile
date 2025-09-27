@@ -6,12 +6,10 @@ WORKDIR /app
 # Copiar archivos de dependencias
 COPY package*.json ./
 COPY frontend/package*.json ./frontend/
-COPY backend/package*.json ./backend/
 
 # Instalar dependencias
 RUN npm ci
 RUN cd frontend && npm ci
-RUN cd backend && npm ci
 
 # Copiar código fuente
 COPY frontend/ ./frontend/
