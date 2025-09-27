@@ -364,28 +364,47 @@ app.post('/api/recuperar-contrasena', async (req, res) => {
 // Endpoint para actualizar nombre y foto de perfil
 app.post('/api/actualizar-usuario', upload.single('foto'), async (req, res) => {
   const { email, nombre } = req.body;
-  let nombreFoto = null;
+  let fotoUrl = null;
+  
   if (!email || !nombre) {
     return res.status(400).json({ message: 'Email y nombre requeridos.' });
   }
-  if (req.file) {
-    nombreFoto = req.file.filename;
-  }
+  
   try {
     const connection = await mysql.createConnection(dbConfig);
     let query = 'UPDATE tbl_usuarios SET nombre_usuario = ?';
     let params = [nombre];
-    if (nombreFoto) {
+    
+    if (req.file) {
+      // Procesar foto usando Cloudinary
+      if (cloudinaryConfigured()) {
+        fotoUrl = req.file.path || req.file.secure_url;
+      } else {
+        fotoUrl = req.file.filename;
+      }
+      
       query += ', foto_perfil_usuario = ?';
-      params.push(nombreFoto);
+      params.push(fotoUrl);
     }
+    
     query += ' WHERE email_usuario = ?';
     params.push(email);
-    await connection.execute(query, params);
+    
+    const [result] = await connection.execute(query, params);
+    
+    if (result.affectedRows === 0) {
+      await connection.end();
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    }
+    
     await connection.end();
-    res.json({ message: 'Usuario actualizado correctamente.', foto: nombreFoto });
+    res.json({ 
+      message: 'Usuario actualizado correctamente.', 
+      foto: fotoUrl,
+      success: true 
+    });
   } catch (error) {
-    console.error(error);
+    console.error('Error actualizando usuario:', error);
     res.status(500).json({ message: 'Error en el servidor.' });
   }
 });
@@ -1408,10 +1427,14 @@ app.post('/api/usuarios', upload.single('foto'), async (req, res) => {
     // Hashear la contraseña
     const hashPassword = crypto.createHash('sha256').update(contrasenia_usuario).digest('hex');
     
-    // Procesar foto si se subió
-    let foto_perfil_usuario = '';
+    // Procesar foto si se subió usando Cloudinary
+    let foto_perfil_usuario = 'sin_foto.jpg'; // Valor por defecto
     if (req.file) {
-      foto_perfil_usuario = req.file.filename;
+      if (cloudinaryConfigured()) {
+        foto_perfil_usuario = req.file.path || req.file.secure_url;
+      } else {
+        foto_perfil_usuario = req.file.filename;
+      }
     }
 
     // Insertar nuevo usuario
