@@ -74,10 +74,18 @@ const processFiles = (files, fieldName) => {
 const dbConfig = {
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
+  password: process.env.MYSQL_ROOT_PASSWORD,
   database: process.env.MYSQLDATABASE,
   port: process.env.MYSQLPORT || 3306,
 };
+
+console.log('🔍 DB Config Railway:', {
+  host: dbConfig.host ? 'Configurado' : 'No configurado',
+  user: dbConfig.user ? 'Configurado' : 'No configurado', 
+  password: dbConfig.password ? 'Configurado' : 'No configurado',
+  database: dbConfig.database ? 'Configurado' : 'No configurado',
+  port: dbConfig.port
+});
 
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
