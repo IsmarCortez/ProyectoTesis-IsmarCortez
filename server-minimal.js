@@ -6,6 +6,13 @@ const app = express();
 
 const PORT = process.env.PORT || 8080;
 
+// Logs de debug críticos
+console.log('🔍 PORT:', process.env.PORT);
+console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
+console.log('🔍 MYSQLHOST:', process.env.MYSQLHOST);
+console.log('🔍 MYSQLUSER:', process.env.MYSQLUSER);
+console.log('🔍 MYSQLDATABASE:', process.env.MYSQLDATABASE);
+
 console.log('🚀 Iniciando servidor mínimo...');
 console.log('🔍 Puerto:', PORT);
 console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
@@ -14,17 +21,10 @@ console.log('🔍 Todas las variables de entorno:', Object.keys(process.env).len
 // Middleware básico
 app.use(express.json());
 
-// Health check simple
+// Health check ultra simple - SIN dependencias externas
 app.get('/api/health', (req, res) => {
-  console.log('🔍 Health check recibido desde:', req.get('host'));
-  console.log('🔍 User-Agent:', req.get('user-agent'));
-  
-  res.status(200).json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    port: PORT,
-    environment: process.env.NODE_ENV || 'development'
-  });
+  console.log('🔍 Health check recibido');
+  res.status(200).json({ status: 'OK' });
 });
 
 // Ruta básica
