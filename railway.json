@@ -3,7 +3,6 @@
     "builder": "DOCKERFILE"
   },
   "deploy": {
-    "startCommand": "npm run start:production",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 600,
     "restartPolicyType": "ON_FAILURE",

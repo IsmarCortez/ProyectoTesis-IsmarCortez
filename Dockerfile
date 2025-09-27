@@ -4,10 +4,10 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copiar solo lo necesario
-COPY minimal.js ./
+COPY hello.js ./
 
 # Exponer puerto
 EXPOSE 8080
 
 # Comando de inicio directo
-CMD ["node", "minimal.js"]
+CMD ["node", "hello.js"]
