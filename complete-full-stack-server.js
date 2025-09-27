@@ -224,6 +224,56 @@ app.post('/api/login', async (req, res) => {
 
 // ==================== ENDPOINTS DE DIAGNÓSTICO ====================
 
+// Endpoint para configurar la base de datos (solo para diagnóstico)
+app.post('/api/debug/setup-database', async (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Leer el archivo SQL
+    const sqlFile = fs.readFileSync(path.join(__dirname, 'database_setup.sql'), 'utf8');
+    
+    // Dividir el archivo en consultas individuales
+    const queries = sqlFile
+      .split(';')
+      .map(query => query.trim())
+      .filter(query => query.length > 0);
+    
+    const connection = await mysql.createConnection(dbConfig);
+    
+    let executedQueries = 0;
+    let errors = [];
+    
+    for (const query of queries) {
+      try {
+        await connection.execute(query);
+        executedQueries++;
+        console.log(`✅ Query ejecutada: ${query.substring(0, 50)}...`);
+      } catch (error) {
+        if (error.code !== 'ER_TABLE_EXISTS_ERROR' && error.code !== 'ER_DUP_ENTRY') {
+          errors.push({
+            query: query.substring(0, 50),
+            error: error.message
+          });
+          console.log(`❌ Error en query: ${query.substring(0, 50)}... - ${error.message}`);
+        }
+      }
+    }
+    
+    await connection.end();
+    
+    res.json({
+      message: 'Configuración de base de datos completada',
+      executedQueries: executedQueries,
+      errors: errors,
+      success: errors.length === 0
+    });
+  } catch (error) {
+    console.error('Error configurando base de datos:', error);
+    res.status(500).json({ message: 'Error configurando base de datos', error: error.message });
+  }
+});
+
 // Endpoint para listar usuarios (solo para diagnóstico)
 app.get('/api/debug/usuarios', async (req, res) => {
   try {
@@ -304,6 +354,12 @@ app.get('/api/usuarios', async (req, res) => {
 app.post('/api/usuarios', async (req, res) => {
   try {
     const { nombre_usuario, email_usuario, password_usuario, foto_perfil_usuario } = req.body;
+    
+    // Validar que la contraseña no esté vacía
+    if (!password_usuario) {
+      return res.status(400).json({ message: 'La contraseña es requerida' });
+    }
+    
     const hashPassword = crypto.createHash('sha256').update(password_usuario).digest('hex');
     
     const connection = await mysql.createConnection(dbConfig);
@@ -450,7 +506,7 @@ app.post('/api/servicios', async (req, res) => {
 app.get('/api/estados', async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
-    const [rows] = await connection.execute('SELECT * FROM tbl_estados_orden ORDER BY pk_id_estado DESC');
+    const [rows] = await connection.execute('SELECT * FROM tbl_orden_estado ORDER BY pk_id_estado DESC');
     await connection.end();
     res.json(rows);
   } catch (error) {
@@ -480,7 +536,7 @@ app.get('/api/ordenes', async (req, res) => {
       LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
       LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
       LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
-      LEFT JOIN tbl_estados_orden e ON o.fk_id_estado_orden = e.pk_id_estado
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
       ORDER BY o.pk_id_orden DESC
     `);
     await connection.end();
