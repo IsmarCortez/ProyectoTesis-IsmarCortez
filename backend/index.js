@@ -17,14 +17,7 @@ const { upload: cloudinaryUpload, isConfigured: cloudinaryConfigured } = require
 const app = express();
 // Configurar CORS para Railway
 app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'http://localhost:3001',
-    'https://healthcheck.railway.app', // Para health checks de Railway
-    /\.railway\.app$/, // Para dominios de Railway
-    /\.vercel\.app$/, // Para dominios de Vercel
-    /\.netlify\.app$/ // Para dominios de Netlify
-  ],
+  origin: true, // Permitir todos los orígenes para Railway
   credentials: true
 }));
 app.use(express.json());
@@ -2221,9 +2214,13 @@ app.get('/api/tracker/estadisticas-historial', async (req, res) => {
 
 // Endpoint de health check para Railway
 app.get('/api/health', (req, res) => {
+  console.log('🔍 Health check desde:', req.get('host'));
+  console.log('🔍 User-Agent:', req.get('user-agent'));
+  
   res.status(200).json({ 
     status: 'OK', 
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    port: process.env.PORT || 4000
   });
 });
 
