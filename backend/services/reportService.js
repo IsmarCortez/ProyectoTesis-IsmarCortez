@@ -1,5 +1,6 @@
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
+const moment = require('moment-timezone');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
@@ -380,17 +381,8 @@ class ReportService {
 
   formatDate(date) {
     if (!date) return 'No especificada';
-    const d = new Date(date);
-    // Convertir a zona horaria de Guatemala (GMT-6)
-    const guatemalaTime = new Date(d.getTime() - (6 * 60 * 60 * 1000));
-    return guatemalaTime.toLocaleDateString('es-GT', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'America/Guatemala'
-    });
+    // Usar moment-timezone para convertir a zona horaria de Guatemala
+    return moment(date).tz('America/Guatemala').format('DD [de] MMMM [de] YYYY, HH:mm');
   }
 
   // Agregar contenido específico al Excel

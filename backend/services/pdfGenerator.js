@@ -1,4 +1,5 @@
 const PDFDocument = require('pdfkit');
+const moment = require('moment-timezone');
 const config = require('../config/notifications');
 const path = require('path');
 const fs = require('fs');
@@ -292,17 +293,8 @@ class PDFGenerator {
 
   formatDate(date) {
     if (!date) return 'No especificada';
-    const d = new Date(date);
-    // Convertir a zona horaria de Guatemala (GMT-6)
-    const guatemalaTime = new Date(d.getTime() - (6 * 60 * 60 * 1000));
-    return guatemalaTime.toLocaleDateString('es-GT', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'America/Guatemala'
-    });
+    // Usar moment-timezone para convertir a zona horaria de Guatemala
+    return moment(date).tz('America/Guatemala').format('DD [de] MMMM [de] YYYY, HH:mm');
   }
 
   formatPhone(phone) {

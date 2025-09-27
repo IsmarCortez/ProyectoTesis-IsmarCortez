@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail');
+const moment = require('moment-timezone');
 const GmailApiService = require('./gmailApiService');
 const config = require('../config/notifications');
 
@@ -502,7 +503,7 @@ class EmailService {
                 </div>
                 <div class="info-row">
                     <span class="info-label">Fecha de Actualización:</span>
-                    <span class="info-value">${new Date().toLocaleDateString('es-GT')}</span>
+                    <span class="info-value">${this.formatDate(new Date())}</span>
                 </div>
             </div>
 
@@ -630,18 +631,8 @@ class EmailService {
    */
   formatDate(date) {
     if (!date) return 'No especificada';
-    
-    const d = new Date(date);
-    // Convertir a zona horaria de Guatemala (GMT-6)
-    const guatemalaTime = new Date(d.getTime() - (6 * 60 * 60 * 1000));
-    return guatemalaTime.toLocaleDateString('es-GT', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'America/Guatemala'
-    });
+    // Usar moment-timezone para convertir a zona horaria de Guatemala
+    return moment(date).tz('America/Guatemala').format('DD [de] MMMM [de] YYYY, HH:mm');
   }
 
   /**
