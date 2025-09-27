@@ -76,6 +76,7 @@ const dbConfig = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 3306,
 };
 
 app.post('/api/login', async (req, res) => {
@@ -2260,9 +2261,11 @@ if (process.env.NODE_ENV === 'production') {
 const PORT = process.env.PORT || 8080;
 
 console.log('🚀 Iniciando servidor...');
-console.log('🔍 Puerto:', PORT);
+console.log('🔍 Puerto de aplicación:', PORT);
 console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
-console.log('🔍 Variables de entorno disponibles:', Object.keys(process.env).filter(key => key.includes('PORT') || key.includes('DB_')));
+console.log('🔍 DB_HOST:', process.env.DB_HOST);
+console.log('🔍 DB_PORT:', process.env.DB_PORT);
+console.log('🔍 DB_NAME:', process.env.DB_NAME);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🟢 Servidor escuchando en puerto ${PORT}`);
