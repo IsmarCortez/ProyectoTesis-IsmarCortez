@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const GmailApiService = require('./gmailApiService');
 const config = require('../config/notifications');
 
@@ -44,19 +45,19 @@ class EmailService {
 
       // Configurar el transportador según el servicio
       if (this.config.service === 'sendgrid') {
-        // Configuración para SendGrid
-        this.transporter = nodemailer.createTransport({
-          host: 'smtp.sendgrid.net',
-          port: 587,
-          secure: false,
-          auth: {
-            user: 'apikey',
-            pass: this.config.pass || this.config.apiKey
-          },
-          tls: {
-            rejectUnauthorized: false
-          }
-        });
+        // SendGrid usa API REST, no SMTP en Railway
+        this.transporter = null; // No usar SMTP para SendGrid
+        this.sendGridApiKey = this.config.pass || this.config.apiKey;
+        
+        if (!this.sendGridApiKey) {
+          throw new Error('SendGrid API key not configured');
+        }
+        
+        // Configurar SendGrid
+        sgMail.setApiKey(this.sendGridApiKey);
+        this.isInitialized = true;
+        console.log('✅ SendGrid API configurado (sin SMTP)');
+        return;
       } else {
         // Configuración especial para Gmail en Railway
         this.transporter = nodemailer.createTransport({
@@ -107,6 +108,37 @@ class EmailService {
         return {
           success: false,
           error: 'Email service not available'
+        };
+      }
+
+      // Usar SendGrid API si está configurado
+      if (this.config.service === 'sendgrid' && this.isInitialized) {
+        const templateData = this.prepareTemplateData(orderData);
+        const emailContent = this.generateEmailContent(templateData);
+        
+        const msg = {
+          to: orderData.correo_cliente,
+          from: this.config.from,
+          subject: emailContent.subject,
+          html: emailContent.html,
+          attachments: [
+            {
+              content: pdfBuffer.toString('base64'),
+              filename: `Orden_Servicio_${orderData.pk_id_orden}.pdf`,
+              type: 'application/pdf',
+              disposition: 'attachment'
+            }
+          ]
+        };
+        
+        const result = await sgMail.send(msg);
+        
+        console.log(`📧 Email sent via SendGrid API to ${orderData.correo_cliente}`);
+        return {
+          success: true,
+          messageId: result[0].headers['x-message-id'],
+          recipient: orderData.correo_cliente,
+          method: 'SendGrid API'
         };
       }
 
@@ -198,6 +230,39 @@ class EmailService {
         return {
           success: false,
           error: 'Email service not available'
+        };
+      }
+
+      // Usar SendGrid API si está configurado
+      if (this.config.service === 'sendgrid' && this.isInitialized) {
+        const templateData = this.prepareTemplateData(orderData);
+        const emailContent = this.generateStateChangeEmailContent(templateData, estadoAnterior, estadoNuevo);
+        
+        const msg = {
+          to: email,
+          from: this.config.from,
+          subject: emailContent.subject,
+          html: emailContent.html,
+          attachments: [
+            {
+              content: pdfBuffer.toString('base64'),
+              filename: `Orden_Servicio_${orderData.pk_id_orden}_Actualizada.pdf`,
+              type: 'application/pdf',
+              disposition: 'attachment'
+            }
+          ]
+        };
+        
+        const result = await sgMail.send(msg);
+        
+        console.log(`📧 State change email sent via SendGrid API to ${email}`);
+        return {
+          success: true,
+          messageId: result[0].headers['x-message-id'],
+          recipient: email,
+          estadoAnterior,
+          estadoNuevo,
+          method: 'SendGrid API'
         };
       }
 
