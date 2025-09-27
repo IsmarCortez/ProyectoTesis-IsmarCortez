@@ -2261,18 +2261,79 @@ app.get('/api/test-gmail', (req, res) => {
 });
 
 // Ruta temporal para configurar Gmail API (SOLO USAR UNA VEZ)
-app.get('/api/gmail/setup', (req, res) => {
+app.get('/api/gmail/setup', async (req, res) => {
   console.log('🔍 Endpoint /api/gmail/setup llamado');
-  res.json({
-    message: 'Gmail API Setup - Endpoint funcionando',
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    instructions: [
-      '1. Endpoint funcionando correctamente',
-      '2. Próximo paso: configurar Gmail API',
-      '3. Variables necesarias en Railway'
-    ]
-  });
+  
+  try {
+    // Verificar si las variables están configuradas
+    const hasClientId = process.env.GMAIL_CLIENT_ID;
+    const hasClientSecret = process.env.GMAIL_CLIENT_SECRET;
+    const hasRefreshToken = process.env.GMAIL_REFRESH_TOKEN;
+    
+    console.log('🔍 Variables Gmail API:', {
+      clientId: hasClientId ? 'Configurado' : 'No configurado',
+      clientSecret: hasClientSecret ? 'Configurado' : 'No configurado',
+      refreshToken: hasRefreshToken ? 'Configurado' : 'No configurado'
+    });
+    
+    if (!hasClientId || !hasClientSecret) {
+      return res.json({
+        message: 'Variables de Gmail API no configuradas',
+        status: 'ERROR',
+        timestamp: new Date().toISOString(),
+        variables: {
+          GMAIL_CLIENT_ID: hasClientId ? 'OK' : 'FALTANTE',
+          GMAIL_CLIENT_SECRET: hasClientSecret ? 'OK' : 'FALTANTE'
+        },
+        instructions: [
+          '1. Agrega GMAIL_CLIENT_ID en Railway',
+          '2. Agrega GMAIL_CLIENT_SECRET en Railway',
+          '3. Espera a que se redespliegue'
+        ]
+      });
+    }
+    
+    if (hasRefreshToken) {
+      return res.json({
+        message: 'Gmail API completamente configurado',
+        status: 'COMPLETED',
+        timestamp: new Date().toISOString(),
+        instructions: [
+          '✅ Todas las variables configuradas',
+          '✅ Gmail API listo para usar',
+          '✅ Puedes eliminar estos endpoints temporales'
+        ]
+      });
+    }
+    
+    // Si tenemos client_id y client_secret pero no refresh_token, generar URL de autorización
+    const GmailApiService = require('./services/gmailApiService');
+    const gmailService = new GmailApiService();
+    
+    const authUrl = gmailService.getAuthUrl();
+    
+    res.json({
+      message: 'Configuración de Gmail API',
+      status: 'READY_FOR_AUTH',
+      timestamp: new Date().toISOString(),
+      authUrl: authUrl,
+      instructions: [
+        '1. Ve a esta URL para autorizar:',
+        authUrl,
+        '2. Copia el código de autorización',
+        '3. Envía POST a /api/gmail/token con el código'
+      ]
+    });
+    
+  } catch (error) {
+    console.error('❌ Error en setup de Gmail API:', error.message);
+    res.status(500).json({
+      message: 'Error configurando Gmail API',
+      status: 'ERROR',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 console.log('✅ Endpoints Gmail API registrados correctamente');
