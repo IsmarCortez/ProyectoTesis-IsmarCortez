@@ -351,9 +351,10 @@ app.get('/api/usuarios', async (req, res) => {
 });
 
 // Crear usuario
-app.post('/api/usuarios', async (req, res) => {
+app.post('/api/usuarios', upload.single('foto'), async (req, res) => {
   try {
-    const { nombre_usuario, email_usuario, password_usuario, foto_perfil_usuario } = req.body;
+    const { nombre_usuario, email_usuario, password_usuario } = req.body;
+    const foto_perfil_usuario = req.file ? req.file.filename : null;
     
     // Validar que la contraseña no esté vacía
     if (!password_usuario) {
@@ -365,7 +366,7 @@ app.post('/api/usuarios', async (req, res) => {
     const connection = await mysql.createConnection(dbConfig);
     const [result] = await connection.execute(
       'INSERT INTO tbl_usuarios (nombre_usuario, email_usuario, contrasenia_usuario, foto_perfil_usuario) VALUES (?, ?, ?, ?)',
-      [nombre_usuario, email_usuario, hashPassword, foto_perfil_usuario || null]
+      [nombre_usuario, email_usuario, hashPassword, foto_perfil_usuario]
     );
     await connection.end();
     
@@ -373,6 +374,94 @@ app.post('/api/usuarios', async (req, res) => {
   } catch (error) {
     console.error('Error creando usuario:', error);
     res.status(500).json({ message: 'Error creando usuario' });
+  }
+});
+
+// Actualizar usuario con foto (endpoint especial)
+app.post('/api/actualizar-usuario', upload.single('foto'), async (req, res) => {
+  try {
+    const { id_usuario, nombre_usuario, email_usuario, telefono_usuario } = req.body;
+    const foto_perfil_usuario = req.file ? req.file.filename : null;
+    
+    const connection = await mysql.createConnection(dbConfig);
+    
+    let query = 'UPDATE tbl_usuarios SET nombre_usuario = ?, email_usuario = ?, telefono_usuario = ?';
+    let params = [nombre_usuario, email_usuario, telefono_usuario];
+    
+    if (foto_perfil_usuario) {
+      query += ', foto_perfil_usuario = ?';
+      params.push(foto_perfil_usuario);
+    }
+    
+    query += ' WHERE pk_id_usuarios = ?';
+    params.push(id_usuario);
+    
+    const [result] = await connection.execute(query, params);
+    await connection.end();
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    res.json({ message: 'Usuario actualizado exitosamente' });
+  } catch (error) {
+    console.error('Error actualizando usuario:', error);
+    res.status(500).json({ message: 'Error actualizando usuario' });
+  }
+});
+
+// Obtener un usuario por ID
+app.get('/api/usuarios/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT pk_id_usuarios, nombre_usuario, apellido_usuario, email_usuario, telefono_usuario, foto_perfil_usuario FROM tbl_usuarios WHERE pk_id_usuarios = ?', [id]);
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error al obtener usuario:', error);
+    res.status(500).json({ message: 'Error al obtener usuario' });
+  }
+});
+
+// Actualizar un usuario
+app.put('/api/usuarios/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nombre_usuario, apellido_usuario, email_usuario, telefono_usuario, foto_perfil_usuario } = req.body;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      'UPDATE tbl_usuarios SET nombre_usuario = ?, apellido_usuario = ?, email_usuario = ?, telefono_usuario = ?, foto_perfil_usuario = COALESCE(?, foto_perfil_usuario) WHERE pk_id_usuarios = ?',
+      [nombre_usuario, apellido_usuario, email_usuario, telefono_usuario, foto_perfil_usuario, id]
+    );
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    res.json({ message: 'Usuario actualizado exitosamente' });
+  } catch (error) {
+    console.error('Error al actualizar usuario:', error);
+    res.status(500).json({ message: 'Error al actualizar usuario' });
+  }
+});
+
+// Eliminar un usuario
+app.delete('/api/usuarios/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute('DELETE FROM tbl_usuarios WHERE pk_id_usuarios = ?', [id]);
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    res.json({ message: 'Usuario eliminado exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar usuario:', error);
+    res.status(500).json({ message: 'Error al eliminar usuario' });
   }
 });
 
@@ -432,6 +521,61 @@ app.get('/api/clientes/nit/:nit', async (req, res) => {
   }
 });
 
+// Obtener un cliente por ID
+app.get('/api/clientes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT * FROM tbl_clientes WHERE PK_id_cliente = ?', [id]);
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Cliente no encontrado' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error al obtener cliente:', error);
+    res.status(500).json({ message: 'Error al obtener cliente' });
+  }
+});
+
+// Actualizar un cliente
+app.put('/api/clientes/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nombre_cliente, apellido_cliente, dpi_cliente, NIT, telefono_cliente, correo_cliente, direccion_cliente } = req.body;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      'UPDATE tbl_clientes SET nombre_cliente = ?, apellido_cliente = ?, dpi_cliente = ?, NIT = ?, telefono_cliente = ?, correo_cliente = ?, direccion_cliente = ? WHERE PK_id_cliente = ?',
+      [nombre_cliente, apellido_cliente, dpi_cliente, NIT, telefono_cliente, correo_cliente, direccion_cliente, id]
+    );
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Cliente no encontrado' });
+    }
+    res.json({ message: 'Cliente actualizado exitosamente' });
+  } catch (error) {
+    console.error('Error al actualizar cliente:', error);
+    res.status(500).json({ message: 'Error al actualizar cliente' });
+  }
+});
+
+// Eliminar un cliente
+app.delete('/api/clientes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute('DELETE FROM tbl_clientes WHERE PK_id_cliente = ?', [id]);
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Cliente no encontrado' });
+    }
+    res.json({ message: 'Cliente eliminado exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar cliente:', error);
+    res.status(500).json({ message: 'Error al eliminar cliente' });
+  }
+});
+
 // ==================== VEHÍCULOS ====================
 
 // Obtener todos los vehículos
@@ -463,6 +607,61 @@ app.post('/api/vehiculos', async (req, res) => {
   } catch (error) {
     console.error('Error creando vehículo:', error);
     res.status(500).json({ message: 'Error creando vehículo' });
+  }
+});
+
+// Obtener un vehículo por ID
+app.get('/api/vehiculos/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT * FROM tbl_vehiculos WHERE pk_id_vehiculo = ?', [id]);
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Vehículo no encontrado' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error al obtener vehículo:', error);
+    res.status(500).json({ message: 'Error al obtener vehículo' });
+  }
+});
+
+// Actualizar un vehículo
+app.put('/api/vehiculos/:id', async (req, res) => {
+  const { id } = req.params;
+  const { placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo, color_vehiculo } = req.body;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      'UPDATE tbl_vehiculos SET placa_vehiculo = ?, marca_vehiculo = ?, modelo_vehiculo = ?, anio_vehiculo = ?, color_vehiculo = ? WHERE pk_id_vehiculo = ?',
+      [placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo, color_vehiculo, id]
+    );
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Vehículo no encontrado' });
+    }
+    res.json({ message: 'Vehículo actualizado exitosamente' });
+  } catch (error) {
+    console.error('Error al actualizar vehículo:', error);
+    res.status(500).json({ message: 'Error al actualizar vehículo' });
+  }
+});
+
+// Eliminar un vehículo
+app.delete('/api/vehiculos/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute('DELETE FROM tbl_vehiculos WHERE pk_id_vehiculo = ?', [id]);
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Vehículo no encontrado' });
+    }
+    res.json({ message: 'Vehículo eliminado exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar vehículo:', error);
+    res.status(500).json({ message: 'Error al eliminar vehículo' });
   }
 });
 
@@ -500,6 +699,61 @@ app.post('/api/servicios', async (req, res) => {
   }
 });
 
+// Obtener un servicio por ID
+app.get('/api/servicios/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT * FROM tbl_servicios WHERE pk_id_servicio = ?', [id]);
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Servicio no encontrado' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error al obtener servicio:', error);
+    res.status(500).json({ message: 'Error al obtener servicio' });
+  }
+});
+
+// Actualizar un servicio
+app.put('/api/servicios/:id', async (req, res) => {
+  const { id } = req.params;
+  const { servicio, descripcion_servicios } = req.body;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      'UPDATE tbl_servicios SET servicio = ?, descripcion_servicios = ? WHERE pk_id_servicio = ?',
+      [servicio, descripcion_servicios, id]
+    );
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Servicio no encontrado' });
+    }
+    res.json({ message: 'Servicio actualizado exitosamente' });
+  } catch (error) {
+    console.error('Error al actualizar servicio:', error);
+    res.status(500).json({ message: 'Error al actualizar servicio' });
+  }
+});
+
+// Eliminar un servicio
+app.delete('/api/servicios/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute('DELETE FROM tbl_servicios WHERE pk_id_servicio = ?', [id]);
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Servicio no encontrado' });
+    }
+    res.json({ message: 'Servicio eliminado exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar servicio:', error);
+    res.status(500).json({ message: 'Error al eliminar servicio' });
+  }
+});
+
 // ==================== ESTADOS ====================
 
 // Obtener todos los estados
@@ -515,7 +769,116 @@ app.get('/api/estados', async (req, res) => {
   }
 });
 
+// Obtener un estado por ID
+app.get('/api/estados/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT * FROM tbl_orden_estado WHERE pk_id_estado = ?', [id]);
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Estado no encontrado' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error al obtener estado:', error);
+    res.status(500).json({ message: 'Error al obtener estado' });
+  }
+});
+
+// Crear un nuevo estado
+app.post('/api/estados', async (req, res) => {
+  try {
+    const { estado_orden, descripcion_estado } = req.body;
+    if (!estado_orden) {
+      return res.status(400).json({ message: 'El nombre del estado es requerido' });
+    }
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      'INSERT INTO tbl_orden_estado (estado_orden, descripcion_estado) VALUES (?, ?)',
+      [estado_orden, descripcion_estado]
+    );
+    await connection.end();
+    res.status(201).json({ message: 'Estado registrado exitosamente', id: result.insertId });
+  } catch (error) {
+    console.error('Error al registrar estado:', error);
+    res.status(500).json({ message: 'Error al registrar estado' });
+  }
+});
+
+// Actualizar un estado
+app.put('/api/estados/:id', async (req, res) => {
+  const { id } = req.params;
+  const { estado_orden, descripcion_estado } = req.body;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      'UPDATE tbl_orden_estado SET estado_orden = ?, descripcion_estado = ? WHERE pk_id_estado = ?',
+      [estado_orden, descripcion_estado, id]
+    );
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Estado no encontrado' });
+    }
+    res.json({ message: 'Estado actualizado exitosamente' });
+  } catch (error) {
+    console.error('Error al actualizar estado:', error);
+    res.status(500).json({ message: 'Error al actualizar estado' });
+  }
+});
+
+// Eliminar un estado
+app.delete('/api/estados/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute('DELETE FROM tbl_orden_estado WHERE pk_id_estado = ?', [id]);
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Estado no encontrado' });
+    }
+    res.json({ message: 'Estado eliminado exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar estado:', error);
+    res.status(500).json({ message: 'Error al eliminar estado' });
+  }
+});
+
 // ==================== ÓRDENES ====================
+
+// Buscar cliente por NIT para órdenes
+app.get('/api/ordenes/buscar-cliente-nit/:nit', async (req, res) => {
+  const { nit } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT PK_id_cliente, nombre_cliente, apellido_cliente, NIT FROM tbl_clientes WHERE NIT = ?', [nit]);
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Cliente no encontrado' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error al buscar cliente por NIT:', error);
+    res.status(500).json({ message: 'Error al buscar cliente por NIT' });
+  }
+});
+
+// Buscar vehículo por placa para órdenes
+app.get('/api/ordenes/buscar-vehiculo/:placa', async (req, res) => {
+  const { placa } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT pk_id_vehiculo, placa_vehiculo, marca_vehiculo, modelo_vehiculo, anio_vehiculo FROM tbl_vehiculos WHERE placa_vehiculo = ?', [placa]);
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Vehículo no encontrado' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error al buscar vehículo por placa:', error);
+    res.status(500).json({ message: 'Error al buscar vehículo por placa' });
+  }
+});
 
 // Obtener todas las órdenes
 app.get('/api/ordenes', async (req, res) => {
@@ -544,6 +907,182 @@ app.get('/api/ordenes', async (req, res) => {
   } catch (error) {
     console.error('Error obteniendo órdenes:', error);
     res.status(500).json({ message: 'Error obteniendo órdenes' });
+  }
+});
+
+// Obtener una orden por ID
+app.get('/api/ordenes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT 
+        o.*,
+        c.nombre_cliente,
+        c.apellido_cliente,
+        c.NIT,
+        v.placa_vehiculo,
+        v.marca_vehiculo,
+        v.modelo_vehiculo,
+        s.servicio,
+        e.estado_orden
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE o.pk_id_orden = ?
+    `, [id]);
+    await connection.end();
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada' });
+    }
+    
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error al obtener orden:', error);
+    res.status(500).json({ message: 'Error al obtener orden' });
+  }
+});
+
+// Crear una nueva orden
+app.post('/api/ordenes', upload.fields([
+  { name: 'imagen_1', maxCount: 1 },
+  { name: 'imagen_2', maxCount: 1 },
+  { name: 'imagen_3', maxCount: 1 },
+  { name: 'imagen_4', maxCount: 1 },
+  { name: 'video', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    const {
+      fk_id_cliente,
+      fk_id_vehiculo,
+      fk_id_servicio,
+      comentario_cliente_orden,
+      nivel_combustible_orden,
+      odometro_auto_cliente_orden,
+      fk_id_estado_orden,
+      observaciones_orden,
+      estado_vehiculo
+    } = req.body;
+
+    const imagen_1 = req.files && req.files['imagen_1'] ? req.files['imagen_1'][0].filename : 'sin_imagen.jpg';
+    const imagen_2 = req.files && req.files['imagen_2'] ? req.files['imagen_2'][0].filename : 'sin_imagen.jpg';
+    const imagen_3 = req.files && req.files['imagen_3'] ? req.files['imagen_3'][0].filename : 'sin_imagen.jpg';
+    const imagen_4 = req.files && req.files['imagen_4'] ? req.files['imagen_4'][0].filename : 'sin_imagen.jpg';
+    const video = req.files && req.files['video'] ? req.files['video'][0].filename : 'sin_video.mp4';
+
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      `INSERT INTO tbl_ordenes (
+        fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
+        nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
+        observaciones_orden, estado_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
+        nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
+        observaciones_orden, estado_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video
+      ]
+    );
+    await connection.end();
+
+    res.status(201).json({ message: 'Orden registrada exitosamente', id: result.insertId });
+  } catch (error) {
+    console.error('Error al registrar orden:', error);
+    res.status(500).json({ message: 'Error al registrar orden' });
+  }
+});
+
+// Actualizar una orden
+app.put('/api/ordenes/:id', upload.fields([
+  { name: 'imagen_1', maxCount: 1 },
+  { name: 'imagen_2', maxCount: 1 },
+  { name: 'imagen_3', maxCount: 1 },
+  { name: 'imagen_4', maxCount: 1 },
+  { name: 'video', maxCount: 1 }
+]), async (req, res) => {
+  const { id } = req.params;
+  const {
+    fk_id_cliente,
+    fk_id_vehiculo,
+    fk_id_servicio,
+    comentario_cliente_orden,
+    nivel_combustible_orden,
+    odometro_auto_cliente_orden,
+    fk_id_estado_orden,
+    observaciones_orden,
+    estado_vehiculo
+  } = req.body;
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    let query = `UPDATE tbl_ordenes SET
+      fk_id_cliente = ?, fk_id_vehiculo = ?, fk_id_servicio = ?, comentario_cliente_orden = ?,
+      nivel_combustible_orden = ?, odometro_auto_cliente_orden = ?, fk_id_estado_orden = ?,
+      observaciones_orden = ?, estado_vehiculo = ?`;
+    
+    let params = [
+      fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
+      nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
+      observaciones_orden, estado_vehiculo
+    ];
+
+    // Solo actualizar imágenes si se proporcionan
+    if (req.files && req.files['imagen_1']) {
+      query += ', imagen_1 = ?';
+      params.push(req.files['imagen_1'][0].filename);
+    }
+    if (req.files && req.files['imagen_2']) {
+      query += ', imagen_2 = ?';
+      params.push(req.files['imagen_2'][0].filename);
+    }
+    if (req.files && req.files['imagen_3']) {
+      query += ', imagen_3 = ?';
+      params.push(req.files['imagen_3'][0].filename);
+    }
+    if (req.files && req.files['imagen_4']) {
+      query += ', imagen_4 = ?';
+      params.push(req.files['imagen_4'][0].filename);
+    }
+    if (req.files && req.files['video']) {
+      query += ', video = ?';
+      params.push(req.files['video'][0].filename);
+    }
+
+    query += ' WHERE pk_id_orden = ?';
+    params.push(id);
+
+    const [result] = await connection.execute(query, params);
+    await connection.end();
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada' });
+    }
+
+    res.json({ message: 'Orden actualizada exitosamente' });
+  } catch (error) {
+    console.error('Error al actualizar orden:', error);
+    res.status(500).json({ message: 'Error al actualizar orden' });
+  }
+});
+
+// Eliminar una orden
+app.delete('/api/ordenes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute('DELETE FROM tbl_ordenes WHERE pk_id_orden = ?', [id]);
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada' });
+    }
+    res.json({ message: 'Orden eliminada exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar orden:', error);
+    res.status(500).json({ message: 'Error al eliminar orden' });
   }
 });
 
