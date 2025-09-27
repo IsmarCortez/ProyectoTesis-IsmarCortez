@@ -23,6 +23,29 @@ const PORT = process.env.PORT || 8080;
 console.log('🔍 Puerto:', PORT);
 console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
 
+// Verificar configuración de Cloudinary
+try {
+  console.log('🔍 Cloudinary configurado:', cloudinaryConfigured());
+  if (cloudinaryConfigured()) {
+    console.log('☁️ Cloudinary: ACTIVO');
+  } else {
+    console.log('📁 Almacenamiento: LOCAL');
+  }
+} catch (error) {
+  console.log('❌ Error verificando Cloudinary:', error.message);
+  console.log('📁 Usando almacenamiento local como fallback');
+}
+
+// Crear carpeta uploads si no existe
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, 'backend/uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('📁 Carpeta uploads creada:', uploadsDir);
+} else {
+  console.log('📁 Carpeta uploads existe:', uploadsDir);
+}
+
 // Configuración de base de datos
 const dbConfig = {
   host: process.env.MYSQLHOST,
@@ -1083,6 +1106,244 @@ app.delete('/api/ordenes/:id', async (req, res) => {
   } catch (error) {
     console.error('Error al eliminar orden:', error);
     res.status(500).json({ message: 'Error al eliminar orden' });
+  }
+});
+
+// Generar PDF de orden
+app.get('/api/ordenes/:id/pdf', async (req, res) => {
+  const { id } = req.params;
+  try {
+    console.log(`🖨️ Generando PDF para orden #${id}...`);
+    
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT 
+        o.*,
+        c.dpi_cliente,
+        c.NIT,
+        c.nombre_cliente,
+        c.apellido_cliente,
+        c.correo_cliente,
+        c.telefono_cliente,
+        v.placa_vehiculo,
+        v.marca_vehiculo,
+        v.modelo_vehiculo,
+        v.anio_vehiculo,
+        v.color_vehiculo,
+        s.servicio,
+        e.estado_orden
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE o.pk_id_orden = ?
+    `, [id]);
+    await connection.end();
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada.' });
+    }
+    
+    const ordenData = rows[0];
+    
+    // Generar PDF simple (sin servicios externos por ahora)
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument();
+    
+    // Configurar headers para descarga
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="orden_${id}.pdf"`);
+    
+    // Pipe PDF to response
+    doc.pipe(res);
+    
+    // Contenido del PDF
+    doc.fontSize(20).text('ORDEN DE SERVICIO', 100, 100);
+    doc.fontSize(14).text(`Orden #${ordenData.pk_id_orden}`, 100, 150);
+    doc.text(`Fecha: ${new Date(ordenData.fecha_ingreso_orden).toLocaleDateString()}`, 100, 180);
+    
+    // Datos del cliente
+    doc.fontSize(16).text('DATOS DEL CLIENTE', 100, 220);
+    doc.fontSize(12).text(`Nombre: ${ordenData.nombre_cliente} ${ordenData.apellido_cliente}`, 100, 250);
+    doc.text(`NIT: ${ordenData.NIT}`, 100, 270);
+    doc.text(`Teléfono: ${ordenData.telefono_cliente}`, 100, 290);
+    doc.text(`Correo: ${ordenData.correo_cliente}`, 100, 310);
+    
+    // Datos del vehículo
+    doc.fontSize(16).text('DATOS DEL VEHÍCULO', 100, 350);
+    doc.fontSize(12).text(`Placa: ${ordenData.placa_vehiculo}`, 100, 380);
+    doc.text(`Marca: ${ordenData.marca_vehiculo}`, 100, 400);
+    doc.text(`Modelo: ${ordenData.modelo_vehiculo}`, 100, 420);
+    doc.text(`Año: ${ordenData.anio_vehiculo}`, 100, 440);
+    doc.text(`Color: ${ordenData.color_vehiculo}`, 100, 460);
+    
+    // Datos del servicio
+    doc.fontSize(16).text('DATOS DEL SERVICIO', 100, 500);
+    doc.fontSize(12).text(`Servicio: ${ordenData.servicio}`, 100, 530);
+    doc.text(`Estado: ${ordenData.estado_orden}`, 100, 550);
+    doc.text(`Comentario: ${ordenData.comentario_cliente_orden || 'N/A'}`, 100, 570);
+    doc.text(`Observaciones: ${ordenData.observaciones_orden || 'N/A'}`, 100, 590);
+    
+    // Finalizar PDF
+    doc.end();
+    
+    console.log(`✅ PDF generado exitosamente para orden #${id}`);
+    
+  } catch (error) {
+    console.error('Error generando PDF:', error);
+    res.status(500).json({ message: 'Error generando PDF de la orden' });
+  }
+});
+
+// Endpoint para enviar correo de orden
+app.post('/api/ordenes/:id/enviar-correo', async (req, res) => {
+  const { id } = req.params;
+  const { correo_cliente } = req.body;
+  
+  try {
+    console.log(`📧 Enviando correo para orden #${id} a ${correo_cliente}...`);
+    
+    // Obtener datos de la orden
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT 
+        o.*,
+        c.nombre_cliente,
+        c.apellido_cliente,
+        c.correo_cliente,
+        v.placa_vehiculo,
+        v.marca_vehiculo,
+        v.modelo_vehiculo,
+        s.servicio,
+        e.estado_orden
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE o.pk_id_orden = ?
+    `, [id]);
+    await connection.end();
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada' });
+    }
+    
+    const ordenData = rows[0];
+    
+    // Usar el servicio de notificaciones
+    try {
+      await NotificationService.sendOrderNotification(ordenData, correo_cliente);
+      
+      res.json({ 
+        message: 'Correo enviado exitosamente', 
+        orden_id: id,
+        correo: correo_cliente,
+        status: 'Enviado'
+      });
+      
+      console.log(`✅ Correo enviado exitosamente para orden #${id}`);
+      
+    } catch (notificationError) {
+      console.error('Error en servicio de notificaciones:', notificationError);
+      
+      // Fallback: respuesta básica
+      res.json({ 
+        message: 'Correo procesado (servicio de notificaciones no disponible)', 
+        orden_id: id,
+        correo: correo_cliente,
+        status: 'Procesado',
+        warning: 'Servicio de notificaciones no disponible'
+      });
+    }
+    
+  } catch (error) {
+    console.error('Error enviando correo:', error);
+    res.status(500).json({ message: 'Error enviando correo' });
+  }
+});
+
+// Endpoint para verificar imágenes de una orden
+app.get('/api/ordenes/:id/imagenes', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT imagen_1, imagen_2, imagen_3, imagen_4, video 
+      FROM tbl_ordenes 
+      WHERE pk_id_orden = ?
+    `, [id]);
+    await connection.end();
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada' });
+    }
+    
+    const orden = rows[0];
+    const imagenes = [];
+    
+    // Función helper para generar URL
+    const getImageUrl = (filename) => {
+      if (!filename || filename === 'sin_imagen.jpg') return null;
+      
+      if (cloudinaryConfigured()) {
+        // Si es una URL de Cloudinary, devolverla tal como está
+        if (filename.startsWith('http')) {
+          return filename;
+        }
+        // Si es un public_id de Cloudinary, construir la URL
+        return `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/v1/${filename}`;
+      } else {
+        // Almacenamiento local
+        return `/uploads/${filename}`;
+      }
+    };
+    
+    // Verificar qué imágenes existen
+    if (orden.imagen_1 && orden.imagen_1 !== 'sin_imagen.jpg') {
+      imagenes.push({
+        campo: 'imagen_1',
+        archivo: orden.imagen_1,
+        url: getImageUrl(orden.imagen_1)
+      });
+    }
+    if (orden.imagen_2 && orden.imagen_2 !== 'sin_imagen.jpg') {
+      imagenes.push({
+        campo: 'imagen_2',
+        archivo: orden.imagen_2,
+        url: getImageUrl(orden.imagen_2)
+      });
+    }
+    if (orden.imagen_3 && orden.imagen_3 !== 'sin_imagen.jpg') {
+      imagenes.push({
+        campo: 'imagen_3',
+        archivo: orden.imagen_3,
+        url: getImageUrl(orden.imagen_3)
+      });
+    }
+    if (orden.imagen_4 && orden.imagen_4 !== 'sin_imagen.jpg') {
+      imagenes.push({
+        campo: 'imagen_4',
+        archivo: orden.imagen_4,
+        url: getImageUrl(orden.imagen_4)
+      });
+    }
+    
+    res.json({
+      orden_id: id,
+      imagenes: imagenes,
+      video: orden.video !== 'sin_video.mp4' ? {
+        archivo: orden.video,
+        url: getImageUrl(orden.video)
+      } : null,
+      total_imagenes: imagenes.length,
+      storage_type: cloudinaryConfigured() ? 'cloudinary' : 'local'
+    });
+    
+  } catch (error) {
+    console.error('Error obteniendo imágenes:', error);
+    res.status(500).json({ message: 'Error obteniendo imágenes' });
   }
 });
 
