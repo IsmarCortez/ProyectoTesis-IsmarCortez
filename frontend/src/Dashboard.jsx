@@ -47,7 +47,7 @@ const Dashboard = () => {
         throw new Error('No hay token de autenticación');
       }
 
-      const response = await axios.get('http://localhost:4000/api/dashboard/estadisticas', {
+      const response = await axios.get('/api/dashboard/estadisticas', {
         headers: { Authorization: `Bearer ${token}` }
       });
       

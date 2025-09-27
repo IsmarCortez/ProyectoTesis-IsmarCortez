@@ -24,7 +24,7 @@ const ImprimirOrden = ({ orden, onClose }) => {
       console.log(`🖨️ Descargando PDF para orden #${orden.pk_id_orden}...`);
       
       // Llamar al endpoint del backend para generar el PDF
-      const response = await fetch(`http://localhost:4000/api/ordenes/${orden.pk_id_orden}/pdf`);
+      const response = await fetch(`/api/ordenes/${orden.pk_id_orden}/pdf`);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);

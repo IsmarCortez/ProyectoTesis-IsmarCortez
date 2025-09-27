@@ -17,7 +17,7 @@ const Reportes = () => {
   const cargarTiposReportes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:4000/api/reportes/tipos', {
+      const response = await axios.get('/api/reportes/tipos', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTiposReportes(response.data);
@@ -30,7 +30,7 @@ const Reportes = () => {
   const cargarOpcionesFiltros = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:4000/api/reportes/filtros', {
+      const response = await axios.get('/api/reportes/filtros', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOpcionesFiltros(response.data);
@@ -59,7 +59,7 @@ const Reportes = () => {
         }
       });
 
-      const url = `http://localhost:4000/api/reportes/${formato}/${reporteSeleccionado}?${params.toString()}`;
+      const url = `/api/reportes/${formato}/${reporteSeleccionado}?${params.toString()}`;
       
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },

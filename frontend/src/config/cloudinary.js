@@ -13,7 +13,7 @@ export const getFileUrl = (filename) => {
   }
   
   // Si es un filename local, usar la ruta local
-  return `http://localhost:4000/uploads/${filename}`;
+    return `/uploads/${filename}`;
 };
 
 // Función para obtener URL optimizada de Cloudinary con transformaciones
@@ -44,7 +44,7 @@ export const getOptimizedImageUrl = (filename, options = {}) => {
   }
   
   // Si es un filename local, usar la ruta local
-  return `http://localhost:4000/uploads/${filename}`;
+    return `/uploads/${filename}`;
 };
 
 // Función para obtener thumbnail de video

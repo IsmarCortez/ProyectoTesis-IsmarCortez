@@ -28,7 +28,7 @@ function Clientes() {
 
   const fetchClientes = async () => {
     try {
-      const res = await axios.get('http://localhost:4000/api/clientes');
+      const res = await axios.get('/api/clientes');
       setClientes(res.data);
     } catch (err) {
       setError('Error al cargar los clientes.');
@@ -47,11 +47,11 @@ function Clientes() {
     try {
       if (editId) {
         // Actualizar cliente
-        await axios.put(`http://localhost:4000/api/clientes/${editId}`, form);
+        await axios.put(`/api/clientes/${editId}`, form);
         setMensaje('Cliente actualizado exitosamente.');
       } else {
         // Crear cliente
-        await axios.post('http://localhost:4000/api/clientes', form);
+        await axios.post('/api/clientes', form);
         setMensaje('Cliente registrado exitosamente.');
       }
       setForm({
@@ -94,7 +94,7 @@ function Clientes() {
   const handleDelete = async id => {
     if (!window.confirm('¿Seguro que deseas eliminar este cliente?')) return;
     try {
-      await axios.delete(`http://localhost:4000/api/clientes/${id}`);
+      await axios.delete(`/api/clientes/${id}`);
       setMensaje('Cliente eliminado correctamente.');
       fetchClientes();
     } catch (err) {
@@ -111,7 +111,7 @@ function Clientes() {
     }
     console.log('🔍 Frontend: Verificando NIT:', verificarNIT);
     try {
-      const res = await axios.get(`http://localhost:4000/api/clientes/nit/${verificarNIT}`);
+      const res = await axios.get(`/api/clientes/nit/${verificarNIT}`);
       console.log('✅ Frontend: Cliente encontrado:', res.data);
       console.log('📊 Frontend: Tipo de respuesta:', typeof res.data);
       console.log('📊 Frontend: Contenido de respuesta:', JSON.stringify(res.data));

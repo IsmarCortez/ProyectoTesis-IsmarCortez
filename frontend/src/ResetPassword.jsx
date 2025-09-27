@@ -26,7 +26,7 @@ function ResetPassword() {
 
   const verifyToken = async (tokenToVerify) => {
     try {
-      await axios.get(`http://localhost:4000/api/auth/verify-reset-token/${tokenToVerify}`);
+      await axios.get(`/api/auth/verify-reset-token/${tokenToVerify}`);
       // No mostrar mensaje aquí, solo permitir que se muestre el formulario
     } catch (err) {
       setError('Token inválido o expirado. Por favor, solicita un nuevo enlace de recuperación.');
@@ -53,7 +53,7 @@ function ResetPassword() {
     setLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:4000/api/auth/reset-password', {
+      const res = await axios.post('/api/auth/reset-password', {
         token,
         newPassword
       });

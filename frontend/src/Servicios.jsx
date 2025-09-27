@@ -21,7 +21,7 @@ function Servicios() {
 
   const fetchServicios = async () => {
     try {
-      const res = await axios.get('http://localhost:4000/api/servicios');
+      const res = await axios.get('/api/servicios');
       setServicios(res.data);
     } catch (err) {
       setError('Error al cargar los servicios.');
@@ -41,11 +41,11 @@ function Servicios() {
     try {
       if (editId) {
         // Actualizar servicio
-        await axios.put(`http://localhost:4000/api/servicios/${editId}`, form);
+        await axios.put(`/api/servicios/${editId}`, form);
         setMensaje('Servicio actualizado exitosamente.');
       } else {
         // Crear servicio
-        await axios.post('http://localhost:4000/api/servicios', form);
+        await axios.post('/api/servicios', form);
         setMensaje('Servicio registrado exitosamente.');
       }
 
@@ -80,7 +80,7 @@ function Servicios() {
   const handleDelete = async id => {
     if (!window.confirm('¿Seguro que deseas eliminar este servicio?')) return;
     try {
-      await axios.delete(`http://localhost:4000/api/servicios/${id}`);
+      await axios.delete(`/api/servicios/${id}`);
       setMensaje('Servicio eliminado correctamente.');
       fetchServicios();
     } catch (err) {

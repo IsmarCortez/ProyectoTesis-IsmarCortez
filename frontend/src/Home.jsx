@@ -18,7 +18,7 @@ function Home({ usuario, onLogout }) {
   if (!usuario) return <div className="container mt-5">No autenticado.</div>;
 
   // Construye la URL para la imagen usando la ruta estática del backend
-  const urlFoto = usuario.foto ? `http://localhost:4000/uploads/${usuario.foto}` : null;
+  const urlFoto = usuario.foto ? `/uploads/${usuario.foto}` : null;
 
   const handleLogout = () => {
     onLogout();
@@ -49,7 +49,7 @@ function Home({ usuario, onLogout }) {
       if (nuevaFoto) {
         formData.append('foto', nuevaFoto);
       }
-      const res = await axios.post('http://localhost:4000/api/actualizar-usuario', formData, {
+      const res = await axios.post('/api/actualizar-usuario', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setMensaje(res.data.message);

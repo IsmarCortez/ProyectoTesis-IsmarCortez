@@ -24,7 +24,7 @@ function Vehiculos() {
 
   const fetchVehiculos = async () => {
     try {
-      const res = await axios.get('http://localhost:4000/api/vehiculos');
+      const res = await axios.get('/api/vehiculos');
       setVehiculos(res.data);
     } catch (err) {
       setError('Error al cargar los vehículos.');
@@ -44,11 +44,11 @@ function Vehiculos() {
     try {
       if (editId) {
         // Actualizar vehículo
-        await axios.put(`http://localhost:4000/api/vehiculos/${editId}`, form);
+        await axios.put(`/api/vehiculos/${editId}`, form);
         setMensaje('Vehículo actualizado exitosamente.');
       } else {
         // Crear vehículo
-        await axios.post('http://localhost:4000/api/vehiculos', form);
+        await axios.post('/api/vehiculos', form);
         setMensaje('Vehículo registrado exitosamente.');
       }
 
@@ -89,7 +89,7 @@ function Vehiculos() {
   const handleDelete = async id => {
     if (!window.confirm('¿Seguro que deseas eliminar este vehículo?')) return;
     try {
-      await axios.delete(`http://localhost:4000/api/vehiculos/${id}`);
+      await axios.delete(`/api/vehiculos/${id}`);
       setMensaje('Vehículo eliminado correctamente.');
       fetchVehiculos();
     } catch (err) {

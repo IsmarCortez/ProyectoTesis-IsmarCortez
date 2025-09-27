@@ -38,7 +38,7 @@ function Usuarios() {
   const cargarUsuarios = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:4000/api/usuarios');
+      const response = await axios.get('/api/usuarios');
       setUsuarios(response.data);
       setError('');
     } catch (err) {
@@ -103,10 +103,10 @@ function Usuarios() {
       }
 
       if (isEditing) {
-        await axios.put(`http://localhost:4000/api/usuarios/${editingId}`, formDataToSend);
+        await axios.put(`/api/usuarios/${editingId}`, formDataToSend);
         setSuccessMessage('Usuario actualizado correctamente');
       } else {
-        await axios.post('http://localhost:4000/api/usuarios', formDataToSend);
+        await axios.post('/api/usuarios', formDataToSend);
         setSuccessMessage('Usuario registrado correctamente');
       }
 
@@ -138,7 +138,7 @@ function Usuarios() {
     }
 
     try {
-      await axios.delete(`http://localhost:4000/api/usuarios/${id}`);
+      await axios.delete(`/api/usuarios/${id}`);
       setSuccessMessage('Usuario eliminado correctamente');
       cargarUsuarios();
       setError('');
@@ -429,7 +429,7 @@ function Usuarios() {
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
                             {usuario.foto_perfil_usuario ? (
                               <img
-                                src={`http://localhost:4000/uploads/${usuario.foto_perfil_usuario}`}
+                                src={`/uploads/${usuario.foto_perfil_usuario}`}
                                 alt="Foto de perfil"
                                 className="rounded-circle"
                                 style={{ width: '40px', height: '40px', objectFit: 'cover' }}

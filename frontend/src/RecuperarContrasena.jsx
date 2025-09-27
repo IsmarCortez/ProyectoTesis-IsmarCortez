@@ -24,7 +24,7 @@ function RecuperarContrasena() {
       return;
     }
     try {
-      const res = await axios.post('http://localhost:4000/api/recuperar-contrasena', {
+      const res = await axios.post('/api/recuperar-contrasena', {
         email,
         password,
         confirmPassword,

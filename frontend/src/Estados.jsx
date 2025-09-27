@@ -21,7 +21,7 @@ function Estados() {
 
   const fetchEstados = async () => {
     try {
-      const res = await axios.get('http://localhost:4000/api/estados');
+      const res = await axios.get('/api/estados');
       setEstados(res.data);
     } catch (err) {
       setError('Error al cargar los estados.');
@@ -41,11 +41,11 @@ function Estados() {
     try {
       if (editId) {
         // Actualizar estado
-        await axios.put(`http://localhost:4000/api/estados/${editId}`, form);
+        await axios.put(`/api/estados/${editId}`, form);
         setMensaje('Estado actualizado exitosamente.');
       } else {
         // Crear estado
-        await axios.post('http://localhost:4000/api/estados', form);
+        await axios.post('/api/estados', form);
         setMensaje('Estado registrado exitosamente.');
       }
 
@@ -80,7 +80,7 @@ function Estados() {
   const handleDelete = async id => {
     if (!window.confirm('¿Seguro que deseas eliminar este estado?')) return;
     try {
-      await axios.delete(`http://localhost:4000/api/estados/${id}`);
+      await axios.delete(`/api/estados/${id}`);
       setMensaje('Estado eliminado correctamente.');
       fetchEstados();
     } catch (err) {

@@ -59,7 +59,7 @@ const Ordenes = () => {
 
   const cargarOrdenes = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/ordenes');
+      const response = await fetch('/api/ordenes');
       if (response.ok) {
         const data = await response.json();
         setOrdenes(data);
@@ -71,7 +71,7 @@ const Ordenes = () => {
 
   const cargarServicios = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/servicios');
+      const response = await fetch('/api/servicios');
       if (response.ok) {
         const data = await response.json();
         setServicios(data);
@@ -83,7 +83,7 @@ const Ordenes = () => {
 
   const cargarEstados = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/estados');
+      const response = await fetch('/api/estados');
       if (response.ok) {
         const data = await response.json();
         setEstados(data);
@@ -113,7 +113,7 @@ const Ordenes = () => {
     }
     
     try {
-      const response = await fetch(`http://localhost:4000/api/ordenes/buscar-cliente-nit/${nit}`);
+      const response = await fetch(`/api/ordenes/buscar-cliente-nit/${nit}`);
       if (response.ok) {
         const cliente = await response.json();
         setClienteEncontrado(cliente);
@@ -136,7 +136,7 @@ const Ordenes = () => {
     }
     
     try {
-      const response = await fetch(`http://localhost:4000/api/ordenes/buscar-vehiculo/${placa}`);
+      const response = await fetch(`/api/ordenes/buscar-vehiculo/${placa}`);
       if (response.ok) {
         const vehiculo = await response.json();
         setVehiculoEncontrado(vehiculo);
@@ -227,8 +227,8 @@ const Ordenes = () => {
 
     try {
       const url = editando 
-        ? `http://localhost:4000/api/ordenes/${ordenId}`
-        : 'http://localhost:4000/api/ordenes';
+        ? `/api/ordenes/${ordenId}`
+        : '/api/ordenes';
       
       const method = editando ? 'PUT' : 'POST';
       
@@ -293,7 +293,7 @@ const Ordenes = () => {
     if (!window.confirm('¿Está seguro de que desea eliminar esta orden?')) return;
     
     try {
-      const response = await fetch(`http://localhost:4000/api/ordenes/${id}`, {
+      const response = await fetch(`/api/ordenes/${id}`, {
         method: 'DELETE'
       });
       

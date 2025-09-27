@@ -25,9 +25,9 @@ const TrackerPublico = () => {
 
       let url = '';
       if (tipoBusqueda === 'telefono') {
-        url = `http://localhost:4000/api/tracker/telefono/${valorBusqueda}`;
+        url = `/api/tracker/telefono/${valorBusqueda}`;
       } else {
-        url = `http://localhost:4000/api/tracker/orden/${valorBusqueda}`;
+        url = `/api/tracker/orden/${valorBusqueda}`;
       }
 
       const response = await axios.get(url);
@@ -44,7 +44,7 @@ const TrackerPublico = () => {
   const verHistorial = async (numeroOrden) => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:4000/api/tracker/historial/${numeroOrden}`);
+      const response = await axios.get(`/api/tracker/historial/${numeroOrden}`);
       setHistorial(response.data);
       setOrdenSeleccionada(numeroOrden);
     } catch (error) {
