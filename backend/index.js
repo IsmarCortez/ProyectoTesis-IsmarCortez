@@ -197,7 +197,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     await connection.end();
 
     // Enviar email con el enlace de recuperación
-    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'https://proyectotesis-ismarcortez-production.up.railway.app';
+    const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
     
     // Usar el servicio de notificaciones existente para enviar el email
     try {
