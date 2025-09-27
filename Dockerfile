@@ -10,10 +10,10 @@ COPY package*.json ./
 RUN npm ci
 
 # Copiar código fuente
-COPY complete-backend.js ./
+COPY debug-server.js ./
 
 # Exponer puerto
 EXPOSE 8080
 
 # Comando de inicio
-CMD ["node", "complete-backend.js"]
+CMD ["node", "debug-server.js"]
