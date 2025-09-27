@@ -27,16 +27,22 @@ class EmailService {
       // Configurar el transportador
       this.transporter = nodemailer.createTransport({
         service: this.config.service,
-        host: this.config.host,
-        port: this.config.port,
-        secure: this.config.secure,
+        host: this.config.host || 'smtp.gmail.com',
+        port: this.config.port || 587,
+        secure: this.config.secure || false,
         auth: {
           user: this.config.user,
           pass: this.config.pass
         },
         tls: {
           rejectUnauthorized: false
-        }
+        },
+        connectionTimeout: 60000, // 60 segundos
+        greetingTimeout: 30000,   // 30 segundos
+        socketTimeout: 60000,     // 60 segundos
+        pool: true,
+        maxConnections: 1,
+        maxMessages: 100
       });
 
       // Verificar conexión
