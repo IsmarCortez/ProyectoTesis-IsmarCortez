@@ -10,11 +10,20 @@ class NotificationService {
     this.emailService = EmailService;
     this.whatsappService = WhatsAppService;
     this.dbConfig = {
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
+      host: process.env.MYSQLHOST,
+      user: process.env.MYSQLUSER,
+      password: process.env.MYSQL_ROOT_PASSWORD,
+      database: process.env.MYSQLDATABASE,
+      port: process.env.MYSQLPORT || 3306,
     };
+
+    console.log('🔍 NotificationService DB Config:', {
+      host: this.dbConfig.host ? 'Configurado' : 'No configurado',
+      user: this.dbConfig.user ? 'Configurado' : 'No configurado',
+      password: this.dbConfig.password ? 'Configurado' : 'No configurado',
+      database: this.dbConfig.database ? 'Configurado' : 'No configurado',
+      port: this.dbConfig.port
+    });
   }
 
   /**
