@@ -10,10 +10,10 @@ COPY package*.json ./
 RUN npm ci
 
 # Copiar código fuente
-COPY production-server.js ./
+COPY simple-production.js ./
 
 # Exponer puerto
 EXPOSE 8080
 
 # Comando de inicio
-CMD ["node", "production-server.js"]
+CMD ["node", "simple-production.js"]
