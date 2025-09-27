@@ -141,26 +141,56 @@ app.get('/api/test-db', async (req, res) => {
 // Login
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
+  
+  console.log('🔍 LOGIN DEBUG - Email recibido:', email);
+  console.log('🔍 LOGIN DEBUG - Password recibido:', password ? '[PRESENTE]' : '[VACÍO]');
+  
   if (!email || !password) {
+    console.log('❌ LOGIN DEBUG - Email o password faltantes');
     return res.status(400).json({ message: 'Email y contraseña requeridos.' });
   }
+  
   try {
     const connection = await mysql.createConnection(dbConfig);
+    console.log('🔍 LOGIN DEBUG - Conectado a la base de datos');
+    
     const [rows] = await connection.execute(
       'SELECT * FROM tbl_usuarios WHERE email_usuario = ?',
       [email]
     );
+    
+    console.log('🔍 LOGIN DEBUG - Usuarios encontrados:', rows.length);
+    console.log('🔍 LOGIN DEBUG - Query ejecutada: SELECT * FROM tbl_usuarios WHERE email_usuario = ?');
+    console.log('🔍 LOGIN DEBUG - Email buscado:', email);
+    
     await connection.end();
+    
     if (rows.length === 0) {
+      console.log('❌ LOGIN DEBUG - No se encontró usuario con email:', email);
       return res.status(401).json({ message: 'Credenciales inválidas.' });
     }
+    
     const usuario = rows[0];
+    console.log('🔍 LOGIN DEBUG - Usuario encontrado:', {
+      id: usuario.pk_id_usuarios,
+      email: usuario.email_usuario,
+      nombre: usuario.nombre_usuario,
+      password_hash: usuario.password_usuario ? '[PRESENTE]' : '[VACÍO]'
+    });
 
     // Hasheamos la contraseña ingresada para compararla con la almacenada
     const hashPassword = crypto.createHash('sha256').update(password).digest('hex');
+    console.log('🔍 LOGIN DEBUG - Hash de contraseña ingresada:', hashPassword);
+    console.log('🔍 LOGIN DEBUG - Hash de contraseña almacenada:', usuario.password_usuario);
+    
     if (hashPassword !== usuario.password_usuario) {
+      console.log('❌ LOGIN DEBUG - Contraseñas no coinciden');
+      console.log('❌ LOGIN DEBUG - Hash ingresado:', hashPassword);
+      console.log('❌ LOGIN DEBUG - Hash almacenado:', usuario.password_usuario);
       return res.status(401).json({ message: 'Credenciales inválidas.' });
     }
+
+    console.log('✅ LOGIN DEBUG - Contraseñas coinciden, generando token');
 
     // Generar token JWT
     const token = jwt.sign(
@@ -173,6 +203,9 @@ app.post('/api/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    console.log('✅ LOGIN DEBUG - Token generado exitosamente');
+    console.log('✅ LOGIN DEBUG - Login exitoso para usuario:', usuario.email_usuario);
+
     res.json({
       message: 'Login exitoso',
       token,
@@ -184,8 +217,32 @@ app.post('/api/login', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error en login:', error);
+    console.error('❌ LOGIN DEBUG - Error en login:', error);
     res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+});
+
+// ==================== ENDPOINTS DE DIAGNÓSTICO ====================
+
+// Endpoint para listar usuarios (solo para diagnóstico)
+app.get('/api/debug/usuarios', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT pk_id_usuarios, email_usuario, nombre_usuario FROM tbl_usuarios');
+    await connection.end();
+    
+    console.log('🔍 DEBUG - Usuarios en la base de datos:', rows.length);
+    res.json({
+      total: rows.length,
+      usuarios: rows.map(u => ({
+        id: u.pk_id_usuarios,
+        email: u.email_usuario,
+        nombre: u.nombre_usuario
+      }))
+    });
+  } catch (error) {
+    console.error('Error obteniendo usuarios:', error);
+    res.status(500).json({ message: 'Error obteniendo usuarios' });
   }
 });
 
