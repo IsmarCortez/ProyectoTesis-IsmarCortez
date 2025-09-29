@@ -16,6 +16,7 @@ const Ordenes = () => {
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
   const [mostrarImpresion, setMostrarImpresion] = useState(false);
   const [ordenParaImprimir, setOrdenParaImprimir] = useState(null);
+  const [procesandoOrden, setProcesandoOrden] = useState(false);
 
   const [form, setForm] = useState({
     nit_cliente: '',
@@ -194,6 +195,11 @@ const Ordenes = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Prevenir múltiples envíos
+    if (procesandoOrden) {
+      return;
+    }
+    
     // Validar campos requeridos (fk_id_cliente puede ser null para CF)
     if ((form.fk_id_cliente === '' || form.fk_id_cliente === undefined) && form.nit_cliente?.toUpperCase() !== 'CF') {
       alert('Por favor ingrese un NIT válido o "CF" para Consumidor Final');
@@ -204,6 +210,9 @@ const Ordenes = () => {
       alert('Por favor complete todos los campos requeridos');
       return;
     }
+
+    // Activar estado de procesamiento
+    setProcesandoOrden(true);
 
     const formData = new FormData();
     formData.append('fk_id_cliente', form.fk_id_cliente || '');
@@ -249,6 +258,9 @@ const Ordenes = () => {
     } catch (error) {
       console.error('Error:', error);
       alert('Error al procesar la orden');
+    } finally {
+      // Desactivar estado de procesamiento
+      setProcesandoOrden(false);
     }
   };
 
@@ -587,8 +599,23 @@ const Ordenes = () => {
 
             {/* Botones */}
             <div className="d-flex gap-2">
-              <button type="submit" className="btn-tecno">
-                {editando ? '✏️ Actualizar Orden' : '➕ Registrar Orden'}
+              <button 
+                type="submit" 
+                className="btn-tecno"
+                disabled={procesandoOrden}
+                style={{
+                  opacity: procesandoOrden ? 0.6 : 1,
+                  cursor: procesandoOrden ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {procesandoOrden ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    {editando ? '⏳ Actualizando...' : '⏳ Procesando...'}
+                  </>
+                ) : (
+                  editando ? '✏️ Actualizar Orden' : '➕ Registrar Orden'
+                )}
               </button>
               {editando && (
                 <button 
