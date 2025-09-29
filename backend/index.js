@@ -856,6 +856,7 @@ app.get('/api/ordenes', async (req, res) => {
           v.placa_vehiculo,
           v.marca_vehiculo,
           v.modelo_vehiculo,
+          v.anio_vehiculo,
           s.servicio,
           e.estado_orden
         FROM tbl_ordenes o
@@ -1065,6 +1066,7 @@ app.get('/api/ordenes/:id', async (req, res) => {
         v.placa_vehiculo,
         v.marca_vehiculo,
         v.modelo_vehiculo,
+        v.anio_vehiculo,
         s.servicio,
         e.estado_orden
       FROM tbl_ordenes o
