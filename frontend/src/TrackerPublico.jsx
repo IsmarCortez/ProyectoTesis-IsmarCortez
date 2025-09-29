@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { getFileUrl } from './config/cloudinary';
 
 const TrackerPublico = () => {
   const [tipoBusqueda, setTipoBusqueda] = useState('telefono');
@@ -9,6 +10,61 @@ const TrackerPublico = () => {
   const [error, setError] = useState(null);
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
   const [historial, setHistorial] = useState(null);
+
+  // Función para renderizar multimedia
+  const renderizarMultimedia = (orden) => {
+    const imagenes = [
+      orden.imagen_1,
+      orden.imagen_2, 
+      orden.imagen_3,
+      orden.imagen_4
+    ].filter(img => img && img !== 'sin_imagen.jpg');
+
+    const video = orden.video && orden.video !== 'sin_video.mp4' ? orden.video : null;
+
+    if (imagenes.length === 0 && !video) {
+      return null;
+    }
+
+    return (
+      <div className="mt-3">
+        <h6 className="text-primary mb-2">📷 Fotos del Vehículo</h6>
+        {imagenes.length > 0 && (
+          <div className="row mb-3">
+            {imagenes.map((imagen, index) => (
+              <div key={index} className="col-md-3 mb-2">
+                <img
+                  src={getFileUrl(imagen)}
+                  alt={`Foto ${index + 1} del vehículo`}
+                  className="img-fluid rounded shadow-sm"
+                  style={{ 
+                    width: '100%', 
+                    height: '120px', 
+                    objectFit: 'cover',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => window.open(getFileUrl(imagen), '_blank')}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        {video && (
+          <div className="mb-3">
+            <h6 className="text-primary mb-2">🎥 Video del Vehículo</h6>
+            <video
+              src={getFileUrl(video)}
+              controls
+              className="img-fluid rounded shadow-sm"
+              style={{ maxHeight: '300px' }}
+            >
+              Tu navegador no soporta la reproducción de video.
+            </video>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const buscarOrden = async () => {
     if (!valorBusqueda.trim()) {
@@ -190,6 +246,8 @@ const TrackerPublico = () => {
                                 >
                                   📋 Ver Historial
                                 </button>
+                                {/* Galería de multimedia para cada orden */}
+                                {renderizarMultimedia(orden)}
                               </div>
                             </div>
                           </div>
@@ -221,6 +279,8 @@ const TrackerPublico = () => {
                               <p className="text-muted">{resultado.orden.observaciones_orden}</p>
                             </div>
                           )}
+                          {/* Galería de multimedia */}
+                          {renderizarMultimedia(resultado.orden)}
                         </div>
                         <div className="col-md-4 text-center">
                           <div className={`badge bg-${getEstadoColor(resultado.orden.estado_orden)} fs-6 p-3 mb-3`}>
