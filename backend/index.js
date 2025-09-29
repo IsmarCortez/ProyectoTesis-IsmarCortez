@@ -57,8 +57,8 @@ const upload = cloudinaryConfigured() ? cloudinaryUpload : multer({
 // Función helper para procesar archivos (Cloudinary o local)
 const processFiles = (files, fieldName) => {
   if (!files || !files[fieldName] || files[fieldName].length === 0) {
-    // Siempre devolver valores por defecto, nunca null
-    return fieldName === 'video' ? 'sin_video.mp4' : 'sin_imagen.jpg';
+    // No devolver valores por defecto, devolver null para indicar que no hay archivo nuevo
+    return null;
   }
   
   const file = files[fieldName][0];
@@ -987,12 +987,12 @@ app.post('/api/ordenes', upload.fields([
   try {
     const connection = await mysql.createConnection(dbConfig);
     
-    // Procesar archivos (Cloudinary o local)
-    const imagen_1 = processFiles(req.files, 'imagen_1');
-    const imagen_2 = processFiles(req.files, 'imagen_2');
-    const imagen_3 = processFiles(req.files, 'imagen_3');
-    const imagen_4 = processFiles(req.files, 'imagen_4');
-    const video = processFiles(req.files, 'video');
+    // Procesar archivos (Cloudinary o local) - usar valores por defecto si no hay archivos
+    const imagen_1 = processFiles(req.files, 'imagen_1') || 'sin_imagen.jpg';
+    const imagen_2 = processFiles(req.files, 'imagen_2') || 'sin_imagen.jpg';
+    const imagen_3 = processFiles(req.files, 'imagen_3') || 'sin_imagen.jpg';
+    const imagen_4 = processFiles(req.files, 'imagen_4') || 'sin_imagen.jpg';
+    const video = processFiles(req.files, 'video') || 'sin_video.mp4';
 
     // Asegurar que estado_vehiculo tenga un valor por defecto
     const estadoVehiculo = estado_vehiculo || 'Bueno';
@@ -1211,11 +1211,11 @@ app.put('/api/ordenes/:id', upload.fields([
     const estadoCambio = estadoAnterior !== estadoNuevo;
 
     // Procesar archivos nuevos o mantener existentes (Cloudinary o local)
-    const imagen_1 = processFiles(req.files, 'imagen_1') || currentOrder[0].imagen_1;
-    const imagen_2 = processFiles(req.files, 'imagen_2') || currentOrder[0].imagen_2;
-    const imagen_3 = processFiles(req.files, 'imagen_3') || currentOrder[0].imagen_3;
-    const imagen_4 = processFiles(req.files, 'imagen_4') || currentOrder[0].imagen_4;
-    const video = processFiles(req.files, 'video') || currentOrder[0].video;
+    const imagen_1 = processFiles(req.files, 'imagen_1') !== null ? processFiles(req.files, 'imagen_1') : currentOrder[0].imagen_1;
+    const imagen_2 = processFiles(req.files, 'imagen_2') !== null ? processFiles(req.files, 'imagen_2') : currentOrder[0].imagen_2;
+    const imagen_3 = processFiles(req.files, 'imagen_3') !== null ? processFiles(req.files, 'imagen_3') : currentOrder[0].imagen_3;
+    const imagen_4 = processFiles(req.files, 'imagen_4') !== null ? processFiles(req.files, 'imagen_4') : currentOrder[0].imagen_4;
+    const video = processFiles(req.files, 'video') !== null ? processFiles(req.files, 'video') : currentOrder[0].video;
 
     // Asegurar que estado_vehiculo tenga un valor por defecto
     const estadoVehiculo = estado_vehiculo || 'Bueno';
