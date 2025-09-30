@@ -415,23 +415,48 @@ app.post('/api/clientes', async (req, res) => {
   if (!nombre_cliente) {
     return res.status(400).json({ message: 'El nombre del cliente es requerido.' });
   }
+  
   try {
     const connection = await mysql.createConnection(dbConfig);
+    
+    // Validar que DPI y NIT no estén duplicados (solo si no están vacíos)
+    if (dpi_cliente && dpi_cliente.trim() !== '') {
+      const [dpiExists] = await connection.execute(
+        'SELECT PK_id_cliente FROM tbl_clientes WHERE dpi_cliente = ?',
+        [dpi_cliente]
+      );
+      if (dpiExists.length > 0) {
+        await connection.end();
+        return res.status(409).json({ message: 'El DPI ya está registrado.' });
+      }
+    }
+    
+    if (NIT && NIT.trim() !== '') {
+      const [nitExists] = await connection.execute(
+        'SELECT PK_id_cliente FROM tbl_clientes WHERE NIT = ?',
+        [NIT]
+      );
+      if (nitExists.length > 0) {
+        await connection.end();
+        return res.status(409).json({ message: 'El NIT ya está registrado.' });
+      }
+    }
+    
+    // Convertir campos vacíos a NULL para evitar problemas con UNIQUE
+    const dpiValue = (dpi_cliente && dpi_cliente.trim() !== '') ? dpi_cliente : null;
+    const nitValue = (NIT && NIT.trim() !== '') ? NIT : null;
+    
     // Insertar cliente
     await connection.execute(
       `INSERT INTO tbl_clientes (nombre_cliente, apellido_cliente, dpi_cliente, NIT, telefono_cliente, correo_cliente, direccion_cliente)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [nombre_cliente, apellido_cliente, dpi_cliente, NIT, telefono_cliente, correo_cliente, direccion_cliente]
+      [nombre_cliente, apellido_cliente, dpiValue, nitValue, telefono_cliente, correo_cliente, direccion_cliente]
     );
     await connection.end();
     res.json({ message: 'Cliente registrado exitosamente.' });
   } catch (error) {
-    if (error.code === 'ER_DUP_ENTRY') {
-      res.status(409).json({ message: 'El DPI o NIT ya está registrado.' });
-    } else {
-      console.error(error);
-      res.status(500).json({ message: 'Error al registrar el cliente.' });
-    }
+    console.error('Error registrando cliente:', error);
+    res.status(500).json({ message: 'Error al registrar el cliente.' });
   }
 });
 
