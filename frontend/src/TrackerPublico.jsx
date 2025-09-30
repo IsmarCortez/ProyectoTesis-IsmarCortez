@@ -240,6 +240,18 @@ const TrackerPublico = () => {
                                   <strong>Servicio:</strong> {orden.servicio}<br/>
                                   <strong>Fecha:</strong> {new Date(orden.fecha_ingreso_orden).toLocaleDateString('es-GT')}
                                 </p>
+                                {orden.comentario_cliente_orden && (
+                                  <div className="mb-2">
+                                    <strong className="small">Comentario del cliente:</strong>
+                                    <p className="text-muted small">{orden.comentario_cliente_orden}</p>
+                                  </div>
+                                )}
+                                {orden.observaciones_orden && (
+                                  <div className="mb-2">
+                                    <strong className="small">Observaciones del taller:</strong>
+                                    <p className="text-muted small">{orden.observaciones_orden}</p>
+                                  </div>
+                                )}
                                 <button 
                                   className="btn btn-outline-primary btn-sm"
                                   onClick={() => verHistorial(orden.pk_id_orden)}
