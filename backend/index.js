@@ -1023,8 +1023,14 @@ app.post('/api/ordenes', upload.fields([
     // Asegurar que estado_vehiculo tenga un valor por defecto
     const estadoVehiculo = estado_vehiculo || 'Bueno';
 
+    // Validar y convertir odómetro (manejar campos vacíos)
+    const odometroValue = (odometro_auto_cliente_orden && odometro_auto_cliente_orden.trim() !== '') 
+      ? parseFloat(odometro_auto_cliente_orden) 
+      : 0;
+
     // Debug: verificar si es Consumidor Final
     console.log('🔍 Creando orden - fk_id_cliente:', fk_id_cliente);
+    console.log('🔍 Odómetro procesado:', odometroValue);
     
     // Convertir valores vacíos o 'null' a null real para MySQL
     const fk_id_cliente_final = (fk_id_cliente === 'null' || fk_id_cliente === null || fk_id_cliente === '' || fk_id_cliente === undefined) ? null : fk_id_cliente;
@@ -1041,7 +1047,7 @@ app.post('/api/ordenes', upload.fields([
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         fk_id_cliente_final, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
-        nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
+        nivel_combustible_orden, odometroValue, fk_id_estado_orden,
         observaciones_orden, estadoVehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video
       ]
     );
