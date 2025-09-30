@@ -2005,7 +2005,12 @@ app.get('/api/tracker/orden/:numero', async (req, res) => {
         e.estado_orden,
         e.descripcion_estado,
         o.comentario_cliente_orden,
-        o.observaciones_orden
+        o.observaciones_orden,
+        o.imagen_1,
+        o.imagen_2,
+        o.imagen_3,
+        o.imagen_4,
+        o.video
       FROM tbl_ordenes o
       LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
       LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
