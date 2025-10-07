@@ -581,6 +581,7 @@ function Home({ usuario, onLogout }) {
                   }}>
                     <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>📞 Búsqueda por teléfono</li>
                     <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>🔢 Búsqueda por número de orden</li>
+                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>🚗 Búsqueda por placa del vehículo</li>
                     <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>📋 Historial de estados</li>
                     <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>⏰ Timeline de progreso</li>
                     <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>🌐 Acceso público</li>

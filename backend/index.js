@@ -2061,6 +2061,68 @@ app.get('/api/tracker/telefono/:telefono', async (req, res) => {
   }
 });
 
+// Endpoint público para buscar orden por placa del vehículo
+app.get('/api/tracker/placa/:placa', async (req, res) => {
+  try {
+    const { placa } = req.params;
+    
+    console.log(`🔍 Búsqueda pública por placa: ${placa}`);
+    
+    const connection = await mysql.createConnection(dbConfig);
+    
+    const [ordenes] = await connection.execute(`
+      SELECT 
+        o.pk_id_orden,
+        o.fecha_ingreso_orden,
+        CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) as cliente,
+        c.telefono_cliente,
+        CONCAT(v.marca_vehiculo, ' ', v.modelo_vehiculo) as vehiculo,
+        v.placa_vehiculo,
+        v.anio_vehiculo,
+        s.servicio,
+        e.estado_orden,
+        e.descripcion_estado,
+        o.comentario_cliente_orden,
+        o.observaciones_orden,
+        o.imagen_1,
+        o.imagen_2,
+        o.imagen_3,
+        o.imagen_4,
+        o.video
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE v.placa_vehiculo = ?
+      ORDER BY o.fecha_ingreso_orden DESC
+    `, [placa]);
+    
+    await connection.end();
+    
+    if (ordenes.length === 0) {
+      return res.json({ 
+        encontrado: false, 
+        mensaje: 'No se encontraron órdenes para ese vehículo.' 
+      });
+    }
+    
+    res.json({ 
+      encontrado: true, 
+      ordenes: ordenes,
+      total: ordenes.length,
+      placa: placa
+    });
+    
+  } catch (error) {
+    console.error('Error en búsqueda por placa:', error);
+    res.status(500).json({ 
+      encontrado: false, 
+      mensaje: 'Error interno del servidor.' 
+    });
+  }
+});
+
 // Endpoint público para buscar orden por número de orden
 app.get('/api/tracker/orden/:numero', async (req, res) => {
   try {

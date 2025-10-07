@@ -82,6 +82,8 @@ const TrackerPublico = () => {
       let url = '';
       if (tipoBusqueda === 'telefono') {
         url = `/api/tracker/telefono/${valorBusqueda}`;
+      } else if (tipoBusqueda === 'placa') {
+        url = `/api/tracker/placa/${valorBusqueda}`;
       } else {
         url = `/api/tracker/orden/${valorBusqueda}`;
       }
@@ -166,16 +168,28 @@ const TrackerPublico = () => {
                   >
                     <option value="telefono">📞 Por teléfono</option>
                     <option value="orden">🔢 Por número de orden</option>
+                    <option value="placa">🚗 Por placa del vehículo</option>
                   </select>
                 </div>
                 <div className="col-md-6">
                   <label className="form-label">
-                    {tipoBusqueda === 'telefono' ? 'Número de teléfono' : 'Número de orden'}
+                    {tipoBusqueda === 'telefono' 
+                      ? 'Número de teléfono' 
+                      : tipoBusqueda === 'placa'
+                      ? 'Placa del vehículo'
+                      : 'Número de orden'
+                    }
                   </label>
                   <input
-                    type={tipoBusqueda === 'telefono' ? 'tel' : 'number'}
+                    type={tipoBusqueda === 'orden' ? 'number' : 'text'}
                     className="form-control"
-                    placeholder={tipoBusqueda === 'telefono' ? 'Ej: 12345678' : 'Ej: 12'}
+                    placeholder={
+                      tipoBusqueda === 'telefono' 
+                        ? 'Ej: 12345678' 
+                        : tipoBusqueda === 'placa'
+                        ? 'Ej: P123ABC'
+                        : 'Ej: 12'
+                    }
                     value={valorBusqueda}
                     onChange={(e) => setValorBusqueda(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && buscarOrden()}
@@ -218,10 +232,16 @@ const TrackerPublico = () => {
                 </div>
                 <div className="card-body">
                   {resultado.ordenes ? (
-                    // Múltiples órdenes (búsqueda por teléfono)
+                    // Múltiples órdenes (búsqueda por teléfono o placa)
                     <div>
                       <p className="text-muted mb-3">
-                        Se encontraron {resultado.total} orden(es) para el teléfono {valorBusqueda}
+                        Se encontraron {resultado.total} orden(es) para {
+                          tipoBusqueda === 'telefono' 
+                            ? `el teléfono ${valorBusqueda}`
+                            : tipoBusqueda === 'placa'
+                            ? `la placa ${valorBusqueda}`
+                            : 'la búsqueda'
+                        }
                       </p>
                       <div className="row">
                         {resultado.ordenes.map((orden) => (
