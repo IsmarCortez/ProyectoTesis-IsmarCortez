@@ -18,10 +18,6 @@ const Ordenes = () => {
   const [ordenParaImprimir, setOrdenParaImprimir] = useState(null);
   const [procesandoOrden, setProcesandoOrden] = useState(false);
 
-  const [busquedaCliente, setBusquedaCliente] = useState('');
-  const [clientesSugeridos, setClientesSugeridos] = useState([]);
-  const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
-
   const [form, setForm] = useState({
     nit_cliente: '',
     placa_vehiculo: '',
@@ -98,60 +94,6 @@ const Ordenes = () => {
     }
   };
 
-  // Búsqueda de clientes en tiempo real (autocompletado)
-  const buscarClientesEnVivo = async (termino) => {
-    setBusquedaCliente(termino);
-    
-    if (termino.length < 2) {
-      setClientesSugeridos([]);
-      setMostrarSugerencias(false);
-      setClienteEncontrado(null);
-      setForm(prev => ({ ...prev, fk_id_cliente: '' }));
-      return;
-    }
-    
-    try {
-      const response = await fetch(`/api/clientes/buscar/${termino}`);
-      if (response.ok) {
-        const clientes = await response.json();
-        setClientesSugeridos(clientes);
-        setMostrarSugerencias(clientes.length > 0);
-      } else {
-        setClientesSugeridos([]);
-        setMostrarSugerencias(false);
-      }
-    } catch (error) {
-      console.error('Error buscando clientes:', error);
-      setClientesSugeridos([]);
-      setMostrarSugerencias(false);
-    }
-  };
-
-  // Seleccionar cliente del autocompletado
-  const seleccionarCliente = (cliente) => {
-    if (cliente.tipo === 'CF' || cliente.NIT === 'CF') {
-      // Consumidor Final
-      setClienteEncontrado({
-        nombre_cliente: 'Consumidor Final',
-        apellido_cliente: '',
-        NIT: 'CF',
-        PK_id_cliente: null
-      });
-      setForm(prev => ({ ...prev, fk_id_cliente: null, nit_cliente: 'CF' }));
-      setBusquedaCliente('CF - Consumidor Final');
-    } else {
-      // Cliente registrado
-      setClienteEncontrado(cliente);
-      setForm(prev => ({ ...prev, fk_id_cliente: cliente.PK_id_cliente, nit_cliente: cliente.NIT }));
-      setBusquedaCliente(
-        `${cliente.nombre_cliente} ${cliente.apellido_cliente} - NIT: ${cliente.NIT}`
-      );
-    }
-    setMostrarSugerencias(false);
-    setClientesSugeridos([]);
-  };
-
-  // Mantener la función original para compatibilidad con código existente
   const buscarCliente = async (nit) => {
     // Si es "CF" (Consumidor Final), no buscar cliente
     if (nit.toUpperCase() === 'CF') {
@@ -246,9 +188,6 @@ const Ordenes = () => {
     });
     setClienteEncontrado(null);
     setVehiculoEncontrado(null);
-    setBusquedaCliente('');
-    setClientesSugeridos([]);
-    setMostrarSugerencias(false);
     setEditando(false);
     setOrdenId(null);
   };
@@ -350,22 +289,10 @@ const Ordenes = () => {
       video: null
     });
     
-    // Configurar autocompletado con información del cliente
-    if (orden.NIT === 'CF') {
-      setBusquedaCliente('CF - Consumidor Final');
-      setClienteEncontrado({
-        nombre_cliente: 'Consumidor Final',
-        apellido_cliente: '',
-        NIT: 'CF',
-        PK_id_cliente: null
-      });
-    } else if (orden.NIT) {
-      setBusquedaCliente(
-        `${orden.nombre_cliente} ${orden.apellido_cliente} - NIT: ${orden.NIT}`
-      );
+    // Buscar cliente y vehículo para mostrar información
+    if (orden.NIT) {
       buscarCliente(orden.NIT);
     }
-    
     if (orden.placa_vehiculo) {
       buscarVehiculo(orden.placa_vehiculo);
     }
@@ -455,68 +382,27 @@ const Ordenes = () => {
             <div className="row">
               {/* Cliente */}
               <div className="col-md-6 mb-3">
-                <label className="form-label">Cliente *</label>
-                <div className="position-relative">
-                  <input
-                    type="text"
-                    className={`form-control ${clienteEncontrado ? 'is-valid' : busquedaCliente && !clienteEncontrado ? 'is-invalid' : ''}`}
-                    value={busquedaCliente}
-                    onChange={(e) => buscarClientesEnVivo(e.target.value)}
-                    onFocus={() => {
-                      if (clientesSugeridos.length > 0) {
-                        setMostrarSugerencias(true);
-                      }
-                    }}
-                    placeholder="Buscar por nombre, NIT o escriba 'CF'"
-                    autoComplete="off"
-                    required
-                  />
-                  
-                  {/* Dropdown de sugerencias */}
-                  {mostrarSugerencias && clientesSugeridos.length > 0 && (
-                    <ul 
-                      className="list-group position-absolute w-100 shadow-lg" 
-                      style={{
-                        zIndex: 1000, 
-                        maxHeight: '300px', 
-                        overflowY: 'auto',
-                        marginTop: '2px'
-                      }}
-                    >
-                      {clientesSugeridos.map((cliente, index) => (
-                        <li 
-                          key={index}
-                          className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                          onClick={() => seleccionarCliente(cliente)}
-                          style={{cursor: 'pointer'}}
-                        >
-                          <div>
-                            <strong>{cliente.nombre_cliente} {cliente.apellido_cliente}</strong>
-                            <br/>
-                            <small className="text-muted">
-                              {cliente.NIT === 'CF' ? 'Consumidor Final' : `NIT: ${cliente.NIT}`}
-                              {cliente.telefono_cliente && ` • Tel: ${cliente.telefono_cliente}`}
-                            </small>
-                          </div>
-                          <span className="badge bg-primary">Seleccionar</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  
-                  {/* Feedback de cliente seleccionado */}
-                  {clienteEncontrado && (
-                    <div className="valid-feedback d-block">
-                      ✅ Cliente: {clienteEncontrado.nombre_cliente} {clienteEncontrado.apellido_cliente}
-                      {clienteEncontrado.NIT !== 'CF' && ` - NIT: ${clienteEncontrado.NIT}`}
-                    </div>
-                  )}
-                  {busquedaCliente && !clienteEncontrado && busquedaCliente.length >= 2 && (
-                    <div className="invalid-feedback d-block">
-                      ❌ Cliente no encontrado
-                    </div>
-                  )}
-                </div>
+                <label className="form-label">NIT del Cliente *</label>
+                <input
+                  type="text"
+                  className={`form-control ${clienteEncontrado ? 'is-valid' : form.nit_cliente && !clienteEncontrado ? 'is-invalid' : ''}`}
+                  name="nit_cliente"
+                  value={form.nit_cliente}
+                  onChange={handleInputChange}
+                  placeholder="Ingrese NIT del cliente o 'CF' para Consumidor Final"
+                  maxLength="13"
+                  required
+                />
+                {clienteEncontrado && (
+                  <div className="valid-feedback">
+                    ✅ Cliente: {clienteEncontrado.nombre_cliente} {clienteEncontrado.apellido_cliente}
+                  </div>
+                )}
+                {form.nit_cliente && !clienteEncontrado && (
+                  <div className="invalid-feedback">
+                    ❌ Cliente no encontrado
+                  </div>
+                )}
               </div>
 
               {/* Vehículo */}
@@ -1072,3 +958,4 @@ const Ordenes = () => {
 };
 
 export default Ordenes;
+

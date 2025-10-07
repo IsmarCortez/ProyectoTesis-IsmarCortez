@@ -942,6 +942,52 @@ app.get('/api/ordenes/buscar-cliente-nit/:nit', async (req, res) => {
   }
 });
 
+// Endpoint para búsqueda flexible de clientes (nombre, NIT o CF)
+app.get('/api/clientes/buscar/:termino', async (req, res) => {
+  const { termino } = req.params;
+  
+  try {
+    // Caso especial: Consumidor Final
+    if (termino.toUpperCase() === 'CF') {
+      return res.json([{
+        PK_id_cliente: null,
+        nombre_cliente: 'Consumidor Final',
+        apellido_cliente: '',
+        NIT: 'CF',
+        dpi_cliente: null,
+        telefono_cliente: null,
+        tipo: 'CF'
+      }]);
+    }
+    
+    // Búsqueda por nombre, apellido o NIT
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT 
+        PK_id_cliente, 
+        nombre_cliente, 
+        apellido_cliente, 
+        NIT, 
+        dpi_cliente,
+        telefono_cliente
+      FROM tbl_clientes 
+      WHERE 
+        nombre_cliente LIKE ? OR 
+        apellido_cliente LIKE ? OR 
+        NIT LIKE ? OR
+        CONCAT(nombre_cliente, ' ', apellido_cliente) LIKE ?
+      ORDER BY nombre_cliente
+      LIMIT 10
+    `, [`%${termino}%`, `%${termino}%`, `%${termino}%`, `%${termino}%`]);
+    
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('Error en búsqueda de clientes:', error);
+    res.status(500).json({ message: 'Error al buscar clientes.' });
+  }
+});
+
 // Endpoint para buscar vehículo por placa para asociar a orden
 app.get('/api/ordenes/buscar-vehiculo/:placa', async (req, res) => {
   const { placa } = req.params;
