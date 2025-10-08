@@ -39,7 +39,6 @@ class ReportService {
               o.comentario_cliente_orden,
               o.nivel_combustible_orden,
               o.odometro_auto_cliente_orden,
-              o.unidad_odometro,
               o.observaciones_orden
             FROM tbl_ordenes o
             LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
@@ -258,7 +257,7 @@ class ReportService {
          .text(`Servicio: ${orden.servicio}`)
          .text(`Estado: ${orden.estado_orden}`)
          .text(`Combustible: ${orden.nivel_combustible_orden}`)
-         .text(`Odómetro: ${orden.odometro_auto_cliente_orden} ${orden.unidad_odometro || 'km'}`);
+         .text(`Odómetro: ${orden.odometro_auto_cliente_orden} km`);
       
       if (orden.comentario_cliente_orden) {
         doc.text(`Comentario: ${orden.comentario_cliente_orden}`);
@@ -437,7 +436,7 @@ class ReportService {
       worksheet.getCell(row, 8).value = orden.servicio;
       worksheet.getCell(row, 9).value = orden.estado_orden;
       worksheet.getCell(row, 10).value = orden.nivel_combustible_orden;
-      worksheet.getCell(row, 11).value = `${orden.odometro_auto_cliente_orden} ${orden.unidad_odometro || 'km'}`;
+      worksheet.getCell(row, 11).value = orden.odometro_auto_cliente_orden;
     });
 
     // Ajustar ancho de columnas

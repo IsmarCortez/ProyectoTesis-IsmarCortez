@@ -126,7 +126,7 @@ class PDFGenerator {
       { label: 'Color:', value: orderData.color_vehiculo || 'No especificado' },
       { label: 'Estado del Vehículo:', value: orderData.estado_vehiculo || 'No especificado' },
       { label: 'Nivel de Combustible:', value: orderData.nivel_combustible_orden },
-      { label: 'Odómetro:', value: orderData.odometro_auto_cliente_orden ? `${orderData.odometro_auto_cliente_orden} ${orderData.unidad_odometro || 'km'}` : 'No especificado' }
+      { label: 'Odómetro:', value: orderData.odometro_auto_cliente_orden ? `${orderData.odometro_auto_cliente_orden} km` : 'No especificado' }
     ];
 
     this.generateInfoTable(doc, vehicleInfo);

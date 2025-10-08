@@ -29,7 +29,6 @@ const Ordenes = () => {
     comentario_cliente_orden: '',
     nivel_combustible_orden: 'Medium',
     odometro_auto_cliente_orden: '',
-    unidad_odometro: 'km',
     fk_id_estado_orden: '',
     observaciones_orden: '',
     estado_vehiculo: 'Bueno',
@@ -236,7 +235,6 @@ const Ordenes = () => {
       comentario_cliente_orden: '',
       nivel_combustible_orden: 'Medium',
       odometro_auto_cliente_orden: '',
-      unidad_odometro: 'km',
       fk_id_estado_orden: '',
       observaciones_orden: '',
       estado_vehiculo: 'Bueno',
@@ -284,7 +282,6 @@ const Ordenes = () => {
     formData.append('comentario_cliente_orden', form.comentario_cliente_orden);
     formData.append('nivel_combustible_orden', form.nivel_combustible_orden);
     formData.append('odometro_auto_cliente_orden', form.odometro_auto_cliente_orden);
-    formData.append('unidad_odometro', form.unidad_odometro);
     formData.append('fk_id_estado_orden', form.fk_id_estado_orden);
     formData.append('observaciones_orden', form.observaciones_orden);
     formData.append('estado_vehiculo', form.estado_vehiculo);
@@ -343,7 +340,6 @@ const Ordenes = () => {
       comentario_cliente_orden: orden.comentario_cliente_orden || '',
       nivel_combustible_orden: orden.nivel_combustible_orden || 'Medium',
       odometro_auto_cliente_orden: orden.odometro_auto_cliente_orden || '',
-      unidad_odometro: orden.unidad_odometro || 'km',
       fk_id_estado_orden: estadoEncontrado ? estadoEncontrado.pk_id_estado : '',
       observaciones_orden: orden.observaciones_orden || '',
       estado_vehiculo: orden.estado_vehiculo ? orden.estado_vehiculo : 'Bueno',
@@ -609,45 +605,15 @@ const Ordenes = () => {
 
               {/* Odómetro */}
               <div className="col-md-4 mb-3">
-                <label className="form-label">Odómetro del Auto del Cliente</label>
+                <label className="form-label">Odómetro (km)</label>
                 <input
                   type="number"
-                  className="form-control mb-2"
+                  className="form-control"
                   name="odometro_auto_cliente_orden"
                   value={form.odometro_auto_cliente_orden}
                   onChange={handleInputChange}
-                  placeholder="Ej: 45000"
+                  placeholder="Kilometraje actual"
                 />
-                <div className="mt-2">
-                  <div className="form-check form-check-inline">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="unidad_odometro"
-                      id="unidadKm"
-                      value="km"
-                      checked={form.unidad_odometro === 'km'}
-                      onChange={handleInputChange}
-                    />
-                    <label className="form-check-label" htmlFor="unidadKm">
-                      Kilómetros (km)
-                    </label>
-                  </div>
-                  <div className="form-check form-check-inline">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="unidad_odometro"
-                      id="unidadMillas"
-                      value="millas"
-                      checked={form.unidad_odometro === 'millas'}
-                      onChange={handleInputChange}
-                    />
-                    <label className="form-check-label" htmlFor="unidadMillas">
-                      Millas (mi)
-                    </label>
-                  </div>
-                </div>
               </div>
 
               {/* Estado del Vehículo */}
@@ -868,11 +834,7 @@ const Ordenes = () => {
                       </span>
                     </td>
                     <td>{orden.nivel_combustible_orden}</td>
-                    <td>
-                      {orden.odometro_auto_cliente_orden 
-                        ? `${orden.odometro_auto_cliente_orden} ${orden.unidad_odometro || 'km'}` 
-                        : '-'}
-                    </td>
+                    <td>{orden.odometro_auto_cliente_orden ? `${orden.odometro_auto_cliente_orden} km` : '-'}</td>
                     <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
                       <div className="btn-group" role="group">
                         <button
@@ -987,9 +949,7 @@ const Ordenes = () => {
                   <div className="col-md-6">
                     <strong>Combustible:</strong> {ordenSeleccionada.nivel_combustible_orden}
                     <br />
-                    <strong>Odómetro:</strong> {ordenSeleccionada.odometro_auto_cliente_orden 
-                      ? `${ordenSeleccionada.odometro_auto_cliente_orden} ${ordenSeleccionada.unidad_odometro || 'km'}` 
-                      : 'No especificado'}
+                    <strong>Odómetro:</strong> {ordenSeleccionada.odometro_auto_cliente_orden ? `${ordenSeleccionada.odometro_auto_cliente_orden} km` : 'No especificado'}
                   </div>
                 </div>
 

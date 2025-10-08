@@ -866,7 +866,6 @@ app.get('/api/ordenes', async (req, res) => {
           o.comentario_cliente_orden,
           o.nivel_combustible_orden,
           o.odometro_auto_cliente_orden,
-          o.unidad_odometro,
           o.imagen_1,
           o.imagen_2,
           o.imagen_3,
@@ -1047,7 +1046,6 @@ app.post('/api/ordenes', upload.fields([
     comentario_cliente_orden,
     nivel_combustible_orden,
     odometro_auto_cliente_orden,
-    unidad_odometro,
     fk_id_estado_orden,
     observaciones_orden,
     estado_vehiculo
@@ -1076,12 +1074,9 @@ app.post('/api/ordenes', upload.fields([
       ? parseFloat(odometro_auto_cliente_orden) 
       : 0;
 
-    // Validar unidad de odómetro (valor por defecto: 'km')
-    const unidadOdometro = unidad_odometro || 'km';
-
     // Debug: verificar si es Consumidor Final
     console.log('🔍 Creando orden - fk_id_cliente:', fk_id_cliente);
-    console.log('🔍 Odómetro procesado:', odometroValue, unidadOdometro);
+    console.log('🔍 Odómetro procesado:', odometroValue);
     
     // Convertir valores vacíos o 'null' a null real para MySQL
     const fk_id_cliente_final = (fk_id_cliente === 'null' || fk_id_cliente === null || fk_id_cliente === '' || fk_id_cliente === undefined) ? null : fk_id_cliente;
@@ -1093,12 +1088,12 @@ app.post('/api/ordenes', upload.fields([
     const [result] = await connection.execute(
       `INSERT INTO tbl_ordenes (
         fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
-        nivel_combustible_orden, odometro_auto_cliente_orden, unidad_odometro, fk_id_estado_orden,
+        nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
         observaciones_orden, estado_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         fk_id_cliente_final, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
-        nivel_combustible_orden, odometroValue, unidadOdometro, fk_id_estado_orden,
+        nivel_combustible_orden, odometroValue, fk_id_estado_orden,
         observaciones_orden, estadoVehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video
       ]
     );
@@ -1270,7 +1265,6 @@ app.put('/api/ordenes/:id', upload.fields([
     comentario_cliente_orden,
     nivel_combustible_orden,
     odometro_auto_cliente_orden,
-    unidad_odometro,
     fk_id_estado_orden,
     observaciones_orden,
     estado_vehiculo
@@ -1281,7 +1275,7 @@ app.put('/api/ordenes/:id', upload.fields([
     
     // Obtener orden actual para preservar archivos existentes y detectar cambios de estado
     const [currentOrder] = await connection.execute(
-      'SELECT imagen_1, imagen_2, imagen_3, imagen_4, video, fk_id_estado_orden, unidad_odometro FROM tbl_ordenes WHERE pk_id_orden = ?',
+      'SELECT imagen_1, imagen_2, imagen_3, imagen_4, video, fk_id_estado_orden FROM tbl_ordenes WHERE pk_id_orden = ?',
       [id]
     );
     
@@ -1305,21 +1299,18 @@ app.put('/api/ordenes/:id', upload.fields([
     // Asegurar que estado_vehiculo tenga un valor por defecto
     const estadoVehiculo = estado_vehiculo || 'Bueno';
 
-    // Preservar unidad de odómetro existente si no se proporciona una nueva
-    const unidadOdometro = unidad_odometro || currentOrder[0].unidad_odometro || 'km';
-
     // Convertir valores vacíos o 'null' a null real para MySQL
     const fk_id_cliente_final = (fk_id_cliente === 'null' || fk_id_cliente === null || fk_id_cliente === '' || fk_id_cliente === undefined) ? null : fk_id_cliente;
 
     const [result] = await connection.execute(
       `UPDATE tbl_ordenes SET 
         fk_id_cliente = ?, fk_id_vehiculo = ?, fk_id_servicio = ?, comentario_cliente_orden = ?,
-        nivel_combustible_orden = ?, odometro_auto_cliente_orden = ?, unidad_odometro = ?, fk_id_estado_orden = ?,
+        nivel_combustible_orden = ?, odometro_auto_cliente_orden = ?, fk_id_estado_orden = ?,
         observaciones_orden = ?, estado_vehiculo = ?, imagen_1 = ?, imagen_2 = ?, imagen_3 = ?, imagen_4 = ?, video = ?
       WHERE pk_id_orden = ?`,
       [
         fk_id_cliente_final, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
-        nivel_combustible_orden, odometro_auto_cliente_orden, unidadOdometro, fk_id_estado_orden,
+        nivel_combustible_orden, odometro_auto_cliente_orden, fk_id_estado_orden,
         observaciones_orden, estadoVehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video, id
       ]
     );

@@ -63,7 +63,6 @@ CREATE TABLE IF NOT EXISTS tbl_ordenes (
 	comentario_cliente_orden TEXT,
     nivel_combustible_orden ENUM('Empty', 'Low', 'Medium', 'High', 'Full') NOT NULL,
     odometro_auto_cliente_orden float,
-    unidad_odometro ENUM('km', 'millas') DEFAULT 'km',
     
     imagen_1 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg',
     imagen_2 VARCHAR(255) NOT NULL DEFAULT 'sin_imagen.jpg',
@@ -326,17 +325,5 @@ ADD COLUMN estado_vehiculo VARCHAR(200)
 AFTER observaciones_orden;
 
 select* from tbl_ordenes ;
-
-ALTER TABLE tbl_servicios
-MODIFY COLUMN descripcion_servicios VARCHAR(500);
-
-ALTER TABLE tbl_ordenes 
-MODIFY COLUMN observaciones_orden VARCHAR(500);
-
--- Si en tbl_orden_estado tienes un campo texto que describe el estado
--- (por ejemplo "estado_orden"), también lo modificas:
-ALTER TABLE tbl_ordenes
-MODIFY COLUMN estado_vehiculo VARCHAR(500);
-
 
 
