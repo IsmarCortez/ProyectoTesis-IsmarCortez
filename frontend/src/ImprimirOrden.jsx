@@ -102,8 +102,8 @@ const ImprimirOrden = ({ orden, onClose }) => {
             className="logo-orden mb-2"
             style={{ maxHeight: '80px', maxWidth: '200px' }}
           />
-          <h2 className="mb-1">TECNO AUTO</h2>
-          <h4 className="text-muted mb-0">Taller Mecánico</h4>
+          <h2 className="mb-1">TECNOAUTO</h2>
+          <h4 className="text-muted mb-0">Centro de Servicio Automotriz</h4>
           <p className="mb-0">Orden de Trabajo #{orden.pk_id_orden}</p>
         </div>
 
@@ -195,7 +195,9 @@ const ImprimirOrden = ({ orden, onClose }) => {
           <div className="row mt-1">
             <div className="col-6">
               <strong>Odómetro:</strong><br />
-              {orden.odometro_auto_cliente_orden ? `${orden.odometro_auto_cliente_orden} km` : 'No especificado'}
+              {orden.odometro_auto_cliente_orden 
+                ? `${orden.odometro_auto_cliente_orden} ${orden.unidad_odometro || 'km'}` 
+                : 'No especificado'}
             </div>
           </div>
         </div>
@@ -230,38 +232,21 @@ const ImprimirOrden = ({ orden, onClose }) => {
           </div>
         </div>
 
-        {/* Pie de página */}
-        <div className="orden-footer mt-3 pt-3 border-top">
-          <div className="row">
-            <div className="col-6">
-              <strong>Fecha de Impresión:</strong><br />
-              {new Date().toLocaleString('es-GT')}
-            </div>
-            <div className="col-6 text-end">
-              <strong>Firma del Cliente:</strong><br />
-              _____________________
-            </div>
-          </div>
-          <div className="row mt-2">
-            <div className="col-6">
-              <strong>Firma del Técnico:</strong><br />
-              _____________________
-            </div>
-            <div className="col-6 text-end">
-              <strong>Sello del Taller:</strong><br />
-              [ÁREA PARA SELLO]
-            </div>
-          </div>
-        </div>
 
         {/* Notas importantes */}
-        <div className="notas-importantes mt-3 p-2 bg-light rounded">
-          <h6 className="text-center mb-1">⚠️ NOTAS IMPORTANTES</h6>
-          <ul className="mb-0 small">
-            <li>Garantia de servicio de 1 mes o 1000 km</li>
-            <li>El taller no se hace responsable por objetos personales dejados en el vehículo</li>
-            <li>Los trabajos adicionales deben ser autorizados por el cliente</li>
-          </ul>
+        <div className="notas-importantes mt-3 p-3 bg-light rounded">
+          <h6 className="text-center mb-3">⚠️ NOTAS IMPORTANTES</h6>
+          <div className="small">
+            <p className="mb-2">
+              • Nuestros servicios (no así los repuestos, ya que la garantía la proporciona el fabricante de los mismos) cuentan con una garantía de 30 días o 1,000 Kms. lo que ocurra primero.
+            </p>
+            <p className="mb-2">
+              • Autorizo al taller a realizar una prueba de carretera, no mayor a 5km, si se requiere una prueba en una distancia mayor sera previa autorización del cliente, tomando responsabilidad compartida por cualquier siniestro que pueda llegar a suceder.
+            </p>
+            <p className="mb-0">
+              • Todo trabajo adicional sera notificado y debe ser autorizado por el cliente.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -353,16 +338,13 @@ const ImprimirOrden = ({ orden, onClose }) => {
           
           .notas-importantes h6 {
             font-size: 10px !important;
-            margin-bottom: 5px !important;
+            margin-bottom: 8px !important;
           }
           
-          .notas-importantes ul {
-            margin-bottom: 0 !important;
-          }
-          
-          .notas-importantes li {
-            font-size: 9px !important;
-            margin-bottom: 2px !important;
+          .notas-importantes p {
+            font-size: 8px !important;
+            margin-bottom: 4px !important;
+            line-height: 1.3 !important;
           }
           
           .row {
@@ -412,6 +394,12 @@ const ImprimirOrden = ({ orden, onClose }) => {
         .notas-importantes {
           background-color: #fff3cd;
           border: 1px solid #ffeaa7;
+        }
+        
+        .notas-importantes p {
+          font-size: 13px;
+          line-height: 1.4;
+          margin-bottom: 8px;
         }
       `}</style>
     </div>
