@@ -53,7 +53,7 @@ class PDFGenerator {
       if (fs.existsSync(logoTecnoAutoPath)) {
         doc.image(logoTecnoAutoPath, 50, 20, { width: 100, height: 50 });
       } else {
-        doc.fontSize(16).fillColor('#1a1a1a').text('TecnoAuto', 50, 30, { width: 100 });
+        doc.fontSize(16).fillColor('#1a1a1a').text('TECNOAUTO', 50, 30, { width: 100 });
       }
 
       const logoElectroFrioPath = path.join(__dirname, '..', 'Logos', 'LogoElectrofrio.jpg');
@@ -65,7 +65,7 @@ class PDFGenerator {
       }
     } catch (error) {
       console.log('❌ Error cargando logos:', error.message);
-      doc.fontSize(16).fillColor('#1a1a1a').text('TecnoAuto', 50, 30, { width: 100 });
+      doc.fontSize(16).fillColor('#1a1a1a').text('TECNOAUTO', 50, 30, { width: 100 });
       doc.fontSize(14).fillColor('#e74c3c').text('Repuestos', 400, 30, { width: 100 });
       doc.fontSize(16).fillColor('#0066cc').text('ELECTROFRIO', 400, 45, { width: 100 });
     }
@@ -194,69 +194,40 @@ class PDFGenerator {
 
     this.drawSeparator(doc);
 
-    // Sección de firmas - más compacta
-    doc.fontSize(9).fillColor(this.config.colors.primary).text('FIRMAS Y AUTORIZACIONES', { align: 'center' });
+    // Notas importantes
+    doc.fontSize(9).fillColor(this.config.colors.accent).text('⚠️ NOTAS IMPORTANTES', { align: 'center' });
     doc.moveDown(0.3);
 
-    // Fila de firmas - más compacta
-    const signatureY = doc.y;
-    const leftX = doc.page.margins.left;
-    const rightX = doc.page.width - doc.page.margins.right - 80;
-
-    // Fecha de impresión (izquierda)
-    doc.fontSize(7).fillColor(this.config.colors.text)
-       .text('Fecha de Impresión:', leftX, signatureY)
-       .text(this.formatDate(new Date()), leftX, signatureY + 10);
-
-    // Firma del cliente (derecha)
-    doc.text('Firma del Cliente:', rightX, signatureY)
-       .text('_____________________', rightX, signatureY + 10);
-
-    // Segunda fila de firmas - más compacta
-    const secondRowY = signatureY + 30;
-
-    // Firma del técnico (izquierda)
-    doc.text('Firma del Técnico:', leftX, secondRowY)
-       .text('_____________________', leftX, secondRowY + 10);
-
-    // Sello del taller (derecha)
-    doc.text('Sello del Taller:', rightX, secondRowY)
-       .text('[ÁREA PARA SELLO]', rightX, secondRowY + 10);
-
-    doc.y = secondRowY + 25;
-
-    // Notas importantes - más compactas
-    this.drawSeparator(doc);
-    
-    doc.fontSize(9).fillColor(this.config.colors.accent).text('⚠️ NOTAS IMPORTANTES', { align: 'center' });
-    doc.moveDown(0.2);
-
     const notas = [
-      '• Garantía de servicio de 1 mes o 1000 km',
-      '• El taller no se hace responsable por objetos personales dejados en el vehículo',
-      '• Los trabajos adicionales deben ser autorizados por el cliente'
+      '• Nuestros servicios (no así los repuestos, ya que la garantía la proporciona el fabricante de los mismos) cuentan con una garantía de 30 días o 1,000 Kms. lo que ocurra primero.',
+      '• Autorizo al taller a realizar una prueba de carretera, no mayor a 5km, si se requiere una prueba en una distancia mayor sera previa autorización del cliente, tomando responsabilidad compartida por cualquier siniestro que pueda llegar a suceder.',
+      '• Todo trabajo adicional sera notificado y debe ser autorizado por el cliente.'
     ];
 
-    doc.fontSize(7).fillColor(this.config.colors.text);
+    doc.fontSize(7).fillColor(this.config.colors.secondary);
     notas.forEach(nota => {
-      doc.text(nota, doc.page.margins.left, doc.y, { width: doc.page.width - doc.page.margins.left - doc.page.margins.right });
-      doc.moveDown(0.2);
+      doc.text(nota, doc.page.margins.left, doc.y, { 
+        width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
+        align: 'justify'
+      });
+      doc.moveDown(0.3);
     });
 
     doc.moveDown(0.5);
 
-    // Información de contacto del taller - más compacta
+    // Información de contacto del taller
     const { nombre: empresa, telefono, email, direccion } = config.empresa;
 
-    doc.fontSize(8).fillColor(this.config.colors.secondary).text(empresa, { align: 'center' });
-    doc.fontSize(6).text(`Teléfono: ${telefono} | Email: ${email}`, { align: 'center' });
-    doc.text(`Dirección: ${direccion}`, { align: 'center' });
+    doc.fontSize(10).fillColor(this.config.colors.primary).text('TECNOAUTO', { align: 'center' });
+    doc.fontSize(9).fillColor(this.config.colors.secondary).text('Centro de Servicio Automotriz', { align: 'center' });
+    doc.fontSize(7).text(`Teléfono: ${telefono} | Email: ${email}`, { align: 'center' });
+    doc.fontSize(7).text(`Dirección: ${direccion}`, { align: 'center' });
 
     doc.moveDown(0.3);
 
     doc.fontSize(6)
        .fillColor(this.config.colors.secondary)
-       .text('Este documento es generado automáticamente por el sistema de gestión del taller.', { align: 'center' });
+       .text('Este documento es generado automáticamente por el sistema de gestión.', { align: 'center' });
     doc.text(`Documento generado el: ${this.formatDate(new Date())}`, { align: 'center' });
   }
 
