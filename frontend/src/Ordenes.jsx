@@ -27,7 +27,7 @@ const Ordenes = () => {
     placa_vehiculo: '',
     fk_id_servicio: '',
     comentario_cliente_orden: '',
-    nivel_combustible_orden: 'Medium',
+    nivel_combustible_orden: 'Medio',
     odometro_auto_cliente_orden: '',
     unidad_odometro: 'km',
     fk_id_estado_orden: '',
@@ -234,7 +234,7 @@ const Ordenes = () => {
       placa_vehiculo: '',
       fk_id_servicio: '',
       comentario_cliente_orden: '',
-      nivel_combustible_orden: 'Medium',
+      nivel_combustible_orden: 'Medio',
       odometro_auto_cliente_orden: '',
       unidad_odometro: 'km',
       fk_id_estado_orden: '',
@@ -341,7 +341,7 @@ const Ordenes = () => {
       placa_vehiculo: orden.placa_vehiculo || '',
       fk_id_servicio: servicioEncontrado ? servicioEncontrado.pk_id_servicio : '',
       comentario_cliente_orden: orden.comentario_cliente_orden || '',
-      nivel_combustible_orden: orden.nivel_combustible_orden || 'Medium',
+      nivel_combustible_orden: orden.nivel_combustible_orden || 'Medio',
       odometro_auto_cliente_orden: orden.odometro_auto_cliente_orden || '',
       unidad_odometro: orden.unidad_odometro || 'km',
       fk_id_estado_orden: estadoEncontrado ? estadoEncontrado.pk_id_estado : '',
@@ -599,11 +599,11 @@ const Ordenes = () => {
                   onChange={handleInputChange}
                   required
                 >
-                  <option value="Empty">Vacío</option>
-                  <option value="Low">Bajo</option>
-                  <option value="Medium">Medio</option>
-                  <option value="High">Alto</option>
-                  <option value="Full">Lleno</option>
+                  <option value="Reserva">⛽ Reserva</option>
+                  <option value="1/4">📊 1/4</option>
+                  <option value="Medio">📊 Medio</option>
+                  <option value="3/4">📊 3/4</option>
+                  <option value="Full">✅ Full</option>
                 </select>
               </div>
 

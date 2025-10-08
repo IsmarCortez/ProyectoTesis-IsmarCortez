@@ -9,11 +9,11 @@ const ImprimirOrden = ({ orden, onClose }) => {
 
   const formatearCombustible = (combustible) => {
     const niveles = {
-      'Empty': 'Vacío',
-      'Low': 'Bajo',
-      'Medium': 'Medio',
-      'High': 'Alto',
-      'Full': 'Lleno'
+      'Reserva': 'Reserva',
+      '1/4': '1/4',
+      'Medio': 'Medio',
+      '3/4': '3/4',
+      'Full': 'Full'
     };
     return niveles[combustible] || combustible;
   };
