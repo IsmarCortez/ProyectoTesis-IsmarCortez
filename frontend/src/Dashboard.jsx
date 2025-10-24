@@ -191,7 +191,8 @@ const Dashboard = () => {
   // Gráfico de órdenes por mes
   const datosOrdenesMes = estadisticas ? {
     labels: estadisticas.ordenes_por_mes.map(o => {
-      const fecha = new Date(o.mes + '-01');
+      const [year, month] = o.mes.split('-');
+      const fecha = new Date(parseInt(year), parseInt(month) - 1, 1);
       return fecha.toLocaleDateString('es-GT', { month: 'short', year: 'numeric' });
     }),
     datasets: [{
@@ -207,7 +208,8 @@ const Dashboard = () => {
   // Gráfico de clientes por mes
   const datosClientesMes = estadisticas ? {
     labels: estadisticas.clientes_por_mes.map(c => {
-      const fecha = new Date(c.mes + '-01');
+      const [year, month] = c.mes.split('-');
+      const fecha = new Date(parseInt(year), parseInt(month) - 1, 1);
       return fecha.toLocaleDateString('es-GT', { month: 'short', year: 'numeric' });
     }),
     datasets: [{
