@@ -98,8 +98,7 @@ const Dashboard = () => {
           total_ordenes: 133,
           ordenes_mes_actual: 45,
           ordenes_completadas: 80,
-          ordenes_pendientes: 18,
-          ordenes_listas_entrega: 5
+          ordenes_pendientes: 18
         },
         marcas_populares: [
           { marca_vehiculo: 'Toyota', cantidad_vehiculos: 25, cantidad_ordenes: 35 },
@@ -539,84 +538,6 @@ const Dashboard = () => {
                   fontSize: '14px'
                 }}>
                   Eficiencia del taller
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Nueva tarjeta: Listos para Entrega */}
-        <div className="row mb-4">
-          <div className="col-xl-4 col-md-6 mb-4">
-            <div className="card-tecno h-100">
-              <div className="card-tecno-header">
-                🎁 Listos para Entrega
-              </div>
-              <div className="card-tecno-body text-center">
-                <div style={{ 
-                  fontSize: '3rem', 
-                  fontWeight: '700', 
-                  color: 'var(--info)',
-                  marginBottom: '8px'
-                }}>
-                  {estadisticas.estadisticas_generales.ordenes_listas_entrega || 0}
-                </div>
-                <p style={{ 
-                  color: 'var(--tecno-gray-dark)', 
-                  margin: '0',
-                  fontSize: '14px'
-                }}>
-                  Vehículos terminados esperando al cliente
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-xl-4 col-md-6 mb-4">
-            <div className="card-tecno h-100">
-              <div className="card-tecno-header">
-                🔧 En Proceso Total
-              </div>
-              <div className="card-tecno-body text-center">
-                <div style={{ 
-                  fontSize: '3rem', 
-                  fontWeight: '700', 
-                  color: 'var(--primary)',
-                  marginBottom: '8px'
-                }}>
-                  {estadisticas.estadisticas_generales.ordenes_pendientes || 0}
-                </div>
-                <p style={{ 
-                  color: 'var(--tecno-gray-dark)', 
-                  margin: '0',
-                  fontSize: '14px'
-                }}>
-                  Órdenes en trabajo (no entregadas)
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-xl-4 col-md-6 mb-4">
-            <div className="card-tecno h-100">
-              <div className="card-tecno-header">
-                📈 Total Histórico
-              </div>
-              <div className="card-tecno-body text-center">
-                <div style={{ 
-                  fontSize: '3rem', 
-                  fontWeight: '700', 
-                  color: 'var(--secondary)',
-                  marginBottom: '8px'
-                }}>
-                  {estadisticas.estadisticas_generales.total_ordenes || 0}
-                </div>
-                <p style={{ 
-                  color: 'var(--tecno-gray-dark)', 
-                  margin: '0',
-                  fontSize: '14px'
-                }}>
-                  Todas las órdenes registradas
                 </p>
               </div>
             </div>

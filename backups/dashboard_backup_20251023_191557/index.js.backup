@@ -1793,15 +1793,9 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
         (SELECT COUNT(*) FROM tbl_clientes) as total_clientes,
         (SELECT COUNT(*) FROM tbl_vehiculos) as total_vehiculos,
         (SELECT COUNT(*) FROM tbl_ordenes) as total_ordenes,
-        (SELECT COUNT(*) FROM tbl_ordenes 
-         WHERE YEAR(fecha_ingreso_orden) = YEAR(NOW()) 
-           AND MONTH(fecha_ingreso_orden) = MONTH(NOW())) as ordenes_mes_actual,
-        (SELECT COUNT(*) FROM tbl_ordenes 
-         WHERE fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Entregado')) as ordenes_completadas,
-        (SELECT COUNT(*) FROM tbl_ordenes 
-         WHERE fk_id_estado_orden IN (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden NOT IN ('Entregado', 'Cancelado'))) as ordenes_pendientes,
-        (SELECT COUNT(*) FROM tbl_ordenes 
-         WHERE fk_id_estado_orden IN (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden IN ('Finalizado', 'Finalizado Listo para Entrega', 'Revisión y Limpieza Final'))) as ordenes_listas_entrega
+        (SELECT COUNT(*) FROM tbl_ordenes WHERE fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as ordenes_mes_actual,
+        (SELECT COUNT(*) FROM tbl_ordenes WHERE fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Finalizado')) as ordenes_completadas,
+        (SELECT COUNT(*) FROM tbl_ordenes WHERE fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Recibido')) as ordenes_pendientes
     `);
 
     // 7. Marcas de vehículos más populares
@@ -1825,7 +1819,7 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
         (COUNT(*) * 500) as ingresos_estimados
       FROM tbl_ordenes o
       INNER JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
-      WHERE e.estado_orden = 'Entregado'
+      WHERE e.estado_orden = 'Finalizado'
       GROUP BY DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m')
       ORDER BY mes ASC
     `);
@@ -1881,8 +1875,8 @@ app.get('/api/dashboard/estadisticas/:periodo', async (req, res) => {
         COUNT(*) as total_ordenes,
         COUNT(DISTINCT fk_id_cliente) as clientes_unicos,
         COUNT(DISTINCT fk_id_vehiculo) as vehiculos_unicos,
-        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Entregado') THEN 1 END) as ordenes_completadas,
-        COUNT(CASE WHEN fk_id_estado_orden IN (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden NOT IN ('Entregado', 'Cancelado')) THEN 1 END) as ordenes_pendientes,
+        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Finalizado') THEN 1 END) as ordenes_completadas,
+        COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'Recibido') THEN 1 END) as ordenes_pendientes,
         COUNT(CASE WHEN fk_id_estado_orden = (SELECT pk_id_estado FROM tbl_orden_estado WHERE estado_orden = 'En proceso') THEN 1 END) as ordenes_en_proceso
       FROM tbl_ordenes 
       WHERE fecha_ingreso_orden >= ${fechaInicio}

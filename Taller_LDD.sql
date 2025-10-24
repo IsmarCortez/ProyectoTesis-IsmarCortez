@@ -339,4 +339,7 @@ ALTER TABLE tbl_ordenes
 MODIFY COLUMN estado_vehiculo VARCHAR(500);
 
 
+   ALTER TABLE tbl_ordenes 
+   MODIFY COLUMN nivel_combustible_orden 
+   ENUM('Reserva', '1/4', 'Medio', '3/4', 'Full') NOT NULL;
 
