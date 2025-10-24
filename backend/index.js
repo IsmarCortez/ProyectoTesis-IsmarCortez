@@ -1740,7 +1740,7 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
       LIMIT 10
     `);
 
-    // 2. Clientes por mes (desde septiembre 2025)
+    // 2. Clientes por mes (desde 29 de septiembre 2025)
     const [clientesPorMes] = await connection.execute(`
       WITH RECURSIVE meses AS (
         SELECT '2025-09' as mes
@@ -1754,7 +1754,8 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
         COALESCE(COUNT(DISTINCT o.fk_id_cliente), 0) as cantidad_clientes,
         COALESCE(COUNT(o.pk_id_orden), 0) as cantidad_ordenes
       FROM meses m
-      LEFT JOIN tbl_ordenes o ON DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m') = m.mes
+      LEFT JOIN tbl_ordenes o ON DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m') = m.mes 
+        AND o.fecha_ingreso_orden >= '2025-09-29 00:00:00'
       GROUP BY m.mes
       ORDER BY m.mes ASC
     `);
@@ -1783,7 +1784,7 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
       ORDER BY cantidad_ordenes DESC
     `);
 
-    // 5. Órdenes por mes (desde septiembre 2025)
+    // 5. Órdenes por mes (desde 29 de septiembre 2025)
     const [ordenesPorMes] = await connection.execute(`
       WITH RECURSIVE meses AS (
         SELECT '2025-09' as mes
@@ -1797,6 +1798,7 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
         COALESCE(COUNT(o.pk_id_orden), 0) as cantidad_ordenes
       FROM meses m
       LEFT JOIN tbl_ordenes o ON DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m') = m.mes
+        AND o.fecha_ingreso_orden >= '2025-09-29 00:00:00'
       GROUP BY m.mes
       ORDER BY m.mes ASC
     `);
