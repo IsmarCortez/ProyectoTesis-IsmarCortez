@@ -1740,16 +1740,23 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
       LIMIT 10
     `);
 
-    // 2. Clientes por mes (últimos 12 meses)
+    // 2. Clientes por mes (desde septiembre 2025)
     const [clientesPorMes] = await connection.execute(`
+      WITH RECURSIVE meses AS (
+        SELECT '2025-09' as mes
+        UNION ALL
+        SELECT DATE_FORMAT(DATE_ADD(CONCAT(mes, '-01'), INTERVAL 1 MONTH), '%Y-%m')
+        FROM meses
+        WHERE mes < DATE_FORMAT(NOW(), '%Y-%m')
+      )
       SELECT 
-        DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m') as mes,
-        COUNT(DISTINCT o.fk_id_cliente) as cantidad_clientes,
-        COUNT(o.pk_id_orden) as cantidad_ordenes
-      FROM tbl_ordenes o
-      WHERE o.fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-      GROUP BY DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m')
-      ORDER BY mes ASC
+        m.mes,
+        COALESCE(COUNT(DISTINCT o.fk_id_cliente), 0) as cantidad_clientes,
+        COALESCE(COUNT(o.pk_id_orden), 0) as cantidad_ordenes
+      FROM meses m
+      LEFT JOIN tbl_ordenes o ON DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m') = m.mes
+      GROUP BY m.mes
+      ORDER BY m.mes ASC
     `);
 
     // 3. Servicios más solicitados
@@ -1776,15 +1783,22 @@ app.get('/api/dashboard/estadisticas', async (req, res) => {
       ORDER BY cantidad_ordenes DESC
     `);
 
-    // 5. Órdenes por mes (últimos 12 meses)
+    // 5. Órdenes por mes (desde septiembre 2025)
     const [ordenesPorMes] = await connection.execute(`
+      WITH RECURSIVE meses AS (
+        SELECT '2025-09' as mes
+        UNION ALL
+        SELECT DATE_FORMAT(DATE_ADD(CONCAT(mes, '-01'), INTERVAL 1 MONTH), '%Y-%m')
+        FROM meses
+        WHERE mes < DATE_FORMAT(NOW(), '%Y-%m')
+      )
       SELECT 
-        DATE_FORMAT(fecha_ingreso_orden, '%Y-%m') as mes,
-        COUNT(*) as cantidad_ordenes
-      FROM tbl_ordenes
-      WHERE fecha_ingreso_orden >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-      GROUP BY DATE_FORMAT(fecha_ingreso_orden, '%Y-%m')
-      ORDER BY mes ASC
+        m.mes,
+        COALESCE(COUNT(o.pk_id_orden), 0) as cantidad_ordenes
+      FROM meses m
+      LEFT JOIN tbl_ordenes o ON DATE_FORMAT(o.fecha_ingreso_orden, '%Y-%m') = m.mes
+      GROUP BY m.mes
+      ORDER BY m.mes ASC
     `);
 
     // 6. Estadísticas generales
