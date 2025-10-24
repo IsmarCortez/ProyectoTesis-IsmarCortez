@@ -237,7 +237,8 @@ const Dashboard = () => {
   // Gráfico de ingresos por mes
   const datosIngresos = estadisticas ? {
     labels: estadisticas.ingresos_por_mes.map(i => {
-      const fecha = new Date(i.mes + '-01');
+      const [year, month] = i.mes.split('-');
+      const fecha = new Date(parseInt(year), parseInt(month) - 1, 1);
       return fecha.toLocaleDateString('es-GT', { month: 'short', year: 'numeric' });
     }),
     datasets: [{

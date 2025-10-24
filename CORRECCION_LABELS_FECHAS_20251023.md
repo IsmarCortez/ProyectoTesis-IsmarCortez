@@ -130,6 +130,27 @@ labels: estadisticas.clientes_por_mes.map(c => {
 
 ---
 
+### **3. Gráfica "Ingresos Estimados por Mes" - Líneas 239-242**
+
+#### ❌ ANTES (Incorrecto):
+```javascript
+labels: estadisticas.ingresos_por_mes.map(i => {
+  const fecha = new Date(i.mes + '-01');  // ← Mismo problema
+  return fecha.toLocaleDateString('es-GT', { month: 'short', year: 'numeric' });
+}),
+```
+
+#### ✅ AHORA (Correcto):
+```javascript
+labels: estadisticas.ingresos_por_mes.map(i => {
+  const [year, month] = i.mes.split('-');  // ← Separa año y mes
+  const fecha = new Date(parseInt(year), parseInt(month) - 1, 1);  // ← Crea fecha local
+  return fecha.toLocaleDateString('es-GT', { month: 'short', year: 'numeric' });
+}),
+```
+
+---
+
 ## 🎯 ANTES Y DESPUÉS
 
 ### **ANTES (Labels incorrectos):**
@@ -321,12 +342,13 @@ new Date('2025-09-01T00:00:00')  // Agrega hora para forzar local
 ### **Cambios realizados:**
 ✅ Corregido parsing de fechas en "Órdenes por mes"  
 ✅ Corregido parsing de fechas en "Clientes por mes"  
+✅ Corregido parsing de fechas en "Ingresos Estimados por mes"  
 ✅ Labels ahora muestran el mes correcto  
 ✅ Sin errores de linter  
 ✅ Problema de zona horaria UTC resuelto  
 
 ### **Archivos modificados:**
-- `frontend/src/Dashboard.jsx` (2 gráficas corregidas)
+- `frontend/src/Dashboard.jsx` (3 gráficas corregidas)
 
 ### **Impacto:**
 - **Visual:** Labels ahora coinciden con los meses reales
