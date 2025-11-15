@@ -1308,6 +1308,11 @@ app.put('/api/ordenes/:id', upload.fields([
     // Preservar unidad de odómetro existente si no se proporciona una nueva
     const unidadOdometro = unidad_odometro || currentOrder[0].unidad_odometro || 'km';
 
+    // Validar y convertir odómetro (manejar campos vacíos) - igual que en POST
+    const odometroValue = (odometro_auto_cliente_orden && odometro_auto_cliente_orden.toString().trim() !== '') 
+      ? parseFloat(odometro_auto_cliente_orden) 
+      : 0;
+
     // Convertir valores vacíos o 'null' a null real para MySQL
     const fk_id_cliente_final = (fk_id_cliente === 'null' || fk_id_cliente === null || fk_id_cliente === '' || fk_id_cliente === undefined) ? null : fk_id_cliente;
 
@@ -1319,7 +1324,7 @@ app.put('/api/ordenes/:id', upload.fields([
       WHERE pk_id_orden = ?`,
       [
         fk_id_cliente_final, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
-        nivel_combustible_orden, odometro_auto_cliente_orden, unidadOdometro, fk_id_estado_orden,
+        nivel_combustible_orden, odometroValue, unidadOdometro, fk_id_estado_orden,
         observaciones_orden, estadoVehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video, id
       ]
     );
