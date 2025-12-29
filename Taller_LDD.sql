@@ -343,3 +343,10 @@ MODIFY COLUMN estado_vehiculo VARCHAR(500);
    MODIFY COLUMN nivel_combustible_orden 
    ENUM('Reserva', '1/4', 'Medio', '3/4', 'Full') NOT NULL;
 
+ALTER TABLE nombre_de_tu_tabla
+ADD imagen_5 VARCHAR(255),
+ADD imagen_6 VARCHAR(255),
+ADD imagen_7 VARCHAR(255),
+ADD imagen_8 VARCHAR(255),
+ADD imagen_9 VARCHAR(255),
+ADD imagen_10 VARCHAR(255);

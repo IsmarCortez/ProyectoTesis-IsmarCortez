@@ -871,6 +871,12 @@ app.get('/api/ordenes', async (req, res) => {
           o.imagen_2,
           o.imagen_3,
           o.imagen_4,
+          o.imagen_5,
+          o.imagen_6,
+          o.imagen_7,
+          o.imagen_8,
+          o.imagen_9,
+          o.imagen_10,
           o.video,
           o.observaciones_orden,
           o.estado_vehiculo,
@@ -1015,6 +1021,12 @@ app.post('/api/ordenes', upload.fields([
   { name: 'imagen_2', maxCount: 1 },
   { name: 'imagen_3', maxCount: 1 },
   { name: 'imagen_4', maxCount: 1 },
+  { name: 'imagen_5', maxCount: 1 },
+  { name: 'imagen_6', maxCount: 1 },
+  { name: 'imagen_7', maxCount: 1 },
+  { name: 'imagen_8', maxCount: 1 },
+  { name: 'imagen_9', maxCount: 1 },
+  { name: 'imagen_10', maxCount: 1 },
   { name: 'video', maxCount: 1 }
 ]), (err, req, res, next) => {
   // Manejar errores de Multer
@@ -1066,6 +1078,12 @@ app.post('/api/ordenes', upload.fields([
     const imagen_2 = processFiles(req.files, 'imagen_2') || 'sin_imagen.jpg';
     const imagen_3 = processFiles(req.files, 'imagen_3') || 'sin_imagen.jpg';
     const imagen_4 = processFiles(req.files, 'imagen_4') || 'sin_imagen.jpg';
+    const imagen_5 = processFiles(req.files, 'imagen_5') || 'sin_imagen.jpg';
+    const imagen_6 = processFiles(req.files, 'imagen_6') || 'sin_imagen.jpg';
+    const imagen_7 = processFiles(req.files, 'imagen_7') || 'sin_imagen.jpg';
+    const imagen_8 = processFiles(req.files, 'imagen_8') || 'sin_imagen.jpg';
+    const imagen_9 = processFiles(req.files, 'imagen_9') || 'sin_imagen.jpg';
+    const imagen_10 = processFiles(req.files, 'imagen_10') || 'sin_imagen.jpg';
     const video = processFiles(req.files, 'video') || 'sin_video.mp4';
 
     // Asegurar que estado_vehiculo tenga un valor por defecto
@@ -1094,12 +1112,12 @@ app.post('/api/ordenes', upload.fields([
       `INSERT INTO tbl_ordenes (
         fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
         nivel_combustible_orden, odometro_auto_cliente_orden, unidad_odometro, fk_id_estado_orden,
-        observaciones_orden, estado_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        observaciones_orden, estado_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, imagen_5, imagen_6, imagen_7, imagen_8, imagen_9, imagen_10, video
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         fk_id_cliente_final, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
         nivel_combustible_orden, odometroValue, unidadOdometro, fk_id_estado_orden,
-        observaciones_orden, estadoVehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video
+        observaciones_orden, estadoVehiculo, imagen_1, imagen_2, imagen_3, imagen_4, imagen_5, imagen_6, imagen_7, imagen_8, imagen_9, imagen_10, video
       ]
     );
     
@@ -1237,6 +1255,12 @@ app.put('/api/ordenes/:id', upload.fields([
   { name: 'imagen_2', maxCount: 1 },
   { name: 'imagen_3', maxCount: 1 },
   { name: 'imagen_4', maxCount: 1 },
+  { name: 'imagen_5', maxCount: 1 },
+  { name: 'imagen_6', maxCount: 1 },
+  { name: 'imagen_7', maxCount: 1 },
+  { name: 'imagen_8', maxCount: 1 },
+  { name: 'imagen_9', maxCount: 1 },
+  { name: 'imagen_10', maxCount: 1 },
   { name: 'video', maxCount: 1 }
 ]), (err, req, res, next) => {
   // Manejar errores de Multer
@@ -1248,7 +1272,7 @@ app.put('/api/ordenes/:id', upload.fields([
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
       return res.status(413).json({ 
-        message: 'Demasiados archivos. Máximo 5 archivos por orden' 
+        message: 'Demasiados archivos. Máximo 11 archivos por orden' 
       });
     }
     if (err.code === 'LIMIT_UNEXPECTED_FILE') {
@@ -1281,7 +1305,7 @@ app.put('/api/ordenes/:id', upload.fields([
     
     // Obtener orden actual para preservar archivos existentes y detectar cambios de estado
     const [currentOrder] = await connection.execute(
-      'SELECT imagen_1, imagen_2, imagen_3, imagen_4, video, fk_id_estado_orden, unidad_odometro FROM tbl_ordenes WHERE pk_id_orden = ?',
+      'SELECT imagen_1, imagen_2, imagen_3, imagen_4, imagen_5, imagen_6, imagen_7, imagen_8, imagen_9, imagen_10, video, fk_id_estado_orden, unidad_odometro FROM tbl_ordenes WHERE pk_id_orden = ?',
       [id]
     );
     
@@ -1300,6 +1324,12 @@ app.put('/api/ordenes/:id', upload.fields([
     const imagen_2 = processFiles(req.files, 'imagen_2') !== null ? processFiles(req.files, 'imagen_2') : currentOrder[0].imagen_2;
     const imagen_3 = processFiles(req.files, 'imagen_3') !== null ? processFiles(req.files, 'imagen_3') : currentOrder[0].imagen_3;
     const imagen_4 = processFiles(req.files, 'imagen_4') !== null ? processFiles(req.files, 'imagen_4') : currentOrder[0].imagen_4;
+    const imagen_5 = processFiles(req.files, 'imagen_5') !== null ? processFiles(req.files, 'imagen_5') : currentOrder[0].imagen_5;
+    const imagen_6 = processFiles(req.files, 'imagen_6') !== null ? processFiles(req.files, 'imagen_6') : currentOrder[0].imagen_6;
+    const imagen_7 = processFiles(req.files, 'imagen_7') !== null ? processFiles(req.files, 'imagen_7') : currentOrder[0].imagen_7;
+    const imagen_8 = processFiles(req.files, 'imagen_8') !== null ? processFiles(req.files, 'imagen_8') : currentOrder[0].imagen_8;
+    const imagen_9 = processFiles(req.files, 'imagen_9') !== null ? processFiles(req.files, 'imagen_9') : currentOrder[0].imagen_9;
+    const imagen_10 = processFiles(req.files, 'imagen_10') !== null ? processFiles(req.files, 'imagen_10') : currentOrder[0].imagen_10;
     const video = processFiles(req.files, 'video') !== null ? processFiles(req.files, 'video') : currentOrder[0].video;
 
     // Asegurar que estado_vehiculo tenga un valor por defecto
@@ -1320,12 +1350,12 @@ app.put('/api/ordenes/:id', upload.fields([
       `UPDATE tbl_ordenes SET 
         fk_id_cliente = ?, fk_id_vehiculo = ?, fk_id_servicio = ?, comentario_cliente_orden = ?,
         nivel_combustible_orden = ?, odometro_auto_cliente_orden = ?, unidad_odometro = ?, fk_id_estado_orden = ?,
-        observaciones_orden = ?, estado_vehiculo = ?, imagen_1 = ?, imagen_2 = ?, imagen_3 = ?, imagen_4 = ?, video = ?
+        observaciones_orden = ?, estado_vehiculo = ?, imagen_1 = ?, imagen_2 = ?, imagen_3 = ?, imagen_4 = ?, imagen_5 = ?, imagen_6 = ?, imagen_7 = ?, imagen_8 = ?, imagen_9 = ?, imagen_10 = ?, video = ?
       WHERE pk_id_orden = ?`,
       [
         fk_id_cliente_final, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
         nivel_combustible_orden, odometroValue, unidadOdometro, fk_id_estado_orden,
-        observaciones_orden, estadoVehiculo, imagen_1, imagen_2, imagen_3, imagen_4, video, id
+        observaciones_orden, estadoVehiculo, imagen_1, imagen_2, imagen_3, imagen_4, imagen_5, imagen_6, imagen_7, imagen_8, imagen_9, imagen_10, video, id
       ]
     );
     
@@ -2063,6 +2093,12 @@ app.get('/api/tracker/telefono/:telefono', async (req, res) => {
         o.imagen_2,
         o.imagen_3,
         o.imagen_4,
+        o.imagen_5,
+        o.imagen_6,
+        o.imagen_7,
+        o.imagen_8,
+        o.imagen_9,
+        o.imagen_10,
         o.video
       FROM tbl_ordenes o
       LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
@@ -2124,6 +2160,12 @@ app.get('/api/tracker/placa/:placa', async (req, res) => {
         o.imagen_2,
         o.imagen_3,
         o.imagen_4,
+        o.imagen_5,
+        o.imagen_6,
+        o.imagen_7,
+        o.imagen_8,
+        o.imagen_9,
+        o.imagen_10,
         o.video
       FROM tbl_ordenes o
       LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
@@ -2185,6 +2227,12 @@ app.get('/api/tracker/orden/:numero', async (req, res) => {
         o.imagen_2,
         o.imagen_3,
         o.imagen_4,
+        o.imagen_5,
+        o.imagen_6,
+        o.imagen_7,
+        o.imagen_8,
+        o.imagen_9,
+        o.imagen_10,
         o.video
       FROM tbl_ordenes o
       LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente

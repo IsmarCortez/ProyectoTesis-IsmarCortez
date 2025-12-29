@@ -17,7 +17,13 @@ const TrackerPublico = () => {
       orden.imagen_1,
       orden.imagen_2, 
       orden.imagen_3,
-      orden.imagen_4
+      orden.imagen_4,
+      orden.imagen_5,
+      orden.imagen_6,
+      orden.imagen_7,
+      orden.imagen_8,
+      orden.imagen_9,
+      orden.imagen_10
     ].filter(img => img && img !== 'sin_imagen.jpg');
 
     const video = orden.video && orden.video !== 'sin_video.mp4' ? orden.video : null;

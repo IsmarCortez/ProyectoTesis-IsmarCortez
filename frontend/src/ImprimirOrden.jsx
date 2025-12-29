@@ -223,7 +223,18 @@ const ImprimirOrden = ({ orden, onClose }) => {
           <div className="row">
             <div className="col-6">
               <strong>Imágenes:</strong><br />
-              {[orden.imagen_1, orden.imagen_2, orden.imagen_3, orden.imagen_4].filter(img => img && img !== 'sin_imagen.jpg').length} archivo(s)
+              {[
+                orden.imagen_1, 
+                orden.imagen_2, 
+                orden.imagen_3, 
+                orden.imagen_4,
+                orden.imagen_5,
+                orden.imagen_6,
+                orden.imagen_7,
+                orden.imagen_8,
+                orden.imagen_9,
+                orden.imagen_10
+              ].filter(img => img && img !== 'sin_imagen.jpg').length} archivo(s)
             </div>
             <div className="col-6">
               <strong>Video:</strong><br />

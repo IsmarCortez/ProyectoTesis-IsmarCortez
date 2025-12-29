@@ -37,6 +37,12 @@ const Ordenes = () => {
     imagen_2: null,
     imagen_3: null,
     imagen_4: null,
+    imagen_5: null,
+    imagen_6: null,
+    imagen_7: null,
+    imagen_8: null,
+    imagen_9: null,
+    imagen_10: null,
     video: null
   });
 
@@ -244,6 +250,12 @@ const Ordenes = () => {
       imagen_2: null,
       imagen_3: null,
       imagen_4: null,
+      imagen_5: null,
+      imagen_6: null,
+      imagen_7: null,
+      imagen_8: null,
+      imagen_9: null,
+      imagen_10: null,
       video: null
     });
     setClienteEncontrado(null);
@@ -296,6 +308,12 @@ const Ordenes = () => {
     if (form.imagen_2) formData.append('imagen_2', form.imagen_2);
     if (form.imagen_3) formData.append('imagen_3', form.imagen_3);
     if (form.imagen_4) formData.append('imagen_4', form.imagen_4);
+    if (form.imagen_5) formData.append('imagen_5', form.imagen_5);
+    if (form.imagen_6) formData.append('imagen_6', form.imagen_6);
+    if (form.imagen_7) formData.append('imagen_7', form.imagen_7);
+    if (form.imagen_8) formData.append('imagen_8', form.imagen_8);
+    if (form.imagen_9) formData.append('imagen_9', form.imagen_9);
+    if (form.imagen_10) formData.append('imagen_10', form.imagen_10);
     if (form.video) formData.append('video', form.video);
 
     try {
@@ -351,6 +369,12 @@ const Ordenes = () => {
       imagen_2: null,
       imagen_3: null,
       imagen_4: null,
+      imagen_5: null,
+      imagen_6: null,
+      imagen_7: null,
+      imagen_8: null,
+      imagen_9: null,
+      imagen_10: null,
       video: null
     });
     
@@ -734,6 +758,68 @@ const Ordenes = () => {
                 />
               </div>
               <div className="col-md-2 mb-3">
+                <label className="form-label">Imagen 5</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  name="imagen_5"
+                  onChange={handleInputChange}
+                  accept="image/*"
+                />
+              </div>
+              <div className="col-md-2 mb-3">
+                <label className="form-label">Imagen 6</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  name="imagen_6"
+                  onChange={handleInputChange}
+                  accept="image/*"
+                />
+              </div>
+            </div>
+            <div className="row">
+              <div className="col-md-2 mb-3">
+                <label className="form-label">Imagen 7</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  name="imagen_7"
+                  onChange={handleInputChange}
+                  accept="image/*"
+                />
+              </div>
+              <div className="col-md-2 mb-3">
+                <label className="form-label">Imagen 8</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  name="imagen_8"
+                  onChange={handleInputChange}
+                  accept="image/*"
+                />
+              </div>
+              <div className="col-md-2 mb-3">
+                <label className="form-label">Imagen 9</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  name="imagen_9"
+                  onChange={handleInputChange}
+                  accept="image/*"
+                />
+              </div>
+              <div className="col-md-2 mb-3">
+                <label className="form-label">Imagen 10</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  name="imagen_10"
+                  onChange={handleInputChange}
+                  accept="image/*"
+                />
+              </div>
+              <div className="col-md-2 mb-3">
                 <label className="form-label">Video</label>
                 <input
                   type="file"
@@ -1019,7 +1105,18 @@ const Ordenes = () => {
                   <div className="col-12">
                     <h6>Imágenes:</h6>
                   </div>
-                  {[ordenSeleccionada.imagen_1, ordenSeleccionada.imagen_2, ordenSeleccionada.imagen_3, ordenSeleccionada.imagen_4].map((imagen, index) => {
+                  {[
+                    ordenSeleccionada.imagen_1, 
+                    ordenSeleccionada.imagen_2, 
+                    ordenSeleccionada.imagen_3, 
+                    ordenSeleccionada.imagen_4,
+                    ordenSeleccionada.imagen_5,
+                    ordenSeleccionada.imagen_6,
+                    ordenSeleccionada.imagen_7,
+                    ordenSeleccionada.imagen_8,
+                    ordenSeleccionada.imagen_9,
+                    ordenSeleccionada.imagen_10
+                  ].map((imagen, index) => {
                     const imageUrl = getFileUrl(imagen);
                     return imageUrl ? (
                       <div key={index} className="col-md-6 mb-2">
@@ -1032,7 +1129,18 @@ const Ordenes = () => {
                       </div>
                     ) : null;
                   })}
-                  {[ordenSeleccionada.imagen_1, ordenSeleccionada.imagen_2, ordenSeleccionada.imagen_3, ordenSeleccionada.imagen_4].every(img => !img || img === 'sin_imagen.jpg') && (
+                  {[
+                    ordenSeleccionada.imagen_1, 
+                    ordenSeleccionada.imagen_2, 
+                    ordenSeleccionada.imagen_3, 
+                    ordenSeleccionada.imagen_4,
+                    ordenSeleccionada.imagen_5,
+                    ordenSeleccionada.imagen_6,
+                    ordenSeleccionada.imagen_7,
+                    ordenSeleccionada.imagen_8,
+                    ordenSeleccionada.imagen_9,
+                    ordenSeleccionada.imagen_10
+                  ].every(img => !img || img === 'sin_imagen.jpg') && (
                     <div className="col-12">
                       <p className="text-muted">No hay imágenes registradas</p>
                     </div>
