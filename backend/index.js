@@ -42,7 +42,7 @@ const upload = cloudinaryConfigured() ? cloudinaryUpload : multer({
   storage,
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB máximo (límite de Cloudinary para videos)
-    files: 5 // Máximo 5 archivos por request
+    files: 11 // Máximo 11 archivos por request (10 imágenes + 1 video)
   },
   onError: (err, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
@@ -1038,7 +1038,7 @@ app.post('/api/ordenes', upload.fields([
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
       return res.status(413).json({ 
-        message: 'Demasiados archivos. Máximo 5 archivos por orden' 
+        message: 'Demasiados archivos. Máximo 11 archivos por orden (10 imágenes + 1 video)' 
       });
     }
     if (err.code === 'LIMIT_UNEXPECTED_FILE') {

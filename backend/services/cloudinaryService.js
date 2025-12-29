@@ -24,7 +24,7 @@ const upload = multer({
   storage: storage,
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB máximo (límite de Cloudinary para videos)
-    files: 5 // Máximo 5 archivos por request
+    files: 11 // Máximo 11 archivos por request (10 imágenes + 1 video)
   },
   fileFilter: (req, file, cb) => {
     // Validar tipos de archivo
