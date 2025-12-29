@@ -11,7 +11,14 @@ const OrdenPublica = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    cargarOrden();
+    if (token) {
+      console.log('🔍 Token recibido:', token);
+      cargarOrden();
+    } else {
+      console.error('❌ No se recibió token');
+      setError('Token no válido');
+      setLoading(false);
+    }
   }, [token]);
 
   const cargarOrden = async () => {
@@ -19,7 +26,10 @@ const OrdenPublica = () => {
       setLoading(true);
       setError(null);
       
+      console.log('📡 Cargando orden con token:', token);
       const response = await axios.get(`/api/orden/publica/${token}`);
+      
+      console.log('✅ Respuesta recibida:', response.data);
       
       if (response.data.encontrado) {
         setOrden(response.data.orden);
@@ -28,8 +38,9 @@ const OrdenPublica = () => {
         setError(response.data.mensaje || 'Orden no encontrada');
       }
     } catch (error) {
-      console.error('Error cargando orden:', error);
-      setError('Error al cargar la orden. Verifica que el enlace sea correcto.');
+      console.error('❌ Error cargando orden:', error);
+      console.error('❌ Detalles del error:', error.response?.data || error.message);
+      setError(error.response?.data?.mensaje || 'Error al cargar la orden. Verifica que el enlace sea correcto.');
     } finally {
       setLoading(false);
     }
@@ -158,8 +169,20 @@ const OrdenPublica = () => {
     );
   }
 
-  if (!orden) {
-    return null;
+  if (!orden && !loading && !error) {
+    return (
+      <div className="container-fluid mt-4">
+        <div className="row justify-content-center">
+          <div className="col-lg-8">
+            <div className="card shadow">
+              <div className="card-body text-center py-5">
+                <p className="mb-0">No se pudo cargar la información de la orden.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -307,7 +330,7 @@ const OrdenPublica = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .timeline {
           position: relative;
           padding-left: 30px;
