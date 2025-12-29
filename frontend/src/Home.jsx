@@ -131,7 +131,6 @@ function Home({ usuario, onLogout }) {
           <button onClick={() => navigate('/home')} className="nav-link">🏠 Inicio</button>
           <button onClick={() => navigate('/dashboard')} className="nav-link">📊 Dashboard</button>
           <button onClick={() => navigate('/reportes')} className="nav-link">📄 Reportes</button>
-          <button onClick={() => navigate('/tracker')} className="nav-link">🔍 Tracker</button>
           <button onClick={() => navigate('/clientes')} className="nav-link">👥 Clientes</button>
           <button onClick={() => navigate('/vehiculos')} className="nav-link">🚗 Vehículos</button>
           <button onClick={() => navigate('/servicios')} className="nav-link">🔧 Servicios</button>
@@ -400,7 +399,6 @@ function Home({ usuario, onLogout }) {
           <button onClick={() => goTo('/home')} className="nav-link">🏠 Inicio</button>
           <button onClick={() => goTo('/dashboard')} className="nav-link">📊 Dashboard</button>
           <button onClick={() => goTo('/reportes')} className="nav-link">📄 Reportes</button>
-          <button onClick={() => goTo('/tracker')} className="nav-link">🔍 Tracker</button>
           <button onClick={() => goTo('/clientes')} className="nav-link">👥 Clientes</button>
           <button onClick={() => goTo('/vehiculos')} className="nav-link">🚗 Vehículos</button>
           <button onClick={() => goTo('/servicios')} className="nav-link">🔧 Servicios</button>
@@ -559,39 +557,6 @@ function Home({ usuario, onLogout }) {
                     style={{ fontSize: '16px', padding: '14px' }}
                   >
                     📄 Generar Reportes
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="col-md-4">
-              <div className="card-tecno">
-                <div className="card-tecno-header">
-                  🔍 Tracker Público
-                </div>
-                <div className="card-tecno-body">
-                  <p style={{ color: 'var(--tecno-gray-dark)', marginBottom: '20px' }}>
-                    Consulta el estado de órdenes sin login:
-                  </p>
-                  <ul style={{ 
-                    listStyle: 'none', 
-                    padding: 0, 
-                    textAlign: 'left',
-                    marginBottom: '24px'
-                  }}>
-                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>📞 Búsqueda por teléfono</li>
-                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>🔢 Búsqueda por número de orden</li>
-                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>🚗 Búsqueda por placa del vehículo</li>
-                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>📋 Historial de estados</li>
-                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>⏰ Timeline de progreso</li>
-                    <li style={{ marginBottom: '8px', color: 'var(--tecno-gray-dark)' }}>🌐 Acceso público</li>
-                  </ul>
-                  <button
-                    className="btn-tecno-outline w-100"
-                    onClick={() => navigate('/tracker')}
-                    style={{ fontSize: '16px', padding: '14px' }}
-                  >
-                    🔍 Consultar Orden
                   </button>
                 </div>
               </div>

@@ -924,6 +924,11 @@ const Ordenes = () => {
                       borderColor: 'var(--tecno-gray-light)',
                       color: 'var(--tecno-black)',
                       fontWeight: '600'
+                    }}>Enlace Público</th>
+                    <th style={{ 
+                      borderColor: 'var(--tecno-gray-light)',
+                      color: 'var(--tecno-black)',
+                      fontWeight: '600'
                     }}>Acciones</th>
                   </tr>
                 </thead>
@@ -992,6 +997,37 @@ const Ordenes = () => {
                           🖨️
                         </button>
                       </div>
+                    </td>
+                    <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
+                      {orden.token_publico ? (
+                        <div>
+                          <button
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => {
+                              const url = `${window.location.origin}/orden/${orden.token_publico}`;
+                              navigator.clipboard.writeText(url).then(() => {
+                                alert('✅ Enlace copiado al portapapeles!\n\n' + url);
+                              }).catch(() => {
+                                // Fallback si no se puede copiar
+                                prompt('Copia este enlace:', url);
+                              });
+                            }}
+                            title="Copiar enlace público"
+                            style={{
+                              fontSize: '11px',
+                              padding: '2px 6px'
+                            }}
+                          >
+                            🔗 Copiar
+                          </button>
+                          <br />
+                          <small className="text-muted" style={{ fontSize: '10px' }}>
+                            {orden.token_publico.substring(0, 8)}...
+                          </small>
+                        </div>
+                      ) : (
+                        <span className="text-muted" style={{ fontSize: '11px' }}>No disponible</span>
+                      )}
                     </td>
                     <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
                       <div className="btn-group" role="group">

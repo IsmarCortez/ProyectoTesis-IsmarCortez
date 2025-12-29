@@ -878,6 +878,7 @@ app.get('/api/ordenes', async (req, res) => {
           o.imagen_9,
           o.imagen_10,
           o.video,
+          o.token_publico,
           o.observaciones_orden,
           o.estado_vehiculo,
           c.dpi_cliente,
@@ -1097,9 +1098,13 @@ app.post('/api/ordenes', upload.fields([
     // Validar unidad de odómetro (valor por defecto: 'km')
     const unidadOdometro = unidad_odometro || 'km';
 
+    // Generar token público único para la orden
+    const tokenPublico = crypto.randomUUID();
+
     // Debug: verificar si es Consumidor Final
     console.log('🔍 Creando orden - fk_id_cliente:', fk_id_cliente);
     console.log('🔍 Odómetro procesado:', odometroValue, unidadOdometro);
+    console.log('🔗 Token público generado:', tokenPublico);
     
     // Convertir valores vacíos o 'null' a null real para MySQL
     const fk_id_cliente_final = (fk_id_cliente === 'null' || fk_id_cliente === null || fk_id_cliente === '' || fk_id_cliente === undefined) ? null : fk_id_cliente;
@@ -1112,12 +1117,12 @@ app.post('/api/ordenes', upload.fields([
       `INSERT INTO tbl_ordenes (
         fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
         nivel_combustible_orden, odometro_auto_cliente_orden, unidad_odometro, fk_id_estado_orden,
-        observaciones_orden, estado_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, imagen_5, imagen_6, imagen_7, imagen_8, imagen_9, imagen_10, video
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        observaciones_orden, estado_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, imagen_5, imagen_6, imagen_7, imagen_8, imagen_9, imagen_10, video, token_publico
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         fk_id_cliente_final, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
         nivel_combustible_orden, odometroValue, unidadOdometro, fk_id_estado_orden,
-        observaciones_orden, estadoVehiculo, imagen_1, imagen_2, imagen_3, imagen_4, imagen_5, imagen_6, imagen_7, imagen_8, imagen_9, imagen_10, video
+        observaciones_orden, estadoVehiculo, imagen_1, imagen_2, imagen_3, imagen_4, imagen_5, imagen_6, imagen_7, imagen_8, imagen_9, imagen_10, video, tokenPublico
       ]
     );
     
@@ -2065,10 +2070,137 @@ app.get('/api/reportes/filtros', async (req, res) => {
   }
 });
 
-// ==================== ENDPOINTS DEL TRACKER PÚBLICO ====================
+// ==================== ENDPOINT PÚBLICO DE ORDEN POR TOKEN ====================
 
-// Endpoint público para buscar orden por teléfono
-app.get('/api/tracker/telefono/:telefono', async (req, res) => {
+// Endpoint público para obtener orden completa por token único
+app.get('/api/orden/publica/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    
+    console.log(`🔍 Búsqueda pública por token: ${token}`);
+    
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Obtener información completa de la orden
+    const [ordenes] = await connection.execute(`
+      SELECT 
+        o.pk_id_orden,
+        o.fecha_ingreso_orden,
+        o.token_publico,
+        CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) as cliente,
+        c.telefono_cliente,
+        c.NIT,
+        CONCAT(v.marca_vehiculo, ' ', v.modelo_vehiculo) as vehiculo,
+        v.placa_vehiculo,
+        v.anio_vehiculo,
+        s.servicio,
+        e.estado_orden,
+        e.descripcion_estado,
+        o.comentario_cliente_orden,
+        o.observaciones_orden,
+        o.nivel_combustible_orden,
+        o.odometro_auto_cliente_orden,
+        o.unidad_odometro,
+        o.estado_vehiculo,
+        o.imagen_1,
+        o.imagen_2,
+        o.imagen_3,
+        o.imagen_4,
+        o.imagen_5,
+        o.imagen_6,
+        o.imagen_7,
+        o.imagen_8,
+        o.imagen_9,
+        o.imagen_10,
+        o.video
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_clientes c ON o.fk_id_cliente = c.PK_id_cliente
+      LEFT JOIN tbl_vehiculos v ON o.fk_id_vehiculo = v.pk_id_vehiculo
+      LEFT JOIN tbl_servicios s ON o.fk_id_servicio = s.pk_id_servicio
+      LEFT JOIN tbl_orden_estado e ON o.fk_id_estado_orden = e.pk_id_estado
+      WHERE o.token_publico = ?
+    `, [token]);
+    
+    if (ordenes.length === 0) {
+      await connection.end();
+      return res.status(404).json({ 
+        encontrado: false, 
+        mensaje: 'Orden no encontrada o token inválido.' 
+      });
+    }
+    
+    const orden = ordenes[0];
+    
+    // Obtener historial de estados
+    const [historialReal] = await connection.execute(`
+      SELECT 
+        h.pk_id_historial,
+        h.fecha_cambio,
+        h.comentario_cambio,
+        ea.estado_orden AS estado_anterior,
+        en.estado_orden AS estado_nuevo,
+        en.descripcion_estado AS descripcion_estado,
+        u.nombre_usuario AS usuario_cambio
+      FROM tbl_historial_estados h
+      LEFT JOIN tbl_orden_estado ea ON h.fk_id_estado_anterior = ea.pk_id_estado
+      LEFT JOIN tbl_orden_estado en ON h.fk_id_estado_nuevo = en.pk_id_estado
+      LEFT JOIN tbl_usuarios u ON h.fk_id_usuario_cambio = u.pk_id_usuarios
+      WHERE h.fk_id_orden = ?
+      ORDER BY h.fecha_cambio ASC
+    `, [orden.pk_id_orden]);
+    
+    // Procesar historial
+    const historial = [];
+    
+    if (historialReal.length === 0) {
+      // No hay historial registrado, crear estado inicial
+      historial.push({
+        estado: orden.estado_orden,
+        descripcion: orden.descripcion_estado || 'Estado inicial de la orden',
+        fecha: orden.fecha_ingreso_orden,
+        activo: true,
+        usuario: 'Sistema',
+        comentario: 'Orden creada inicialmente'
+      });
+    } else {
+      // Procesar historial real
+      for (const registro of historialReal) {
+        historial.push({
+          estado: registro.estado_nuevo,
+          descripcion: registro.descripcion_estado || '',
+          fecha: registro.fecha_cambio,
+          activo: false,
+          usuario: registro.usuario_cambio || 'Sistema',
+          comentario: registro.comentario_cambio || ''
+        });
+      }
+      
+      // Marcar el último estado como activo
+      if (historial.length > 0) {
+        historial[historial.length - 1].activo = true;
+      }
+    }
+    
+    await connection.end();
+    
+    res.json({ 
+      encontrado: true,
+      orden: orden,
+      historial: historial
+    });
+    
+  } catch (error) {
+    console.error('Error en búsqueda por token:', error);
+    res.status(500).json({ 
+      encontrado: false, 
+      mensaje: 'Error interno del servidor.' 
+    });
+  }
+});
+
+// ==================== ENDPOINTS DEL TRACKER PÚBLICO (ELIMINADOS - REEMPLAZADOS POR TOKEN ÚNICO) ====================
+// Los siguientes endpoints han sido eliminados. Ahora se usa el sistema de tokens únicos por orden.
+// Endpoint actual: GET /api/orden/publica/:token
   try {
     const { telefono } = req.params;
     

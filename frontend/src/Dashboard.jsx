@@ -353,9 +353,6 @@ const Dashboard = () => {
                 <button className="btn-tecno-secondary" onClick={() => window.open('/reportes', '_blank')}>
                   📊 Generar Reportes
                 </button>
-                <button className="btn-tecno-outline" onClick={() => window.open('/tracker', '_blank')}>
-                  🔍 Tracker Público
-                </button>
                 <button className="btn-tecno-outline" onClick={() => window.history.back()}>
                   ← Volver al Menú
                 </button>
