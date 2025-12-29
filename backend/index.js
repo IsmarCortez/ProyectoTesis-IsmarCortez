@@ -2246,18 +2246,54 @@ async function initializeServices() {
 if (process.env.NODE_ENV === 'production') {
   console.log('🌐 Configurando para servir frontend en producción...');
   
-  // Servir archivos estáticos del frontend
-  app.use(express.static(path.join(__dirname, '../frontend/build')));
+  const frontendBuildPath = path.join(__dirname, '../frontend/build');
+  console.log('📁 Ruta del build del frontend:', frontendBuildPath);
   
-  // Manejar rutas de React (SPA) - debe ir al final
-  app.get('*', (req, res) => {
+  // Verificar que el directorio existe
+  const fs = require('fs');
+  if (!fs.existsSync(frontendBuildPath)) {
+    console.error('❌ ERROR: El directorio del build no existe:', frontendBuildPath);
+    console.error('⚠️  Asegúrate de ejecutar "npm run build" en el directorio frontend antes de desplegar');
+  } else {
+    console.log('✅ Directorio del build encontrado');
+  }
+  
+  // Servir archivos estáticos del frontend (JS, CSS, imágenes, etc.)
+  // Esto debe ir ANTES del catch-all para que los archivos estáticos se sirvan primero
+  app.use(express.static(frontendBuildPath, {
+    // No servir index.html automáticamente para rutas raíz
+    index: false,
+    // Configurar headers para archivos estáticos
+    setHeaders: (res, filePath) => {
+      // Cachear archivos estáticos en producción
+      if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+      }
+    }
+  }));
+  
+  // Manejar rutas de React (SPA) - debe ir al final, después de todos los endpoints y archivos estáticos
+  app.get('*', (req, res, next) => {
     // Si es una ruta de API, no servir el frontend
     if (req.path.startsWith('/api/')) {
       return res.status(404).json({ message: 'API endpoint not found' });
     }
     
-    // Para todas las demás rutas, servir el frontend
-    res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+    // Si tiene extensión de archivo (JS, CSS, imágenes, etc.), ya debería haber sido servido por express.static
+    // Si llegamos aquí y tiene extensión, significa que el archivo no existe
+    const ext = path.extname(req.path);
+    if (ext && ext !== '.html') {
+      return res.status(404).send('File not found');
+    }
+    
+    // Para todas las demás rutas (SPA routes como /orden/:token), servir el index.html
+    // Esto permite que React Router maneje el routing del lado del cliente
+    res.sendFile(path.join(frontendBuildPath, 'index.html'), (err) => {
+      if (err) {
+        console.error('Error sirviendo index.html:', err);
+        res.status(500).send('Error loading application');
+      }
+    });
   });
 }
 
