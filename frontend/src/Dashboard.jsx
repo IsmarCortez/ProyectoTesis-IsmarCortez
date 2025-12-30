@@ -355,7 +355,7 @@ const Dashboard = () => {
                 <button className="btn-tecno-secondary" onClick={() => navigate('/reportes')}>
                   📊 Generar Reportes
                 </button>
-                <button className="btn-tecno-outline" onClick={() => window.history.back()}>
+                <button className="btn-tecno-outline" onClick={() => navigate('/home')}>
                   ← Volver al Menú
                 </button>
               </div>
