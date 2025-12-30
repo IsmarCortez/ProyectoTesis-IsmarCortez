@@ -79,8 +79,8 @@ function Usuarios() {
     e.preventDefault();
     
     if (!formData.nombre_usuario || !formData.email_usuario || 
-        (!isEditing && !formData.contrasenia_usuario) || !formData.pregunta_seguridad_usuario) {
-      setError('Todos los campos son requeridos');
+        (!isEditing && !formData.contrasenia_usuario)) {
+      setError('Todos los campos requeridos deben ser completados');
       return;
     }
 
@@ -95,8 +95,10 @@ function Usuarios() {
       formDataToSend.append('email_usuario', formData.email_usuario);
       if (!isEditing) {
         formDataToSend.append('contrasenia_usuario', formData.contrasenia_usuario);
+        // Enviar pregunta de seguridad al crear nuevo usuario (puede estar vacía, el backend establecerá un valor por defecto)
+        formDataToSend.append('pregunta_seguridad_usuario', formData.pregunta_seguridad_usuario || '');
       }
-      formDataToSend.append('pregunta_seguridad_usuario', formData.pregunta_seguridad_usuario);
+      // Al editar, no se envía pregunta de seguridad (se mantiene la existente en BD)
       
       if (fotoFile) {
         formDataToSend.append('foto', fotoFile);
@@ -124,7 +126,7 @@ function Usuarios() {
       nombre_usuario: usuario.nombre_usuario,
       email_usuario: usuario.email_usuario,
       contrasenia_usuario: '',
-      pregunta_seguridad_usuario: usuario.pregunta_seguridad_usuario
+      pregunta_seguridad_usuario: '' // No mostrar la pregunta de seguridad por seguridad
     });
     setEditingId(usuario.pk_id_usuarios);
     setIsEditing(true);
@@ -328,18 +330,12 @@ function Usuarios() {
                       </div>
                     )}
                   </div>
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label">Pregunta de Seguridad *</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="pregunta_seguridad_usuario"
-                      value={formData.pregunta_seguridad_usuario}
-                      onChange={handleInputChange}
-                      placeholder="Ej: Nombre de tu mascota"
-                      required
-                    />
-                  </div>
+                  {/* Campo de pregunta de seguridad oculto por seguridad */}
+                  <input
+                    type="hidden"
+                    name="pregunta_seguridad_usuario"
+                    value={formData.pregunta_seguridad_usuario}
+                  />
                 </div>
 
                 <div className="row">
@@ -414,11 +410,6 @@ function Usuarios() {
                           borderColor: 'var(--tecno-gray-light)',
                           color: 'var(--tecno-black)',
                           fontWeight: '600'
-                        }}>Pregunta de Seguridad</th>
-                        <th style={{ 
-                          borderColor: 'var(--tecno-gray-light)',
-                          color: 'var(--tecno-black)',
-                          fontWeight: '600'
                         }}>Acciones</th>
                       </tr>
                     </thead>
@@ -445,7 +436,6 @@ function Usuarios() {
                           </td>
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{usuario.nombre_usuario}</td>
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{usuario.email_usuario}</td>
-                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{usuario.pregunta_seguridad_usuario}</td>
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
                             <div className="btn-group" role="group">
                               <button

@@ -1529,9 +1529,14 @@ app.get('/api/usuario/:email', async (req, res) => {
 app.post('/api/usuarios', upload.single('foto'), async (req, res) => {
   const { nombre_usuario, email_usuario, contrasenia_usuario, pregunta_seguridad_usuario } = req.body;
   
-  if (!nombre_usuario || !email_usuario || !contrasenia_usuario || !pregunta_seguridad_usuario) {
-    return res.status(400).json({ message: 'Todos los campos son requeridos.' });
+  if (!nombre_usuario || !email_usuario || !contrasenia_usuario) {
+    return res.status(400).json({ message: 'Nombre, email y contraseña son requeridos.' });
   }
+  
+  // Establecer valor por defecto para pregunta de seguridad si no se proporciona
+  const preguntaSeguridad = pregunta_seguridad_usuario && pregunta_seguridad_usuario.trim() !== '' 
+    ? pregunta_seguridad_usuario 
+    : 'Sin pregunta de seguridad';
 
   // Validar formato de email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1575,7 +1580,7 @@ app.post('/api/usuarios', upload.single('foto'), async (req, res) => {
     const [result] = await connection.execute(
       `INSERT INTO tbl_usuarios (nombre_usuario, email_usuario, contrasenia_usuario, foto_perfil_usuario, pregunta_seguridad_usuario)
        VALUES (?, ?, ?, ?, ?)`,
-      [nombre_usuario, email_usuario, hashPassword, foto_perfil_usuario, pregunta_seguridad_usuario]
+      [nombre_usuario, email_usuario, hashPassword, foto_perfil_usuario, preguntaSeguridad]
     );
     
     await connection.end();
@@ -1595,8 +1600,8 @@ app.put('/api/usuarios/:id', upload.single('foto'), async (req, res) => {
   const { id } = req.params;
   const { nombre_usuario, email_usuario, pregunta_seguridad_usuario } = req.body;
   
-  if (!nombre_usuario || !email_usuario || !pregunta_seguridad_usuario) {
-    return res.status(400).json({ message: 'Nombre, email y pregunta de seguridad son requeridos.' });
+  if (!nombre_usuario || !email_usuario) {
+    return res.status(400).json({ message: 'Nombre y email son requeridos.' });
   }
 
   // Validar formato de email
@@ -1630,10 +1635,17 @@ app.put('/api/usuarios/:id', upload.single('foto'), async (req, res) => {
       return res.status(409).json({ message: 'El email ya está registrado por otro usuario.' });
     }
 
-    // Procesar foto si se subió usando Cloudinary
-    let query = 'UPDATE tbl_usuarios SET nombre_usuario = ?, email_usuario = ?, pregunta_seguridad_usuario = ?';
-    let params = [nombre_usuario, email_usuario, pregunta_seguridad_usuario];
+    // Construir query dinámicamente
+    let query = 'UPDATE tbl_usuarios SET nombre_usuario = ?, email_usuario = ?';
+    let params = [nombre_usuario, email_usuario];
     
+    // Solo actualizar pregunta de seguridad si se proporciona un valor nuevo
+    if (pregunta_seguridad_usuario && pregunta_seguridad_usuario.trim() !== '') {
+      query += ', pregunta_seguridad_usuario = ?';
+      params.push(pregunta_seguridad_usuario);
+    }
+    
+    // Procesar foto si se subió usando Cloudinary
     if (req.file) {
       let fotoUrl = '';
       if (cloudinaryConfigured()) {
