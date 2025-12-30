@@ -36,6 +36,13 @@ axios.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
+    // Para FormData, axios maneja automáticamente el Content-Type
+    // No establecer Content-Type manualmente para FormData
+    if (config.data instanceof FormData) {
+      // Axios establecerá automáticamente el Content-Type correcto con el boundary
+      delete config.headers['Content-Type'];
+    }
+    
     return config;
   },
   (error) => {

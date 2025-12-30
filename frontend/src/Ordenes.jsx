@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ImprimirOrden from './ImprimirOrden';
 import { getFileUrl } from './config/cloudinary';
+import axios from './config/axios';
 
 const Ordenes = () => {
   const navigate = useNavigate();
@@ -71,11 +72,8 @@ const Ordenes = () => {
 
   const cargarOrdenes = async () => {
     try {
-      const response = await fetch('/api/ordenes');
-      if (response.ok) {
-        const data = await response.json();
-        setOrdenes(data);
-      }
+      const response = await axios.get('/api/ordenes');
+      setOrdenes(response.data);
     } catch (error) {
       console.error('Error al cargar órdenes:', error);
     }
@@ -83,11 +81,8 @@ const Ordenes = () => {
 
   const cargarServicios = async () => {
     try {
-      const response = await fetch('/api/servicios');
-      if (response.ok) {
-        const data = await response.json();
-        setServicios(data);
-      }
+      const response = await axios.get('/api/servicios');
+      setServicios(response.data);
     } catch (error) {
       console.error('Error al cargar servicios:', error);
     }
@@ -95,11 +90,8 @@ const Ordenes = () => {
 
   const cargarEstados = async () => {
     try {
-      const response = await fetch('/api/estados');
-      if (response.ok) {
-        const data = await response.json();
-        setEstados(data);
-      }
+      const response = await axios.get('/api/estados');
+      setEstados(response.data);
     } catch (error) {
       console.error('Error al cargar estados:', error);
     }
@@ -118,15 +110,9 @@ const Ordenes = () => {
     }
     
     try {
-      const response = await fetch(`/api/clientes/buscar/${termino}`);
-      if (response.ok) {
-        const clientes = await response.json();
-        setClientesSugeridos(clientes);
-        setMostrarSugerencias(clientes.length > 0);
-      } else {
-        setClientesSugeridos([]);
-        setMostrarSugerencias(false);
-      }
+      const response = await axios.get(`/api/clientes/buscar/${termino}`);
+      setClientesSugeridos(response.data);
+      setMostrarSugerencias(response.data.length > 0);
     } catch (error) {
       console.error('Error buscando clientes:', error);
       setClientesSugeridos([]);
@@ -179,15 +165,9 @@ const Ordenes = () => {
     }
     
     try {
-      const response = await fetch(`/api/ordenes/buscar-cliente-nit/${nit}`);
-      if (response.ok) {
-        const cliente = await response.json();
-        setClienteEncontrado(cliente);
-        setForm(prev => ({ ...prev, fk_id_cliente: cliente.PK_id_cliente }));
-      } else {
-        setClienteEncontrado(null);
-        setForm(prev => ({ ...prev, fk_id_cliente: '' }));
-      }
+      const response = await axios.get(`/api/ordenes/buscar-cliente-nit/${nit}`);
+      setClienteEncontrado(response.data);
+      setForm(prev => ({ ...prev, fk_id_cliente: response.data.PK_id_cliente }));
     } catch (error) {
       console.error('Error al buscar cliente:', error);
       setClienteEncontrado(null);
@@ -202,18 +182,13 @@ const Ordenes = () => {
     }
     
     try {
-      const response = await fetch(`/api/ordenes/buscar-vehiculo/${placa}`);
-      if (response.ok) {
-        const vehiculo = await response.json();
-        setVehiculoEncontrado(vehiculo);
-        setForm(prev => ({ ...prev, fk_id_vehiculo: vehiculo.pk_id_vehiculo }));
-      } else {
-        setVehiculoEncontrado(null);
-        setForm(prev => ({ ...prev, fk_id_vehiculo: '' }));
-      }
+      const response = await axios.get(`/api/ordenes/buscar-vehiculo/${placa}`);
+      setVehiculoEncontrado(response.data);
+      setForm(prev => ({ ...prev, fk_id_vehiculo: response.data.pk_id_vehiculo }));
     } catch (error) {
       console.error('Error al buscar vehículo:', error);
       setVehiculoEncontrado(null);
+      setForm(prev => ({ ...prev, fk_id_vehiculo: '' }));
     }
   };
 
@@ -321,25 +296,19 @@ const Ordenes = () => {
         ? `/api/ordenes/${ordenId}`
         : '/api/ordenes';
       
-      const method = editando ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        body: formData
-      });
-
-      if (response.ok) {
-        const message = editando ? 'Orden actualizada correctamente' : 'Orden registrada exitosamente';
-        alert(message);
-        limpiarFormulario();
-        cargarOrdenes();
+      if (editando) {
+        await axios.put(url, formData);
       } else {
-        const error = await response.json();
-        alert(error.message || 'Error al procesar la orden');
+        await axios.post(url, formData);
       }
+
+      const message = editando ? 'Orden actualizada correctamente' : 'Orden registrada exitosamente';
+      alert(message);
+      limpiarFormulario();
+      cargarOrdenes();
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al procesar la orden');
+      alert(error.response?.data?.message || 'Error al procesar la orden');
     } finally {
       // Desactivar estado de procesamiento
       setProcesandoOrden(false);
@@ -406,20 +375,12 @@ const Ordenes = () => {
     if (!window.confirm('¿Está seguro de que desea eliminar esta orden?')) return;
     
     try {
-      const response = await fetch(`/api/ordenes/${id}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.ok) {
-        alert('Orden eliminada correctamente');
-        cargarOrdenes();
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Error al eliminar la orden');
-      }
+      await axios.delete(`/api/ordenes/${id}`);
+      alert('Orden eliminada correctamente');
+      cargarOrdenes();
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al eliminar la orden');
+      alert(error.response?.data?.message || 'Error al eliminar la orden');
     }
   };
 
