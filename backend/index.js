@@ -150,9 +150,9 @@ const requireAuth = (req, res, next) => {
   }
   
   if (isPublicRoute) {
-    // Log para debug del health check
-    if (req.path === '/api/health') {
-      console.log('✅ Health check - Ruta pública detectada, permitiendo acceso sin autenticación');
+    // Log para debug de rutas públicas
+    if (req.path === '/api/login' || req.path === '/api/health') {
+      console.log(`✅ Ruta pública detectada: ${req.path} - permitiendo acceso sin autenticación`);
     }
     return next(); // Continuar sin autenticación
   }
@@ -161,8 +161,10 @@ const requireAuth = (req, res, next) => {
   authenticateToken(req, res, next);
 };
 
-// ==================== HEALTH CHECK ENDPOINT (ANTES DEL MIDDLEWARE) ====================
-// Endpoint de health check para Railway - debe estar antes del middleware de autenticación
+// ==================== ENDPOINTS PÚBLICOS (ANTES DEL MIDDLEWARE) ====================
+// Estos endpoints NO requieren autenticación y deben estar ANTES del middleware
+
+// Health check para Railway
 app.get('/api/health', (req, res) => {
   console.log('✅ Health check recibido desde:', req.get('host') || req.ip);
   console.log('🔍 User-Agent:', req.get('user-agent'));
@@ -176,9 +178,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Aplicar middleware de autenticación a todas las rutas /api/* excepto las públicas
-app.use('/api', requireAuth);
-
+// Login
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -230,7 +230,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// ==================== ENDPOINTS DE RECUPERACIÓN DE CONTRASEÑA ====================
+// ==================== ENDPOINTS DE RECUPERACIÓN DE CONTRASEÑA (PÚBLICOS) ====================
 
 // Endpoint para solicitar recuperación de contraseña
 app.post('/api/auth/forgot-password', async (req, res) => {
@@ -2143,7 +2143,13 @@ app.get('/api/reportes/filtros', async (req, res) => {
   }
 });
 
+// ==================== APLICAR MIDDLEWARE DE AUTENTICACIÓN ====================
+// Todos los endpoints definidos DESPUÉS de esta línea requerirán autenticación
+app.use('/api', requireAuth);
+
 // ==================== ENDPOINT PÚBLICO DE ORDEN POR TOKEN ====================
+// NOTA: Este endpoint debe estar DESPUÉS del middleware pero se maneja como público
+// dentro del middleware mediante la lista de rutas públicas
 
 // Endpoint público para obtener orden completa por token único
 app.get('/api/orden/publica/:token', async (req, res) => {
