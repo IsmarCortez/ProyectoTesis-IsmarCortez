@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from './config/axios';
 
 const ImprimirOrden = ({ orden, onClose }) => {
   const [descargando, setDescargando] = useState(false);
@@ -23,15 +24,13 @@ const ImprimirOrden = ({ orden, onClose }) => {
       setDescargando(true);
       console.log(`🖨️ Descargando PDF para orden #${orden.pk_id_orden}...`);
       
-      // Llamar al endpoint del backend para generar el PDF
-      const response = await fetch(`/api/ordenes/${orden.pk_id_orden}/pdf`);
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
+      // Llamar al endpoint del backend para generar el PDF usando axios
+      const response = await axios.get(`/api/ordenes/${orden.pk_id_orden}/pdf`, {
+        responseType: 'blob' // Importante: indicar que la respuesta es un blob
+      });
       
       // Obtener el PDF como blob
-      const pdfBlob = await response.blob();
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
       
       // Crear URL temporal para el blob
       const pdfUrl = window.URL.createObjectURL(pdfBlob);
@@ -53,7 +52,8 @@ const ImprimirOrden = ({ orden, onClose }) => {
       
     } catch (error) {
       console.error('❌ Error descargando PDF:', error);
-      alert('Error al generar el PDF. Por favor, intente nuevamente.');
+      const errorMessage = error.response?.data?.message || error.message || 'Error desconocido';
+      alert(`Error al generar el PDF: ${errorMessage}. Por favor, intente nuevamente.`);
     } finally {
       setDescargando(false);
     }

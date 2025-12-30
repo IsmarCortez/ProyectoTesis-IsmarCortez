@@ -1455,9 +1455,15 @@ app.get('/api/ordenes/:id/pdf', async (req, res) => {
     
   } catch (error) {
     console.error('❌ Error generando PDF:', error);
+    console.error('❌ Stack trace:', error.stack);
+    
+    // Si el error tiene un mensaje específico, incluirlo
+    const errorMessage = error.message || 'Error al generar el PDF de la orden.';
+    
     res.status(500).json({ 
       success: false, 
-      message: 'Error al generar el PDF de la orden.' 
+      message: errorMessage,
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

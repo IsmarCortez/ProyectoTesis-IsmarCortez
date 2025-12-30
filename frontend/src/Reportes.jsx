@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import axios from './config/axios';
 
 const Reportes = () => {
+  const navigate = useNavigate();
   const [tiposReportes, setTiposReportes] = useState([]);
   const [filtros, setFiltros] = useState({});
   const [opcionesFiltros, setOpcionesFiltros] = useState({ estados: [], servicios: [] });
@@ -16,10 +18,7 @@ const Reportes = () => {
 
   const cargarTiposReportes = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/reportes/tipos', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get('/api/reportes/tipos');
       setTiposReportes(response.data);
     } catch (error) {
       console.error('Error cargando tipos de reportes:', error);
@@ -29,10 +28,7 @@ const Reportes = () => {
 
   const cargarOpcionesFiltros = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/reportes/filtros', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get('/api/reportes/filtros');
       setOpcionesFiltros(response.data);
     } catch (error) {
       console.error('Error cargando opciones de filtros:', error);
@@ -49,7 +45,6 @@ const Reportes = () => {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams();
       
       // Agregar filtros a los parámetros
@@ -62,8 +57,7 @@ const Reportes = () => {
       const url = `/api/reportes/${formato}/${reporteSeleccionado}?${params.toString()}`;
       
       const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob'
+        responseType: 'blob' // Para manejar archivos binarios (PDF/Excel)
       });
 
       // Crear enlace de descarga
@@ -132,7 +126,7 @@ const Reportes = () => {
                   Genera reportes en PDF y Excel del taller mecánico
                 </p>
               </div>
-              <button className="btn-tecno-outline" onClick={() => window.history.back()}>
+              <button className="btn-tecno-outline" onClick={() => navigate('/dashboard')}>
                 ← Volver al Dashboard
               </button>
             </div>

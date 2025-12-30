@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   Chart as ChartJS,
@@ -28,6 +29,7 @@ ChartJS.register(
 );
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [estadisticas, setEstadisticas] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -350,7 +352,7 @@ const Dashboard = () => {
                 <button className="btn-tecno" onClick={cargarEstadisticas}>
                   🔄 Actualizar
                 </button>
-                <button className="btn-tecno-secondary" onClick={() => window.open('/reportes', '_blank')}>
+                <button className="btn-tecno-secondary" onClick={() => navigate('/reportes')}>
                   📊 Generar Reportes
                 </button>
                 <button className="btn-tecno-outline" onClick={() => window.history.back()}>
