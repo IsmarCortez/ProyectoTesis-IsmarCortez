@@ -1600,8 +1600,8 @@ app.put('/api/usuarios/:id', upload.single('foto'), async (req, res) => {
   const { id } = req.params;
   const { nombre_usuario, email_usuario, pregunta_seguridad_usuario } = req.body;
   
-  if (!nombre_usuario || !email_usuario) {
-    return res.status(400).json({ message: 'Nombre y email son requeridos.' });
+  if (!nombre_usuario || !email_usuario || !pregunta_seguridad_usuario) {
+    return res.status(400).json({ message: 'Nombre, email y pregunta de seguridad son requeridos.' });
   }
 
   // Validar formato de email
@@ -1636,14 +1636,8 @@ app.put('/api/usuarios/:id', upload.single('foto'), async (req, res) => {
     }
 
     // Construir query dinámicamente
-    let query = 'UPDATE tbl_usuarios SET nombre_usuario = ?, email_usuario = ?';
-    let params = [nombre_usuario, email_usuario];
-    
-    // Solo actualizar pregunta de seguridad si se proporciona un valor nuevo
-    if (pregunta_seguridad_usuario && pregunta_seguridad_usuario.trim() !== '') {
-      query += ', pregunta_seguridad_usuario = ?';
-      params.push(pregunta_seguridad_usuario);
-    }
+    let query = 'UPDATE tbl_usuarios SET nombre_usuario = ?, email_usuario = ?, pregunta_seguridad_usuario = ?';
+    let params = [nombre_usuario, email_usuario, pregunta_seguridad_usuario];
     
     // Procesar foto si se subió usando Cloudinary
     if (req.file) {

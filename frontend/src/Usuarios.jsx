@@ -79,7 +79,7 @@ function Usuarios() {
     e.preventDefault();
     
     if (!formData.nombre_usuario || !formData.email_usuario || 
-        (!isEditing && !formData.contrasenia_usuario)) {
+        (!isEditing && !formData.contrasenia_usuario) || !formData.pregunta_seguridad_usuario) {
       setError('Todos los campos requeridos deben ser completados');
       return;
     }
@@ -95,10 +95,9 @@ function Usuarios() {
       formDataToSend.append('email_usuario', formData.email_usuario);
       if (!isEditing) {
         formDataToSend.append('contrasenia_usuario', formData.contrasenia_usuario);
-        // Enviar pregunta de seguridad al crear nuevo usuario (puede estar vacía, el backend establecerá un valor por defecto)
-        formDataToSend.append('pregunta_seguridad_usuario', formData.pregunta_seguridad_usuario || '');
       }
-      // Al editar, no se envía pregunta de seguridad (se mantiene la existente en BD)
+      // Enviar pregunta de seguridad tanto al crear como al editar
+      formDataToSend.append('pregunta_seguridad_usuario', formData.pregunta_seguridad_usuario || '');
       
       if (fotoFile) {
         formDataToSend.append('foto', fotoFile);
@@ -126,7 +125,7 @@ function Usuarios() {
       nombre_usuario: usuario.nombre_usuario,
       email_usuario: usuario.email_usuario,
       contrasenia_usuario: '',
-      pregunta_seguridad_usuario: '' // No mostrar la pregunta de seguridad por seguridad
+      pregunta_seguridad_usuario: usuario.pregunta_seguridad_usuario || ''
     });
     setEditingId(usuario.pk_id_usuarios);
     setIsEditing(true);
@@ -330,12 +329,18 @@ function Usuarios() {
                       </div>
                     )}
                   </div>
-                  {/* Campo de pregunta de seguridad oculto por seguridad */}
-                  <input
-                    type="hidden"
-                    name="pregunta_seguridad_usuario"
-                    value={formData.pregunta_seguridad_usuario}
-                  />
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Pregunta de Seguridad *</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="pregunta_seguridad_usuario"
+                      value={formData.pregunta_seguridad_usuario}
+                      onChange={handleInputChange}
+                      placeholder="Ej: Nombre de tu mascota"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div className="row">
