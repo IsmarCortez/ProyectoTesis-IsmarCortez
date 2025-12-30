@@ -132,22 +132,49 @@ const publicRoutes = [
 // Middleware para aplicar autenticación solo a rutas protegidas
 const requireAuth = (req, res, next) => {
   // Verificar si la ruta es pública
-  const isPublicRoute = publicRoutes.some(route => {
-    // Para rutas con parámetros dinámicos, verificar si el path comienza con la ruta pública
+  let isPublicRoute = false;
+  
+  for (const route of publicRoutes) {
+    // Para rutas con parámetros dinámicos (que terminan en /)
     if (route.endsWith('/')) {
-      return req.path.startsWith(route);
+      if (req.path.startsWith(route)) {
+        isPublicRoute = true;
+        break;
+      }
+    } 
+    // Para rutas exactas
+    else if (req.path === route || req.path.startsWith(route + '/')) {
+      isPublicRoute = true;
+      break;
     }
-    // Para rutas exactas, verificar coincidencia exacta
-    return req.path === route || req.path.startsWith(route + '/');
-  });
+  }
   
   if (isPublicRoute) {
+    // Log para debug del health check
+    if (req.path === '/api/health') {
+      console.log('✅ Health check - Ruta pública detectada, permitiendo acceso sin autenticación');
+    }
     return next(); // Continuar sin autenticación
   }
   
   // Aplicar autenticación a rutas protegidas
   authenticateToken(req, res, next);
 };
+
+// ==================== HEALTH CHECK ENDPOINT (ANTES DEL MIDDLEWARE) ====================
+// Endpoint de health check para Railway - debe estar antes del middleware de autenticación
+app.get('/api/health', (req, res) => {
+  console.log('✅ Health check recibido desde:', req.get('host') || req.ip);
+  console.log('🔍 User-Agent:', req.get('user-agent'));
+  console.log('🔍 Puerto del servidor:', process.env.PORT || 8080);
+  
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    port: process.env.PORT || 8080,
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
 // Aplicar middleware de autenticación a todas las rutas /api/* excepto las públicas
 app.use('/api', requireAuth);
@@ -2257,20 +2284,8 @@ app.get('/api/orden/publica/:token', async (req, res) => {
 // - GET /api/tracker/estadisticas-historial
 
 // ==================== HEALTH CHECK ENDPOINT ====================
-
-// Endpoint de health check para Railway
-app.get('/api/health', (req, res) => {
-  console.log('🔍 Health check desde:', req.get('host'));
-  console.log('🔍 User-Agent:', req.get('user-agent'));
-  console.log('🔍 Puerto del servidor:', process.env.PORT || 8080);
-  
-  res.status(200).json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    port: process.env.PORT || 8080,
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
+// El endpoint de health check está definido ANTES del middleware de autenticación
+// (línea ~167) para evitar problemas con el healthcheck de Railway
 
 // ==================== EMAIL SERVICE ====================
 // ✅ SendGrid API configurado y funcionando correctamente
