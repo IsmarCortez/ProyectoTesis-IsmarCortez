@@ -25,7 +25,7 @@ function Login({ setUsuario }) {
     <div style={{ 
       minHeight: '100vh', 
       width: '100vw', 
-      backgroundImage: 'url(/Fondo.jpg)', 
+      backgroundImage: 'url(/Fondo2.jpg)', 
       backgroundSize: 'cover', 
       backgroundPosition: 'center', 
       backgroundRepeat: 'no-repeat',
