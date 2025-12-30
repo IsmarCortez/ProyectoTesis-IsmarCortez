@@ -149,7 +149,7 @@ function ForgotPassword() {
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = 'var(--tecno-orange)';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(242, 101, 34, 0.1)';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(230, 57, 70, 0.1)';
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = 'var(--tecno-gray-light)';
@@ -174,19 +174,19 @@ function ForgotPassword() {
                     color: 'var(--tecno-white)',
                     cursor: loading ? 'not-allowed' : 'pointer',
                     transition: 'all var(--transition-fast)',
-                    boxShadow: '0 4px 15px rgba(242, 101, 34, 0.3)',
+                    boxShadow: '0 4px 15px rgba(230, 57, 70, 0.3)',
                     opacity: loading ? 0.7 : 1
                   }}
                   onMouseEnter={(e) => {
                     if (!loading) {
                       e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 6px 20px rgba(242, 101, 34, 0.4)';
+                      e.target.style.boxShadow = '0 6px 20px rgba(230, 57, 70, 0.4)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!loading) {
                       e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 4px 15px rgba(242, 101, 34, 0.3)';
+                      e.target.style.boxShadow = '0 4px 15px rgba(230, 57, 70, 0.3)';
                     }
                   }}
                 >
@@ -231,7 +231,7 @@ function ForgotPassword() {
                   border: 'none'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = 'rgba(242, 101, 34, 0.1)';
+                  e.target.style.background = 'rgba(230, 57, 70, 0.1)';
                   e.target.style.textDecoration = 'underline';
                 }}
                 onMouseLeave={(e) => {

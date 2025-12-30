@@ -145,13 +145,13 @@ const Dashboard = () => {
 
   // Configuración de colores para los gráficos con paleta Tecno Auto
   const colores = {
-    primario: '#F26522', // Naranja Tecno Auto
+    primario: '#E63946', // Botón primario
     secundario: '#28a745',
     advertencia: '#ffc107',
     peligro: '#dc3545',
     info: '#17a2b8',
     oscuro: '#6E6E6E', // Gris oscuro Tecno Auto
-    colores: ['#F26522', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6E6E6E', '#FF7A3D', '#20c997']
+    colores: ['#E63946', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6E6E6E', '#FF6B7A', '#20c997']
   };
 
   // Gráfico de vehículos más ingresados
