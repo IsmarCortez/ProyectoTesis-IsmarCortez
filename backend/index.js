@@ -337,24 +337,10 @@ app.post('/api/recuperar-contrasena', async (req, res) => {
     );
     await connection.end();
 
-    // Configurar nodemailer (ejemplo con Gmail)
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER, // Debe estar en .env
-        pass: process.env.EMAIL_PASS  // Contraseña de aplicación
-      }
-    });
+    // Email deshabilitado - no se envía correo de confirmación
+    // El sistema de correos no está en uso según requerimientos del usuario
 
-    // Enviar correo de confirmación
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Contraseña restablecida',
-      text: 'Tu contraseña ha sido restablecida exitosamente. Si no fuiste tú, contacta al administrador.'
-    });
-
-    res.json({ message: 'Contraseña actualizada y correo de confirmación enviado.' });
+    res.json({ message: 'Contraseña actualizada correctamente.' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error en el servidor.' });

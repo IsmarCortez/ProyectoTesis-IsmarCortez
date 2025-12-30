@@ -101,16 +101,6 @@ function Login({ setUsuario }) {
                 🚀 Entrar al Sistema
               </button>
             </form>
-            
-            <div className="text-center mt-4">
-              <button 
-                className="btn-tecno-outline" 
-                onClick={() => navigate('/forgot-password')}
-                style={{ fontSize: '14px', padding: '8px 16px' }}
-              >
-                🔐 ¿Olvidaste tu contraseña?
-              </button>
-            </div>
           </div>
           
           {/* Footer con logo Electrofrio */}
