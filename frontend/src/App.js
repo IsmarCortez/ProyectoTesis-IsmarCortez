@@ -15,6 +15,8 @@ import Usuarios from './Usuarios';
 import Dashboard from './Dashboard';
 import Reportes from './Reportes';
 import OrdenPublica from './OrdenPublica';
+// Importar configuración de axios para configurar interceptores
+import './config/axios';
 
 function App() {
   const [usuario, setUsuario] = useState(() => {
@@ -30,6 +32,7 @@ function App() {
   const handleLogout = () => {
     setUsuario(null);
     localStorage.removeItem('usuario');
+    localStorage.removeItem('token'); // Limpiar token al hacer logout
   };
 
   return (

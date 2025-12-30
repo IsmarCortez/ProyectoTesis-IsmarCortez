@@ -98,6 +98,60 @@ console.log('🔍 Todas las variables JWT:', {
   JWT_SECRET_LENGTH: process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 'undefined'
 });
 
+// ==================== MIDDLEWARE DE AUTENTICACIÓN JWT ====================
+
+// Middleware para verificar token JWT
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({ message: 'Token de autenticación requerido.' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET || 'secret_key_default_railway', (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Token inválido o expirado.' });
+    }
+    req.user = user; // Agregar información del usuario al request
+    next();
+  });
+};
+
+// Lista de rutas públicas que no requieren autenticación
+const publicRoutes = [
+  '/api/login',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+  '/api/auth/verify-reset-token',
+  '/api/recuperar-contrasena',
+  '/api/orden/publica/', // Rutas que empiezan con esto son públicas
+  '/api/health'
+];
+
+// Middleware para aplicar autenticación solo a rutas protegidas
+const requireAuth = (req, res, next) => {
+  // Verificar si la ruta es pública
+  const isPublicRoute = publicRoutes.some(route => {
+    // Para rutas con parámetros dinámicos, verificar si el path comienza con la ruta pública
+    if (route.endsWith('/')) {
+      return req.path.startsWith(route);
+    }
+    // Para rutas exactas, verificar coincidencia exacta
+    return req.path === route || req.path.startsWith(route + '/');
+  });
+  
+  if (isPublicRoute) {
+    return next(); // Continuar sin autenticación
+  }
+  
+  // Aplicar autenticación a rutas protegidas
+  authenticateToken(req, res, next);
+};
+
+// Aplicar middleware de autenticación a todas las rutas /api/* excepto las públicas
+app.use('/api', requireAuth);
+
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
