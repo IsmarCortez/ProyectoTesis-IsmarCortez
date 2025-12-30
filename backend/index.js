@@ -1104,7 +1104,7 @@ app.post('/api/ordenes', upload.fields([
         fk_id_cliente, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
         nivel_combustible_orden, odometro_auto_cliente_orden, unidad_odometro, fk_id_estado_orden,
         observaciones_orden, estado_vehiculo, imagen_1, imagen_2, imagen_3, imagen_4, imagen_5, imagen_6, imagen_7, imagen_8, imagen_9, imagen_10, video, token_publico
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         fk_id_cliente_final, fk_id_vehiculo, fk_id_servicio, comentario_cliente_orden,
         nivel_combustible_orden, odometroValue, unidadOdometro, fk_id_estado_orden,
