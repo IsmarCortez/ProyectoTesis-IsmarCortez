@@ -22,6 +22,7 @@ const Ordenes = () => {
   const [busquedaCliente, setBusquedaCliente] = useState('');
   const [clientesSugeridos, setClientesSugeridos] = useState([]);
   const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
+  const [filtroEstado, setFiltroEstado] = useState(null); // null = todas, o pk_id_estado
 
   const [form, setForm] = useState({
     nit_cliente: '',
@@ -397,6 +398,47 @@ const Ordenes = () => {
   const formatearFecha = (fecha) => {
     return new Date(fecha).toLocaleString('es-GT');
   };
+
+  // Calcular conteos de órdenes por estado
+  const calcularConteosPorEstado = () => {
+    const conteos = {};
+    
+    // Inicializar todos los estados con 0
+    estados.forEach(estado => {
+      conteos[estado.pk_id_estado] = 0;
+    });
+    
+    // Contar órdenes por estado
+    ordenes.forEach(orden => {
+      const estadoId = estados.find(e => e.estado_orden === orden.estado_orden)?.pk_id_estado;
+      if (estadoId) {
+        conteos[estadoId] = (conteos[estadoId] || 0) + 1;
+      }
+    });
+    
+    return conteos;
+  };
+
+  // Obtener emoji/icono según el estado
+  const getEmojiEstado = (estadoNombre) => {
+    const estadoLower = estadoNombre?.toLowerCase() || '';
+    if (estadoLower.includes('pendiente')) return '⏳';
+    if (estadoLower.includes('proceso')) return '🔄';
+    if (estadoLower.includes('completado') || estadoLower.includes('completada')) return '✅';
+    if (estadoLower.includes('cancelado') || estadoLower.includes('cancelada')) return '❌';
+    return '📋';
+  };
+
+  // Filtrar órdenes según el estado seleccionado
+  const ordenesFiltradas = filtroEstado === null 
+    ? ordenes 
+    : ordenes.filter(orden => {
+        const estadoEncontrado = estados.find(e => e.pk_id_estado === filtroEstado);
+        return estadoEncontrado && orden.estado_orden === estadoEncontrado.estado_orden;
+      });
+
+  const conteosPorEstado = calcularConteosPorEstado();
+  const totalOrdenes = ordenes.length;
 
   return (
     <div style={{ 
@@ -828,73 +870,135 @@ const Ordenes = () => {
 
         {/* Tabla de Órdenes */}
         <div className="card-tecno">
-          <div className="card-tecno-header">
-            📋 Órdenes Registradas
+          <div className="card-tecno-header d-flex justify-content-between align-items-center">
+            <span>📋 Órdenes Registradas</span>
+            <span style={{ 
+              fontSize: '0.9rem', 
+              color: 'var(--tecno-gray-dark)',
+              fontWeight: '500'
+            }}>
+              {filtroEstado === null 
+                ? `Total: ${totalOrdenes} órdenes`
+                : `Mostrando: ${ordenesFiltradas.length} de ${totalOrdenes} órdenes`
+              }
+            </span>
           </div>
           <div className="card-tecno-body">
-            <div className="table-responsive">
-              <table className="table table-bordered" style={{ marginBottom: '0' }}>
-                <thead style={{ backgroundColor: 'var(--tecno-gray-very-light)' }}>
-                  <tr>
-                    <th style={{ 
-                      borderColor: 'var(--tecno-gray-light)',
-                      color: 'var(--tecno-black)',
-                      fontWeight: '600'
-                    }}>ID</th>
-                    <th style={{ 
-                      borderColor: 'var(--tecno-gray-light)',
-                      color: 'var(--tecno-black)',
-                      fontWeight: '600'
-                    }}>Fecha</th>
-                    <th style={{ 
-                      borderColor: 'var(--tecno-gray-light)',
-                      color: 'var(--tecno-black)',
-                      fontWeight: '600'
-                    }}>Cliente</th>
-                    <th style={{ 
-                      borderColor: 'var(--tecno-gray-light)',
-                      color: 'var(--tecno-black)',
-                      fontWeight: '600'
-                    }}>Vehículo</th>
-                    <th style={{ 
-                      borderColor: 'var(--tecno-gray-light)',
-                      color: 'var(--tecno-black)',
-                      fontWeight: '600'
-                    }}>Servicio</th>
-                    <th style={{ 
-                      borderColor: 'var(--tecno-gray-light)',
-                      color: 'var(--tecno-black)',
-                      fontWeight: '600'
-                    }}>Estado</th>
-                    <th style={{ 
-                      borderColor: 'var(--tecno-gray-light)',
-                      color: 'var(--tecno-black)',
-                      fontWeight: '600'
-                    }}>Combustible</th>
-                    <th style={{ 
-                      borderColor: 'var(--tecno-gray-light)',
-                      color: 'var(--tecno-black)',
-                      fontWeight: '600'
-                    }}>Odómetro</th>
-                    <th style={{ 
-                      borderColor: 'var(--tecno-gray-light)',
-                      color: 'var(--tecno-black)',
-                      fontWeight: '600'
-                    }}>Multimedia</th>
-                    <th style={{ 
-                      borderColor: 'var(--tecno-gray-light)',
-                      color: 'var(--tecno-black)',
-                      fontWeight: '600'
-                    }}>Enlace Público</th>
-                    <th style={{ 
-                      borderColor: 'var(--tecno-gray-light)',
-                      color: 'var(--tecno-black)',
-                      fontWeight: '600'
-                    }}>Acciones</th>
-                  </tr>
-                </thead>
-              <tbody>
-                {ordenes.map(orden => (
+            {/* Filtros por Estado */}
+            <div className="mb-4">
+              <div className="d-flex flex-wrap gap-2 align-items-center">
+                <button
+                  className={`btn ${filtroEstado === null ? 'btn-tecno' : 'btn-tecno-outline'}`}
+                  onClick={() => setFiltroEstado(null)}
+                  style={{
+                    fontSize: '0.9rem',
+                    padding: '8px 16px',
+                    fontWeight: filtroEstado === null ? '600' : '400'
+                  }}
+                >
+                  📊 Todas ({totalOrdenes})
+                </button>
+                {estados.map(estado => {
+                  const conteo = conteosPorEstado[estado.pk_id_estado] || 0;
+                  const emoji = getEmojiEstado(estado.estado_orden);
+                  const estaActivo = filtroEstado === estado.pk_id_estado;
+                  
+                  return (
+                    <button
+                      key={estado.pk_id_estado}
+                      className={`btn ${estaActivo ? 'btn-tecno' : 'btn-tecno-outline'}`}
+                      onClick={() => setFiltroEstado(estado.pk_id_estado)}
+                      style={{
+                        fontSize: '0.9rem',
+                        padding: '8px 16px',
+                        fontWeight: estaActivo ? '600' : '400',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {emoji} {estado.estado_orden} ({conteo})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {ordenesFiltradas.length === 0 ? (
+              <div className="text-center py-5">
+                <p style={{ 
+                  fontSize: '1.1rem', 
+                  color: 'var(--tecno-gray-dark)',
+                  margin: 0
+                }}>
+                  {filtroEstado === null 
+                    ? 'No hay órdenes registradas'
+                    : `No hay órdenes con el estado seleccionado`
+                  }
+                </p>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-bordered" style={{ marginBottom: '0' }}>
+                  <thead style={{ backgroundColor: 'var(--tecno-gray-very-light)' }}>
+                    <tr>
+                      <th style={{ 
+                        borderColor: 'var(--tecno-gray-light)',
+                        color: 'var(--tecno-black)',
+                        fontWeight: '600'
+                      }}>ID</th>
+                      <th style={{ 
+                        borderColor: 'var(--tecno-gray-light)',
+                        color: 'var(--tecno-black)',
+                        fontWeight: '600'
+                      }}>Fecha</th>
+                      <th style={{ 
+                        borderColor: 'var(--tecno-gray-light)',
+                        color: 'var(--tecno-black)',
+                        fontWeight: '600'
+                      }}>Cliente</th>
+                      <th style={{ 
+                        borderColor: 'var(--tecno-gray-light)',
+                        color: 'var(--tecno-black)',
+                        fontWeight: '600'
+                      }}>Vehículo</th>
+                      <th style={{ 
+                        borderColor: 'var(--tecno-gray-light)',
+                        color: 'var(--tecno-black)',
+                        fontWeight: '600'
+                      }}>Servicio</th>
+                      <th style={{ 
+                        borderColor: 'var(--tecno-gray-light)',
+                        color: 'var(--tecno-black)',
+                        fontWeight: '600'
+                      }}>Estado</th>
+                      <th style={{ 
+                        borderColor: 'var(--tecno-gray-light)',
+                        color: 'var(--tecno-black)',
+                        fontWeight: '600'
+                      }}>Combustible</th>
+                      <th style={{ 
+                        borderColor: 'var(--tecno-gray-light)',
+                        color: 'var(--tecno-black)',
+                        fontWeight: '600'
+                      }}>Odómetro</th>
+                      <th style={{ 
+                        borderColor: 'var(--tecno-gray-light)',
+                        color: 'var(--tecno-black)',
+                        fontWeight: '600'
+                      }}>Multimedia</th>
+                      <th style={{ 
+                        borderColor: 'var(--tecno-gray-light)',
+                        color: 'var(--tecno-black)',
+                        fontWeight: '600'
+                      }}>Enlace Público</th>
+                      <th style={{ 
+                        borderColor: 'var(--tecno-gray-light)',
+                        color: 'var(--tecno-black)',
+                        fontWeight: '600'
+                      }}>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ordenesFiltradas.map(orden => (
                   <tr key={orden.pk_id_orden}>
                     <td>{orden.pk_id_orden}</td>
                     <td>{formatearFecha(orden.fecha_ingreso_orden)}</td>
@@ -1026,8 +1130,10 @@ const Ordenes = () => {
                     </td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
