@@ -126,9 +126,14 @@ const OrdenPublica = () => {
       'En espera de piezas': '⏳',
       'Finalizado': '✅',
       'Entregado': '🚗',
-      'Cancelado': '❌'
+      'Cancelado': '❌',
+      'Revisión y Limpieza Final': '🧹',       
+      'En espera confirmación cliente': '⏳',
+      'Presupuesto Aprobado en proceso': '💰',
+      'TRASLADO AREA ELECTRONICA': '💻',
+      'Finalizado Listo para Entrega': '🎁'
     };
-    return iconos[estado] || '❓';
+    return iconos[estado] || '⌚';
   };
 
   if (loading) {
