@@ -1318,7 +1318,6 @@ const Ordenes = () => {
           <div className="modal-backdrop fade show" />
         )}
       </div>
-    </div>
   );
 };
 
