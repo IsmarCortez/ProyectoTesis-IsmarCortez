@@ -438,12 +438,21 @@ const Ordenes = () => {
           '• Intenta con un video más pequeño o comprimido\n' +
           '• Usa una conexión WiFi si es posible\n' +
           '• Intenta nuevamente en unos momentos';
-      } else if (error.response?.status === 413) {
-        mensajeError = 'El archivo es demasiado grande.\n\n' +
-          'Límites permitidos:\n' +
+      } else if (error.response?.status === 413 || error.is413) {
+        // Mensaje más detallado para errores 413
+        const serverMessage = error.response?.data?.message || error.message || 'El archivo es demasiado grande';
+        mensajeError = serverMessage + '\n\n' +
+          'Límites configurados:\n' +
           '• Imágenes: 10MB máximo\n' +
           '• Videos: 150MB máximo\n\n' +
-          'Por favor, reduce el tamaño del archivo e intenta nuevamente.';
+          'Si tu archivo es menor a 150MB y aún así recibes este error, puede ser:\n' +
+          '• Un límite del servidor (Railway)\n' +
+          '• Un límite de Cloudinary\n' +
+          '• Un problema temporal\n\n' +
+          'Recomendaciones:\n' +
+          '• Intenta comprimir el video\n' +
+          '• Intenta nuevamente en unos momentos\n' +
+          '• Contacta al administrador si el problema persiste';
       } else if (error.response?.data?.message) {
         mensajeError = error.response.data.message;
       } else if (error.message) {

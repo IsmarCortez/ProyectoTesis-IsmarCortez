@@ -79,6 +79,21 @@ axios.interceptors.response.use(
       });
     }
     
+    // Manejar errores 413 específicamente
+    if (error.response && error.response.status === 413) {
+      console.error('❌ Error 413 (Payload Too Large) recibido del servidor');
+      console.error('📊 Response data:', error.response.data);
+      console.error('📋 Headers:', error.response.headers);
+      
+      // El error ya tiene un mensaje del servidor, solo agregar contexto
+      const serverMessage = error.response.data?.message || 'El archivo es demasiado grande';
+      return Promise.reject({
+        ...error,
+        message: serverMessage + '\n\nNota: Este error puede venir del servidor (Railway) o de Cloudinary. Si el archivo es menor a 150MB, puede ser un límite del servidor.',
+        is413: true
+      });
+    }
+    
     // Si el error es 401 (No autorizado) o 403 (Prohibido), redirigir al login
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       // Limpiar datos de sesión

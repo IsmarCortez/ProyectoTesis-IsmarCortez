@@ -27,8 +27,25 @@ app.use(cors({
 }));
 
 // Configurar límites de tamaño para JSON y URL-encoded (aunque usamos FormData, es bueno tenerlo)
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+// Aumentado a 150mb para coincidir con el límite de videos
+app.use(express.json({ limit: '150mb' }));
+app.use(express.urlencoded({ extended: true, limit: '150mb' }));
+
+// Middleware para capturar errores de tamaño de payload antes de que lleguen a Multer
+app.use((err, req, res, next) => {
+  if (err.status === 413 || err.statusCode === 413 || err.type === 'entity.too.large') {
+    console.error('❌ Error 413 detectado antes de Multer:', err.message);
+    console.error('📊 Request path:', req.path);
+    console.error('📋 Content-Type:', req.get('Content-Type'));
+    console.error('📏 Content-Length:', req.get('Content-Length'));
+    
+    return res.status(413).json({ 
+      message: 'El archivo es demasiado grande. Límites: Imágenes 10MB, Videos 150MB. Si el archivo es menor a 150MB, puede ser un límite del servidor. Por favor, intenta con un archivo más pequeño o contacta al administrador.',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+  next(err);
+});
 
 // Servir carpeta uploads como estática para acceder a imágenes (fallback)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -1248,7 +1265,22 @@ app.post('/api/ordenes', upload.fields([
 ]), (err, req, res, next) => {
   // Manejar errores de Multer
   if (err) {
+    console.error('❌ Error de Multer en POST /api/ordenes:', err.code, err.message);
+    console.error('📋 Stack:', err.stack);
+    
     if (err.code === 'LIMIT_FILE_SIZE') {
+      // Log detallado del error de tamaño
+      console.error('❌ Error LIMIT_FILE_SIZE detectado en POST');
+      if (req.files) {
+        Object.keys(req.files).forEach(fieldName => {
+          req.files[fieldName].forEach(file => {
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            console.error(`📁 Archivo problemático: ${fieldName} - ${file.originalname || file.filename}`);
+            console.error(`📊 Tamaño recibido: ${fileSizeMB} MB`);
+            console.error(`📋 Tipo MIME: ${file.mimetype}`);
+          });
+        });
+      }
       return res.status(413).json({ 
         message: 'Archivo demasiado grande. Límites: Imágenes 10MB, Videos 150MB' 
       });

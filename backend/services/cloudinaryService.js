@@ -15,7 +15,10 @@ const storage = new CloudinaryStorage({
   params: {
     folder: process.env.CLOUDINARY_FOLDER || 'taller-mecanico',
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'mp4', 'avi', 'mov', 'wmv'],
-    resource_type: 'auto' // Detecta automáticamente si es imagen o video
+    resource_type: 'auto', // Detecta automáticamente si es imagen o video
+    // Configuraciones adicionales para videos grandes
+    chunk_size: 6000000, // 6MB por chunk para uploads grandes
+    eager_async: true // Procesar transformaciones de forma asíncrona
   }
 });
 
