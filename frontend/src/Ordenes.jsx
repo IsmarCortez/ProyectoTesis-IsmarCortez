@@ -408,10 +408,22 @@ const Ordenes = () => {
         : 'Iniciando carga de archivos...'
       );
       
+      // Log para diagnóstico
+      console.log(`📤 Enviando ${editando ? 'actualización' : 'nueva orden'}`);
+      console.log(`📊 URL: ${url}`);
+      console.log(`📊 Método: ${editando ? 'PUT' : 'POST'}`);
+      console.log(`📊 Tiene video: ${tieneVideo}`);
+      if (tieneVideo) {
+        console.log(`📊 Tamaño del video: ${(form.video.size / (1024 * 1024)).toFixed(2)} MB`);
+      }
+      console.log(`📊 Total de archivos: ${archivosCount}`);
+      
       let response;
       if (editando) {
+        console.log('🔄 Enviando petición PUT para actualizar orden...');
         response = await axios.put(url, formData, config);
       } else {
+        console.log('➕ Enviando petición POST para crear orden...');
         response = await axios.post(url, formData, config);
       }
 
