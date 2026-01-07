@@ -49,12 +49,12 @@ const storage = multer.diskStorage({
 const upload = cloudinaryConfigured() ? cloudinaryUpload : multer({ 
   storage,
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB máximo (límite de Cloudinary para videos)
+    fileSize: 150 * 1024 * 1024, // 150MB máximo (con margen para videos ligeramente más grandes)
     files: 11 // Máximo 11 archivos por request (10 imágenes + 1 video)
   },
   onError: (err, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      const error = new Error('Archivo demasiado grande. Límites: Imágenes 10MB, Videos 100MB');
+      const error = new Error('Archivo demasiado grande. Límites: Imágenes 10MB, Videos 150MB');
       error.status = 413;
       return next(error);
     }
@@ -1250,7 +1250,7 @@ app.post('/api/ordenes', upload.fields([
   if (err) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({ 
-        message: 'Archivo demasiado grande. Límites: Imágenes 10MB, Videos 100MB' 
+        message: 'Archivo demasiado grande. Límites: Imágenes 10MB, Videos 150MB' 
       });
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
@@ -1548,7 +1548,7 @@ app.put('/api/ordenes/:id', upload.fields([
         });
       }
       return res.status(413).json({ 
-        message: 'Archivo demasiado grande. Límites: Imágenes 10MB, Videos 100MB' 
+        message: 'Archivo demasiado grande. Límites: Imágenes 10MB, Videos 150MB' 
       });
     }
     if (err.code === 'LIMIT_FILE_COUNT') {

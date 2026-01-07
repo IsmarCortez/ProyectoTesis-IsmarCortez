@@ -207,8 +207,8 @@ const Ordenes = () => {
         const isVideo = name === 'video';
         const isImage = name.startsWith('imagen_');
         
-        // Límites: Imágenes 10MB, Videos 100MB
-        const maxSizeMB = isVideo ? 100 : 10;
+        // Límites: Imágenes 10MB, Videos 150MB (con margen para archivos ligeramente más grandes)
+        const maxSizeMB = isVideo ? 150 : 10;
         
         if (fileSizeMB > maxSizeMB) {
           alert(
@@ -335,11 +335,11 @@ const Ordenes = () => {
       console.log(`📊 Tamaño del video: ${videoSizeMB.toFixed(2)} MB`);
       console.log(`📋 Tipo MIME: ${form.video.type}`);
       
-      if (videoSizeMB > 100) {
+      if (videoSizeMB > 150) {
         alert(
           `El video es demasiado grande.\n\n` +
           `Tamaño: ${videoSizeMB.toFixed(2)} MB\n` +
-          `Límite permitido: 100 MB\n\n` +
+          `Límite permitido: 150 MB\n\n` +
           `Por favor, comprime el video o selecciona uno más pequeño.`
         );
         setProcesandoOrden(false);
@@ -442,7 +442,7 @@ const Ordenes = () => {
         mensajeError = 'El archivo es demasiado grande.\n\n' +
           'Límites permitidos:\n' +
           '• Imágenes: 10MB máximo\n' +
-          '• Videos: 100MB máximo\n\n' +
+          '• Videos: 150MB máximo\n\n' +
           'Por favor, reduce el tamaño del archivo e intenta nuevamente.';
       } else if (error.response?.data?.message) {
         mensajeError = error.response.data.message;

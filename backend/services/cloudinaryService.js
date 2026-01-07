@@ -23,7 +23,7 @@ const storage = new CloudinaryStorage({
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB máximo (límite de Cloudinary para videos)
+    fileSize: 150 * 1024 * 1024, // 150MB máximo (con margen para videos ligeramente más grandes)
     files: 11 // Máximo 11 archivos por request (10 imágenes + 1 video)
   },
   fileFilter: (req, file, cb) => {
@@ -40,7 +40,7 @@ const upload = multer({
   },
   onError: (err, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      const error = new Error('Archivo demasiado grande. Límites: Imágenes 10MB, Videos 100MB');
+      const error = new Error('Archivo demasiado grande. Límites: Imágenes 10MB, Videos 150MB');
       error.status = 413;
       return next(error);
     }
