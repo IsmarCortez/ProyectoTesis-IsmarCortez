@@ -207,8 +207,8 @@ const Ordenes = () => {
         const isVideo = name === 'video';
         const isImage = name.startsWith('imagen_');
         
-        // Límites: Imágenes 10MB, Videos 150MB (con margen para archivos ligeramente más grandes)
-        const maxSizeMB = isVideo ? 150 : 10;
+        // Límites: Imágenes 10MB, Videos 100MB (límite de Cloudinary)
+        const maxSizeMB = isVideo ? 100 : 10;
         
         if (fileSizeMB > maxSizeMB) {
           alert(
@@ -335,11 +335,11 @@ const Ordenes = () => {
       console.log(`📊 Tamaño del video: ${videoSizeMB.toFixed(2)} MB`);
       console.log(`📋 Tipo MIME: ${form.video.type}`);
       
-      if (videoSizeMB > 150) {
+      if (videoSizeMB > 100) {
         alert(
           `El video es demasiado grande.\n\n` +
           `Tamaño: ${videoSizeMB.toFixed(2)} MB\n` +
-          `Límite permitido: 150 MB\n\n` +
+          `Límite permitido: 100 MB (límite de Cloudinary)\n\n` +
           `Por favor, comprime el video o selecciona uno más pequeño.`
         );
         setProcesandoOrden(false);
@@ -456,13 +456,12 @@ const Ordenes = () => {
         mensajeError = serverMessage + '\n\n' +
           'Límites configurados:\n' +
           '• Imágenes: 10MB máximo\n' +
-          '• Videos: 150MB máximo\n\n' +
-          'Si tu archivo es menor a 150MB y aún así recibes este error, puede ser:\n' +
+          '• Videos: 100MB máximo (límite de Cloudinary)\n\n' +
+          'Si tu archivo es menor a 100MB y aún así recibes este error, puede ser:\n' +
           '• Un límite del servidor (Railway)\n' +
-          '• Un límite de Cloudinary\n' +
-          '• Un problema temporal\n\n' +
+          '• Un problema temporal con Cloudinary\n\n' +
           'Recomendaciones:\n' +
-          '• Intenta comprimir el video\n' +
+          '• Comprime el video a menos de 100MB\n' +
           '• Intenta nuevamente en unos momentos\n' +
           '• Contacta al administrador si el problema persiste';
       } else if (error.response?.data?.message) {

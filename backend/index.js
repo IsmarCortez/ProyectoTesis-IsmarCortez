@@ -59,7 +59,7 @@ app.use((err, req, res, next) => {
     console.error('❌ Error 413 detectado antes de Multer:', err.message);
     
     return res.status(413).json({ 
-      message: 'El archivo es demasiado grande. Límites: Imágenes 10MB, Videos 150MB. Si el archivo es menor a 150MB, puede ser un límite del servidor (Railway). Por favor, intenta con un archivo más pequeño o contacta al administrador.',
+      message: 'El archivo es demasiado grande. Límites: Imágenes 10MB, Videos 100MB (límite de Cloudinary). Si el archivo es menor a 100MB, puede ser un límite del servidor (Railway). Por favor, intenta con un archivo más pequeño o contacta al administrador.',
       error: process.env.NODE_ENV === 'development' ? err.message : undefined,
       method: req.method,
       path: req.path
@@ -84,15 +84,17 @@ const storage = multer.diskStorage({
 });
 
 // Usar Cloudinary si está configurado, sino usar almacenamiento local
+// NOTA: Si usamos Cloudinary, el límite es 100MB (límite de Cloudinary)
+// Si usamos almacenamiento local, podemos usar 150MB
 const upload = cloudinaryConfigured() ? cloudinaryUpload : multer({ 
   storage,
   limits: {
-    fileSize: 150 * 1024 * 1024, // 150MB máximo (con margen para videos ligeramente más grandes)
+    fileSize: 150 * 1024 * 1024, // 150MB máximo solo para almacenamiento local (Cloudinary tiene límite de 100MB)
     files: 11 // Máximo 11 archivos por request (10 imágenes + 1 video)
   },
   onError: (err, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      const error = new Error('Archivo demasiado grande. Límites: Imágenes 10MB, Videos 150MB');
+      const error = new Error('Archivo demasiado grande. Límites: Imágenes 10MB, Videos 100MB (Cloudinary) o 150MB (local)');
       error.status = 413;
       return next(error);
     }
@@ -1303,7 +1305,7 @@ app.post('/api/ordenes', upload.fields([
         });
       }
       return res.status(413).json({ 
-        message: 'Archivo demasiado grande. Límites: Imágenes 10MB, Videos 150MB' 
+        message: 'Archivo demasiado grande. Límites: Imágenes 10MB, Videos 100MB (límite de Cloudinary)' 
       });
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
@@ -1611,7 +1613,7 @@ app.put('/api/ordenes/:id', upload.fields([
         console.error('⚠️ No se recibieron archivos en req.files');
       }
       return res.status(413).json({ 
-        message: 'Archivo demasiado grande. Límites: Imágenes 10MB, Videos 150MB' 
+        message: 'Archivo demasiado grande. Límites: Imágenes 10MB, Videos 100MB (límite de Cloudinary)' 
       });
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
@@ -1624,10 +1626,23 @@ app.put('/api/ordenes/:id', upload.fields([
         message: 'Campo de archivo no esperado' 
       });
     }
+    
+    // Manejar errores de Cloudinary específicamente
+    if (err.name === 'UnexpectedResponse' && err.http_code === 413) {
+      console.error('❌ Cloudinary rechazó el archivo (límite de 100MB):', err.message);
+      console.error('📊 Detalles del error de Cloudinary:', JSON.stringify(err, null, 2));
+      return res.status(413).json({ 
+        message: 'El archivo es demasiado grande. Cloudinary tiene un límite de 100MB para videos. Por favor, comprime el video a menos de 100MB e intenta nuevamente.',
+        cloudinaryError: true,
+        limit: '100MB'
+      });
+    }
+    
     // Log para cualquier otro error de Multer
     console.error('❌ Otro error de Multer:', err);
+    console.error('❌ Error completo:', JSON.stringify(err, null, 2));
     return res.status(400).json({ 
-      message: 'Error al procesar archivos: ' + err.message 
+      message: 'Error al procesar archivos: ' + (err.message || 'Error desconocido')
     });
   }
   next();
