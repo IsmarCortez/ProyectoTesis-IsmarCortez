@@ -199,7 +199,37 @@ const Ordenes = () => {
     const { name, value, files } = e.target;
     
     if (files) {
-      setForm(prev => ({ ...prev, [name]: files[0] }));
+      const file = files[0];
+      
+      // Validar tamaño de archivo antes de asignarlo
+      if (file) {
+        const fileSizeMB = file.size / (1024 * 1024);
+        const isVideo = name === 'video';
+        const isImage = name.startsWith('imagen_');
+        
+        // Límites: Imágenes 10MB, Videos 100MB
+        const maxSizeMB = isVideo ? 100 : 10;
+        
+        if (fileSizeMB > maxSizeMB) {
+          alert(
+            `El archivo "${file.name}" es demasiado grande.\n\n` +
+            `Tamaño: ${fileSizeMB.toFixed(2)} MB\n` +
+            `Límite permitido: ${maxSizeMB} MB\n\n` +
+            `Por favor, selecciona un archivo más pequeño.`
+          );
+          // Limpiar el input
+          e.target.value = '';
+          return;
+        }
+        
+        // Log para diagnóstico
+        console.log(`📁 Archivo seleccionado: ${file.name}`);
+        console.log(`📊 Tamaño: ${fileSizeMB.toFixed(2)} MB`);
+        console.log(`📋 Tipo: ${file.type}`);
+        console.log(`🔍 Es video: ${isVideo}, Es imagen: ${isImage}`);
+      }
+      
+      setForm(prev => ({ ...prev, [name]: file }));
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
       
@@ -299,14 +329,54 @@ const Ordenes = () => {
     
     const tieneVideo = !!form.video;
     if (tieneVideo) {
+      // Validar tamaño del video una vez más antes de enviar
+      const videoSizeMB = form.video.size / (1024 * 1024);
+      console.log(`🎥 Video a subir: ${form.video.name}`);
+      console.log(`📊 Tamaño del video: ${videoSizeMB.toFixed(2)} MB`);
+      console.log(`📋 Tipo MIME: ${form.video.type}`);
+      
+      if (videoSizeMB > 100) {
+        alert(
+          `El video es demasiado grande.\n\n` +
+          `Tamaño: ${videoSizeMB.toFixed(2)} MB\n` +
+          `Límite permitido: 100 MB\n\n` +
+          `Por favor, comprime el video o selecciona uno más pequeño.`
+        );
+        setProcesandoOrden(false);
+        setProgresoUpload(0);
+        setMensajeProgreso('');
+        return;
+      }
+      
       formData.append('video', form.video);
       archivosCount++;
       
-      // Obtener tamaño del video para mensaje informativo
-      const videoSizeMB = (form.video.size / (1024 * 1024)).toFixed(2);
-      setMensajeProgreso(`Subiendo video (${videoSizeMB} MB). Esto puede tardar varios minutos en conexiones móviles...`);
+      // Mensaje informativo con tamaño
+      setMensajeProgreso(`Subiendo video (${videoSizeMB.toFixed(2)} MB). Esto puede tardar varios minutos en conexiones móviles...`);
     } else {
       setMensajeProgreso(`Subiendo ${archivosCount} archivo${archivosCount !== 1 ? 's' : ''}...`);
+    }
+    
+    // Validar también imágenes antes de enviar
+    const imagenes = [
+      form.imagen_1, form.imagen_2, form.imagen_3, form.imagen_4, form.imagen_5,
+      form.imagen_6, form.imagen_7, form.imagen_8, form.imagen_9, form.imagen_10
+    ].filter(img => img !== null);
+    
+    for (const img of imagenes) {
+      const imgSizeMB = img.size / (1024 * 1024);
+      if (imgSizeMB > 10) {
+        alert(
+          `La imagen "${img.name}" es demasiado grande.\n\n` +
+          `Tamaño: ${imgSizeMB.toFixed(2)} MB\n` +
+          `Límite permitido: 10 MB\n\n` +
+          `Por favor, comprime la imagen o selecciona una más pequeña.`
+        );
+        setProcesandoOrden(false);
+        setProgresoUpload(0);
+        setMensajeProgreso('');
+        return;
+      }
     }
 
     try {

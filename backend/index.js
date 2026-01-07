@@ -1276,6 +1276,20 @@ app.post('/api/ordenes', upload.fields([
   const startTime = Date.now();
   console.log('📤 Iniciando registro de orden...');
   
+  // Log detallado de todos los archivos recibidos
+  if (req.files) {
+    console.log('📦 Archivos recibidos:');
+    Object.keys(req.files).forEach(fieldName => {
+      req.files[fieldName].forEach(file => {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        console.log(`  - ${fieldName}: ${file.originalname || file.filename}`);
+        console.log(`    Tamaño: ${fileSizeMB} MB`);
+        console.log(`    Tipo: ${file.mimetype}`);
+        console.log(`    Campo: ${file.fieldname}`);
+      });
+    });
+  }
+  
   // Detectar si hay video
   const tieneVideo = req.files && req.files.video && req.files.video.length > 0;
   if (tieneVideo) {
@@ -1521,6 +1535,18 @@ app.put('/api/ordenes/:id', upload.fields([
   // Manejar errores de Multer
   if (err) {
     if (err.code === 'LIMIT_FILE_SIZE') {
+      // Log detallado del error de tamaño
+      console.error('❌ Error LIMIT_FILE_SIZE detectado en actualización');
+      if (req.files) {
+        Object.keys(req.files).forEach(fieldName => {
+          req.files[fieldName].forEach(file => {
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            console.error(`📁 Archivo problemático: ${fieldName} - ${file.originalname}`);
+            console.error(`📊 Tamaño recibido: ${fileSizeMB} MB`);
+            console.error(`📋 Tipo MIME: ${file.mimetype}`);
+          });
+        });
+      }
       return res.status(413).json({ 
         message: 'Archivo demasiado grande. Límites: Imágenes 10MB, Videos 100MB' 
       });
@@ -1548,6 +1574,20 @@ app.put('/api/ordenes/:id', upload.fields([
   const startTime = Date.now();
   const { id } = req.params;
   console.log(`📤 Iniciando actualización de orden #${id}...`);
+  
+  // Log detallado de todos los archivos recibidos
+  if (req.files) {
+    console.log('📦 Archivos recibidos para actualización:');
+    Object.keys(req.files).forEach(fieldName => {
+      req.files[fieldName].forEach(file => {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        console.log(`  - ${fieldName}: ${file.originalname || file.filename}`);
+        console.log(`    Tamaño: ${fileSizeMB} MB`);
+        console.log(`    Tipo: ${file.mimetype}`);
+        console.log(`    Campo: ${file.fieldname}`);
+      });
+    });
+  }
   
   // Detectar si hay video
   const tieneVideo = req.files && req.files.video && req.files.video.length > 0;
