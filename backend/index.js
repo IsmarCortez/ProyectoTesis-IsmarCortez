@@ -15,12 +15,20 @@ const NotificationService = require('./services/notificationService');
 const { upload: cloudinaryUpload, isConfigured: cloudinaryConfigured } = require('./services/cloudinaryService');
 
 const app = express();
+
+// Configurar timeouts extendidos para uploads de archivos grandes (especialmente videos)
+// Timeout de 15 minutos (900000ms) para requests con archivos
+app.timeout = 900000; // 15 minutos
+
 // Configurar CORS para Railway
 app.use(cors({
   origin: true, // Permitir todos los orígenes para Railway
   credentials: true
 }));
-app.use(express.json());
+
+// Configurar límites de tamaño para JSON y URL-encoded (aunque usamos FormData, es bueno tenerlo)
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // Servir carpeta uploads como estática para acceder a imágenes (fallback)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -1261,6 +1269,20 @@ app.post('/api/ordenes', upload.fields([
   }
   next();
 }, async (req, res) => {
+  // Configurar timeout extendido para este request específico (15 minutos)
+  req.setTimeout(900000);
+  res.setTimeout(900000);
+  
+  const startTime = Date.now();
+  console.log('📤 Iniciando registro de orden...');
+  
+  // Detectar si hay video
+  const tieneVideo = req.files && req.files.video && req.files.video.length > 0;
+  if (tieneVideo) {
+    const videoSize = (req.files.video[0].size / (1024 * 1024)).toFixed(2);
+    console.log(`🎥 Video detectado: ${videoSize} MB - Esto puede tardar varios minutos`);
+  }
+  
   const {
     fk_id_cliente,
     fk_id_vehiculo,
@@ -1354,14 +1376,28 @@ app.post('/api/ordenes', upload.fields([
       });
     }
     
+    const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`✅ Orden registrada exitosamente en ${elapsedTime} segundos (ID: ${result.insertId})`);
+    
     res.json({ 
       message: 'Orden registrada exitosamente.',
       orderId: result.insertId,
       notifications: 'Procesando notificaciones automáticas...'
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error al registrar la orden.' });
+    const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.error(`❌ Error después de ${elapsedTime} segundos:`, error);
+    
+    // Mensajes de error más específicos
+    if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) {
+      res.status(504).json({ 
+        message: 'La carga del archivo está tardando demasiado. Por favor, intenta con un archivo más pequeño o verifica tu conexión a internet.' 
+      });
+    } else {
+      res.status(500).json({ 
+        message: 'Error al registrar la orden: ' + (error.message || 'Error desconocido') 
+      });
+    }
   }
 });
 
@@ -1505,7 +1541,21 @@ app.put('/api/ordenes/:id', upload.fields([
   }
   next();
 }, async (req, res) => {
+  // Configurar timeout extendido para este request específico (15 minutos)
+  req.setTimeout(900000);
+  res.setTimeout(900000);
+  
+  const startTime = Date.now();
   const { id } = req.params;
+  console.log(`📤 Iniciando actualización de orden #${id}...`);
+  
+  // Detectar si hay video
+  const tieneVideo = req.files && req.files.video && req.files.video.length > 0;
+  if (tieneVideo) {
+    const videoSize = (req.files.video[0].size / (1024 * 1024)).toFixed(2);
+    console.log(`🎥 Video detectado en actualización: ${videoSize} MB - Esto puede tardar varios minutos`);
+  }
+  
   const {
     fk_id_cliente,
     fk_id_vehiculo,
@@ -1621,14 +1671,29 @@ app.put('/api/ordenes/:id', upload.fields([
     }
 
     await connection.end();
+    
+    const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`✅ Orden #${id} actualizada exitosamente en ${elapsedTime} segundos`);
+    
     res.json({ 
       message: 'Orden actualizada correctamente.',
       estadoCambio: estadoCambio,
       notificacionEnviada: estadoCambio
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error al actualizar la orden.' });
+    const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.error(`❌ Error actualizando orden #${id} después de ${elapsedTime} segundos:`, error);
+    
+    // Mensajes de error más específicos
+    if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) {
+      res.status(504).json({ 
+        message: 'La carga del archivo está tardando demasiado. Por favor, intenta con un archivo más pequeño o verifica tu conexión a internet.' 
+      });
+    } else {
+      res.status(500).json({ 
+        message: 'Error al actualizar la orden: ' + (error.message || 'Error desconocido') 
+      });
+    }
   }
 });
 

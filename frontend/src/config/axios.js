@@ -41,6 +41,18 @@ axios.interceptors.request.use(
     if (config.data instanceof FormData) {
       // Axios establecerá automáticamente el Content-Type correcto con el boundary
       delete config.headers['Content-Type'];
+      
+      // Configurar timeout extendido para uploads de archivos (especialmente videos)
+      // 10 minutos (600000ms) para permitir uploads grandes desde móviles
+      if (!config.timeout) {
+        config.timeout = 600000; // 10 minutos
+      }
+      
+      // Detectar si hay un video en el FormData
+      const hasVideo = config.data.has('video');
+      if (hasVideo && !config.timeout) {
+        config.timeout = 600000; // 10 minutos para videos
+      }
     }
     
     return config;
@@ -56,6 +68,17 @@ axios.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Manejar errores de timeout específicamente
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      console.error('⏱️ Timeout en la petición:', error.message);
+      // No redirigir en caso de timeout, solo rechazar el error
+      return Promise.reject({
+        ...error,
+        message: 'La carga está tardando más de lo esperado. Por favor, verifica tu conexión a internet e intenta nuevamente. Si el problema persiste, el archivo puede ser demasiado grande.',
+        isTimeout: true
+      });
+    }
+    
     // Si el error es 401 (No autorizado) o 403 (Prohibido), redirigir al login
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       // Limpiar datos de sesión

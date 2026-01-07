@@ -23,6 +23,8 @@ const Ordenes = () => {
   const [clientesSugeridos, setClientesSugeridos] = useState([]);
   const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState(null); // null = todas, o pk_id_estado
+  const [progresoUpload, setProgresoUpload] = useState(0);
+  const [mensajeProgreso, setMensajeProgreso] = useState('');
 
   const [form, setForm] = useState({
     nit_cliente: '',
@@ -264,6 +266,8 @@ const Ordenes = () => {
 
     // Activar estado de procesamiento
     setProcesandoOrden(true);
+    setProgresoUpload(0);
+    setMensajeProgreso('Preparando archivos...');
 
     const formData = new FormData();
     formData.append('fk_id_cliente', form.fk_id_cliente || '');
@@ -280,28 +284,69 @@ const Ordenes = () => {
     // Debug: verificar qué se está enviando
     console.log('🔍 Estado del vehículo que se envía:', form.estado_vehiculo);
     
-    if (form.imagen_1) formData.append('imagen_1', form.imagen_1);
-    if (form.imagen_2) formData.append('imagen_2', form.imagen_2);
-    if (form.imagen_3) formData.append('imagen_3', form.imagen_3);
-    if (form.imagen_4) formData.append('imagen_4', form.imagen_4);
-    if (form.imagen_5) formData.append('imagen_5', form.imagen_5);
-    if (form.imagen_6) formData.append('imagen_6', form.imagen_6);
-    if (form.imagen_7) formData.append('imagen_7', form.imagen_7);
-    if (form.imagen_8) formData.append('imagen_8', form.imagen_8);
-    if (form.imagen_9) formData.append('imagen_9', form.imagen_9);
-    if (form.imagen_10) formData.append('imagen_10', form.imagen_10);
-    if (form.video) formData.append('video', form.video);
+    // Contar archivos para mensajes informativos
+    let archivosCount = 0;
+    if (form.imagen_1) { formData.append('imagen_1', form.imagen_1); archivosCount++; }
+    if (form.imagen_2) { formData.append('imagen_2', form.imagen_2); archivosCount++; }
+    if (form.imagen_3) { formData.append('imagen_3', form.imagen_3); archivosCount++; }
+    if (form.imagen_4) { formData.append('imagen_4', form.imagen_4); archivosCount++; }
+    if (form.imagen_5) { formData.append('imagen_5', form.imagen_5); archivosCount++; }
+    if (form.imagen_6) { formData.append('imagen_6', form.imagen_6); archivosCount++; }
+    if (form.imagen_7) { formData.append('imagen_7', form.imagen_7); archivosCount++; }
+    if (form.imagen_8) { formData.append('imagen_8', form.imagen_8); archivosCount++; }
+    if (form.imagen_9) { formData.append('imagen_9', form.imagen_9); archivosCount++; }
+    if (form.imagen_10) { formData.append('imagen_10', form.imagen_10); archivosCount++; }
+    
+    const tieneVideo = !!form.video;
+    if (tieneVideo) {
+      formData.append('video', form.video);
+      archivosCount++;
+      
+      // Obtener tamaño del video para mensaje informativo
+      const videoSizeMB = (form.video.size / (1024 * 1024)).toFixed(2);
+      setMensajeProgreso(`Subiendo video (${videoSizeMB} MB). Esto puede tardar varios minutos en conexiones móviles...`);
+    } else {
+      setMensajeProgreso(`Subiendo ${archivosCount} archivo${archivosCount !== 1 ? 's' : ''}...`);
+    }
 
     try {
       const url = editando 
         ? `/api/ordenes/${ordenId}`
         : '/api/ordenes';
       
+      // Configurar axios con indicador de progreso
+      const config = {
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const porcentaje = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setProgresoUpload(porcentaje);
+            
+            if (tieneVideo) {
+              const uploadedMB = (progressEvent.loaded / (1024 * 1024)).toFixed(2);
+              const totalMB = (progressEvent.total / (1024 * 1024)).toFixed(2);
+              setMensajeProgreso(`Subiendo video: ${uploadedMB} MB / ${totalMB} MB (${porcentaje}%)`);
+            } else {
+              setMensajeProgreso(`Subiendo archivos: ${porcentaje}%`);
+            }
+          }
+        },
+        timeout: tieneVideo ? 600000 : 300000 // 10 min para videos, 5 min para imágenes
+      };
+      
+      setMensajeProgreso(tieneVideo 
+        ? 'Iniciando carga de video. Por favor, mantén la aplicación abierta...'
+        : 'Iniciando carga de archivos...'
+      );
+      
+      let response;
       if (editando) {
-        await axios.put(url, formData);
+        response = await axios.put(url, formData, config);
       } else {
-        await axios.post(url, formData);
+        response = await axios.post(url, formData, config);
       }
+
+      setProgresoUpload(100);
+      setMensajeProgreso('Procesando orden en el servidor...');
 
       const message = editando ? 'Orden actualizada correctamente' : 'Orden registrada exitosamente';
       alert(message);
@@ -309,10 +354,38 @@ const Ordenes = () => {
       cargarOrdenes();
     } catch (error) {
       console.error('Error:', error);
-      alert(error.response?.data?.message || 'Error al procesar la orden');
+      
+      let mensajeError = 'Error al procesar la orden';
+      
+      if (error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        mensajeError = 'La carga está tardando más de lo esperado.\n\n' +
+          'Posibles causas:\n' +
+          '• Conexión a internet lenta o inestable\n' +
+          '• Archivo de video muy grande\n' +
+          '• Problemas temporales del servidor\n\n' +
+          'Recomendaciones:\n' +
+          '• Verifica tu conexión a internet\n' +
+          '• Intenta con un video más pequeño o comprimido\n' +
+          '• Usa una conexión WiFi si es posible\n' +
+          '• Intenta nuevamente en unos momentos';
+      } else if (error.response?.status === 413) {
+        mensajeError = 'El archivo es demasiado grande.\n\n' +
+          'Límites permitidos:\n' +
+          '• Imágenes: 10MB máximo\n' +
+          '• Videos: 100MB máximo\n\n' +
+          'Por favor, reduce el tamaño del archivo e intenta nuevamente.';
+      } else if (error.response?.data?.message) {
+        mensajeError = error.response.data.message;
+      } else if (error.message) {
+        mensajeError = error.message;
+      }
+      
+      alert(mensajeError);
     } finally {
       // Desactivar estado de procesamiento
       setProcesandoOrden(false);
+      setProgresoUpload(0);
+      setMensajeProgreso('');
     }
   };
 
@@ -833,6 +906,55 @@ const Ordenes = () => {
                 />
               </div>
             </div>
+
+            {/* Indicador de Progreso */}
+            {procesandoOrden && (
+              <div className="mb-3 p-3" style={{
+                backgroundColor: 'var(--tecno-gray-very-light)',
+                borderRadius: '8px',
+                border: '1px solid var(--tecno-gray-light)'
+              }}>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span style={{ 
+                    fontSize: '0.9rem', 
+                    fontWeight: '500',
+                    color: 'var(--tecno-black)'
+                  }}>
+                    {mensajeProgreso || 'Procesando...'}
+                  </span>
+                  <span style={{ 
+                    fontSize: '0.85rem', 
+                    color: 'var(--tecno-gray-dark)',
+                    fontWeight: '600'
+                  }}>
+                    {progresoUpload > 0 ? `${progresoUpload}%` : ''}
+                  </span>
+                </div>
+                {progresoUpload > 0 && (
+                  <div className="progress" style={{ height: '8px', borderRadius: '4px' }}>
+                    <div 
+                      className="progress-bar progress-bar-striped progress-bar-animated" 
+                      role="progressbar" 
+                      style={{ 
+                        width: `${progresoUpload}%`,
+                        backgroundColor: 'var(--tecno-orange)'
+                      }}
+                      aria-valuenow={progresoUpload} 
+                      aria-valuemin="0" 
+                      aria-valuemax="100"
+                    ></div>
+                  </div>
+                )}
+                {progresoUpload === 0 && (
+                  <div className="text-center mt-2">
+                    <span className="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                    <span className="ms-2" style={{ fontSize: '0.85rem', color: 'var(--tecno-gray-dark)' }}>
+                      Iniciando carga...
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Botones */}
             <div className="d-flex gap-2">
