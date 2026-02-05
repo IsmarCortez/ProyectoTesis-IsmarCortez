@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ImprimirOrden from './ImprimirOrden';
 import { getFileUrl } from './config/cloudinary';
 import axios from './config/axios';
+import { isAdmin, isAdminOrEditor } from './utils/auth';
 
 const Ordenes = () => {
   const navigate = useNavigate();
@@ -1202,11 +1203,13 @@ const Ordenes = () => {
                         color: 'var(--tecno-black)',
                         fontWeight: '600'
                       }}>Enlace Público</th>
-                      <th style={{ 
-                        borderColor: 'var(--tecno-gray-light)',
-                        color: 'var(--tecno-black)',
-                        fontWeight: '600'
-                      }}>Acciones</th>
+                      {(isAdmin() || isAdminOrEditor()) && (
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
+                        }}>Acciones</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -1306,40 +1309,46 @@ const Ordenes = () => {
                         <span className="text-muted" style={{ fontSize: '11px' }}>No disponible</span>
                       )}
                     </td>
-                    <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
-                      <div className="btn-group" role="group">
-                        <button
-                          className="btn btn-sm"
-                          onClick={() => editarOrden(orden)}
-                          title="Editar"
-                          style={{
-                            backgroundColor: 'var(--warning)',
-                            color: 'var(--tecno-white)',
-                            border: 'none',
-                            borderRadius: '4px',
-                            padding: '4px 8px',
-                            fontSize: '12px'
-                          }}
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          className="btn btn-sm"
-                          onClick={() => eliminarOrden(orden.pk_id_orden)}
-                          title="Eliminar"
-                          style={{
-                            backgroundColor: 'var(--danger)',
-                            color: 'var(--tecno-white)',
-                            border: 'none',
-                            borderRadius: '4px',
-                            padding: '4px 8px',
-                            fontSize: '12px'
-                          }}
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
+                    {(isAdmin() || isAdminOrEditor()) && (
+                      <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
+                        <div className="btn-group" role="group">
+                          {isAdminOrEditor() && (
+                            <button
+                              className="btn btn-sm"
+                              onClick={() => editarOrden(orden)}
+                              title="Editar"
+                              style={{
+                                backgroundColor: 'var(--warning)',
+                                color: 'var(--tecno-white)',
+                                border: 'none',
+                                borderRadius: '4px',
+                                padding: '4px 8px',
+                                fontSize: '12px'
+                              }}
+                            >
+                              ✏️
+                            </button>
+                          )}
+                          {isAdmin() && (
+                            <button
+                              className="btn btn-sm"
+                              onClick={() => eliminarOrden(orden.pk_id_orden)}
+                              title="Eliminar"
+                              style={{
+                                backgroundColor: 'var(--danger)',
+                                color: 'var(--tecno-white)',
+                                border: 'none',
+                                borderRadius: '4px',
+                                padding: '4px 8px',
+                                fontSize: '12px'
+                              }}
+                            >
+                              🗑️
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
                   </tbody>

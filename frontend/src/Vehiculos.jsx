@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { isAdmin, isAdminOrEditor } from './utils/auth';
 
 function Vehiculos() {
   const navigate = useNavigate();
@@ -157,7 +158,12 @@ function Vehiculos() {
                 {editId ? '✏️ Editando Vehículo' : '➕ Nuevo Vehículo'}
               </div>
               <div className="card-tecno-body">
-                <form onSubmit={handleSubmit}>
+                {!isAdminOrEditor() && (
+                  <div className="alert-tecno alert-tecno-warning">
+                    ⚠️ No tienes permisos para crear o editar vehículos. Tu rol es de solo lectura.
+                  </div>
+                )}
+                <form onSubmit={handleSubmit} style={{ display: isAdminOrEditor() ? 'block' : 'none' }}>
                   {/* Campos del vehículo */}
                   <div className="mb-3">
                     <label className="form-label">Placa *</label>
@@ -298,11 +304,13 @@ function Vehiculos() {
                           color: 'var(--tecno-black)',
                           fontWeight: '600'
                         }}>Color</th>
-                        <th style={{ 
-                          borderColor: 'var(--tecno-gray-light)',
-                          color: 'var(--tecno-black)',
-                          fontWeight: '600'
-                        }}>Acciones</th>
+                        {(isAdmin() || isAdminOrEditor()) && (
+                          <th style={{ 
+                            borderColor: 'var(--tecno-gray-light)',
+                            color: 'var(--tecno-black)',
+                            fontWeight: '600'
+                          }}>Acciones</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -314,39 +322,45 @@ function Vehiculos() {
                           </td>
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{vehiculo.anio_vehiculo || '-'}</td>
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{vehiculo.color_vehiculo || '-'}</td>
-                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
-                            <div className="btn-group btn-group-sm">
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => handleEdit(vehiculo)}
-                                style={{
-                                  backgroundColor: 'var(--warning)',
-                                  color: 'var(--tecno-white)',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  padding: '4px 8px',
-                                  fontSize: '12px',
-                                  marginRight: '4px'
-                                }}
-                              >
-                                Editar
-                              </button>
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => handleDelete(vehiculo.pk_id_vehiculo)}
-                                style={{
-                                  backgroundColor: 'var(--danger)',
-                                  color: 'var(--tecno-white)',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  padding: '4px 8px',
-                                  fontSize: '12px'
-                                }}
-                              >
-                                Eliminar
-                              </button>
-                            </div>
-                          </td>
+                          {(isAdmin() || isAdminOrEditor()) && (
+                            <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
+                              <div className="btn-group btn-group-sm">
+                                {isAdminOrEditor() && (
+                                  <button
+                                    className="btn btn-sm"
+                                    onClick={() => handleEdit(vehiculo)}
+                                    style={{
+                                      backgroundColor: 'var(--warning)',
+                                      color: 'var(--tecno-white)',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      padding: '4px 8px',
+                                      fontSize: '12px',
+                                      marginRight: '4px'
+                                    }}
+                                  >
+                                    Editar
+                                  </button>
+                                )}
+                                {isAdmin() && (
+                                  <button
+                                    className="btn btn-sm"
+                                    onClick={() => handleDelete(vehiculo.pk_id_vehiculo)}
+                                    style={{
+                                      backgroundColor: 'var(--danger)',
+                                      color: 'var(--tecno-white)',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      padding: '4px 8px',
+                                      fontSize: '12px'
+                                    }}
+                                  >
+                                    Eliminar
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>

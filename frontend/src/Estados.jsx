@@ -225,11 +225,13 @@ function Estados() {
                           color: 'var(--tecno-black)',
                           fontWeight: '600'
                         }}>Descripción</th>
-                        <th style={{ 
-                          borderColor: 'var(--tecno-gray-light)',
-                          color: 'var(--tecno-black)',
-                          fontWeight: '600'
-                        }}>Acciones</th>
+                        {(isAdmin() || isAdminOrEditor()) && (
+                          <th style={{ 
+                            borderColor: 'var(--tecno-gray-light)',
+                            color: 'var(--tecno-black)',
+                            fontWeight: '600'
+                          }}>Acciones</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -238,39 +240,45 @@ function Estados() {
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{estado.pk_id_estado}</td>
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{estado.estado_orden}</td>
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{estado.descripcion_estado || '-'}</td>
-                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
-                            <div className="btn-group btn-group-sm">
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => handleEdit(estado)}
-                                style={{
-                                  backgroundColor: 'var(--warning)',
-                                  color: 'var(--tecno-white)',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  padding: '4px 8px',
-                                  fontSize: '12px',
-                                  marginRight: '4px'
-                                }}
-                              >
-                                Editar
-                              </button>
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => handleDelete(estado.pk_id_estado)}
-                                style={{
-                                  backgroundColor: 'var(--danger)',
-                                  color: 'var(--tecno-white)',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  padding: '4px 8px',
-                                  fontSize: '12px'
-                                }}
-                              >
-                                Eliminar
-                              </button>
-                            </div>
-                          </td>
+                          {(isAdmin() || isAdminOrEditor()) && (
+                            <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
+                              <div className="btn-group btn-group-sm">
+                                {isAdminOrEditor() && (
+                                  <button
+                                    className="btn btn-sm"
+                                    onClick={() => handleEdit(estado)}
+                                    style={{
+                                      backgroundColor: 'var(--warning)',
+                                      color: 'var(--tecno-white)',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      padding: '4px 8px',
+                                      fontSize: '12px',
+                                      marginRight: '4px'
+                                    }}
+                                  >
+                                    Editar
+                                  </button>
+                                )}
+                                {isAdmin() && (
+                                  <button
+                                    className="btn btn-sm"
+                                    onClick={() => handleDelete(estado.pk_id_estado)}
+                                    style={{
+                                      backgroundColor: 'var(--danger)',
+                                      color: 'var(--tecno-white)',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      padding: '4px 8px',
+                                      fontSize: '12px'
+                                    }}
+                                  >
+                                    Eliminar
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>

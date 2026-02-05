@@ -56,7 +56,8 @@ function Usuarios() {
       nombre_usuario: '',
       email_usuario: '',
       contrasenia_usuario: '',
-      pregunta_seguridad_usuario: ''
+      pregunta_seguridad_usuario: '',
+      rol_usuario: 'mecanico'
     });
     setFotoFile(null);
     setIsEditing(false);
@@ -131,7 +132,8 @@ function Usuarios() {
       nombre_usuario: usuario.nombre_usuario,
       email_usuario: usuario.email_usuario,
       contrasenia_usuario: '',
-      pregunta_seguridad_usuario: usuario.pregunta_seguridad_usuario || ''
+      pregunta_seguridad_usuario: usuario.pregunta_seguridad_usuario || '',
+      rol_usuario: usuario.rol_usuario || 'mecanico'
     });
     setEditingId(usuario.pk_id_usuarios);
     setIsEditing(true);
@@ -347,6 +349,22 @@ function Usuarios() {
                       required
                     />
                   </div>
+                  {isAdmin() && (
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Rol *</label>
+                      <select
+                        className="form-control"
+                        name="rol_usuario"
+                        value={formData.rol_usuario}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="mecanico">Mecánico (Solo lectura)</option>
+                        <option value="editor">Editor (Crear/Editar)</option>
+                        <option value="admin">Administrador (Completo)</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="row">

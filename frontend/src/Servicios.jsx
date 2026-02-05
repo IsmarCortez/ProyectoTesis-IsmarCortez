@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { isAdmin, isAdminOrEditor } from './utils/auth';
 
 function Servicios() {
   const navigate = useNavigate();
@@ -145,7 +146,12 @@ function Servicios() {
                 {editId ? '✏️ Editando Servicio' : '➕ Nuevo Servicio'}
               </div>
               <div className="card-tecno-body">
-              <form onSubmit={handleSubmit}>
+                {!isAdminOrEditor() && (
+                  <div className="alert-tecno alert-tecno-warning">
+                    ⚠️ No tienes permisos para crear o editar servicios. Tu rol es de solo lectura.
+                  </div>
+                )}
+              <form onSubmit={handleSubmit} style={{ display: isAdminOrEditor() ? 'block' : 'none' }}>
                 <div className="mb-3">
                   <label className="form-label">Nombre del Servicio *</label>
                   <input
@@ -225,11 +231,13 @@ function Servicios() {
                           color: 'var(--tecno-black)',
                           fontWeight: '600'
                         }}>Descripción</th>
-                        <th style={{ 
-                          borderColor: 'var(--tecno-gray-light)',
-                          color: 'var(--tecno-black)',
-                          fontWeight: '600'
-                        }}>Acciones</th>
+                        {(isAdmin() || isAdminOrEditor()) && (
+                          <th style={{ 
+                            borderColor: 'var(--tecno-gray-light)',
+                            color: 'var(--tecno-black)',
+                            fontWeight: '600'
+                          }}>Acciones</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -238,39 +246,45 @@ function Servicios() {
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{servicio.pk_id_servicio}</td>
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{servicio.servicio}</td>
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{servicio.descripcion_servicios || '-'}</td>
-                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
-                            <div className="btn-group btn-group-sm">
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => handleEdit(servicio)}
-                                style={{
-                                  backgroundColor: 'var(--warning)',
-                                  color: 'var(--tecno-white)',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  padding: '4px 8px',
-                                  fontSize: '12px',
-                                  marginRight: '4px'
-                                }}
-                              >
-                                Editar
-                              </button>
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => handleDelete(servicio.pk_id_servicio)}
-                                style={{
-                                  backgroundColor: 'var(--danger)',
-                                  color: 'var(--tecno-white)',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  padding: '4px 8px',
-                                  fontSize: '12px'
-                                }}
-                              >
-                                Eliminar
-                              </button>
-                            </div>
-                          </td>
+                          {(isAdmin() || isAdminOrEditor()) && (
+                            <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
+                              <div className="btn-group btn-group-sm">
+                                {isAdminOrEditor() && (
+                                  <button
+                                    className="btn btn-sm"
+                                    onClick={() => handleEdit(servicio)}
+                                    style={{
+                                      backgroundColor: 'var(--warning)',
+                                      color: 'var(--tecno-white)',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      padding: '4px 8px',
+                                      fontSize: '12px',
+                                      marginRight: '4px'
+                                    }}
+                                  >
+                                    Editar
+                                  </button>
+                                )}
+                                {isAdmin() && (
+                                  <button
+                                    className="btn btn-sm"
+                                    onClick={() => handleDelete(servicio.pk_id_servicio)}
+                                    style={{
+                                      backgroundColor: 'var(--danger)',
+                                      color: 'var(--tecno-white)',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      padding: '4px 8px',
+                                      fontSize: '12px'
+                                    }}
+                                  >
+                                    Eliminar
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
