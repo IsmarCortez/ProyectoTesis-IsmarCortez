@@ -439,6 +439,11 @@ function Usuarios() {
                           borderColor: 'var(--tecno-gray-light)',
                           color: 'var(--tecno-black)',
                           fontWeight: '600'
+                        }}>Rol</th>
+                        <th style={{ 
+                          borderColor: 'var(--tecno-gray-light)',
+                          color: 'var(--tecno-black)',
+                          fontWeight: '600'
                         }}>Acciones</th>
                       </tr>
                     </thead>
@@ -465,6 +470,30 @@ function Usuarios() {
                           </td>
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{usuario.nombre_usuario}</td>
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>{usuario.email_usuario}</td>
+                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
+                            {usuario.rol_usuario ? (
+                              <span className={`badge ${
+                                usuario.rol_usuario === 'admin' ? 'bg-danger' :
+                                usuario.rol_usuario === 'editor' ? 'bg-warning' :
+                                'bg-secondary'
+                              }`} style={{ 
+                                fontSize: '0.85rem',
+                                padding: '6px 12px',
+                                textTransform: 'capitalize'
+                              }}>
+                                {usuario.rol_usuario === 'admin' ? '👑 Administrador' :
+                                 usuario.rol_usuario === 'editor' ? '✏️ Editor' :
+                                 '🔧 Mecánico'}
+                              </span>
+                            ) : (
+                              <span className="badge bg-secondary" style={{ 
+                                fontSize: '0.85rem',
+                                padding: '6px 12px'
+                              }}>
+                                Sin rol
+                              </span>
+                            )}
+                          </td>
                           <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
                             <div className="btn-group" role="group">
                               <button
