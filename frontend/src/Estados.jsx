@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { isAdmin, isAdminOrEditor } from './utils/auth';
 
 function Estados() {
   const navigate = useNavigate();
@@ -145,7 +146,12 @@ function Estados() {
                 {editId ? '✏️ Editando Estado' : '➕ Nuevo Estado'}
               </div>
               <div className="card-tecno-body">
-              <form onSubmit={handleSubmit}>
+                {!isAdminOrEditor() && (
+                  <div className="alert-tecno alert-tecno-warning">
+                    ⚠️ No tienes permisos para crear o editar estados. Tu rol es de solo lectura.
+                  </div>
+                )}
+              <form onSubmit={handleSubmit} style={{ display: isAdminOrEditor() ? 'block' : 'none' }}>
                 <div className="mb-3">
                   <label className="form-label">Nombre del Estado *</label>
                   <input
