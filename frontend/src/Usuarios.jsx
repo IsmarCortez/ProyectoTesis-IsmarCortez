@@ -274,12 +274,13 @@ function Usuarios() {
           </div>
         )}
 
-        {/* Formulario */}
-        <div className="card-tecno mb-4">
-          <div className="card-tecno-header">
-            {isEditing ? '✏️ Editando Usuario' : '➕ Nuevo Usuario'}
-          </div>
-          <div className="card-tecno-body">
+        {/* Formulario - Solo visible para Admin */}
+        {isAdmin() ? (
+          <div className="card-tecno mb-4">
+            <div className="card-tecno-header">
+              {isEditing ? '✏️ Editando Usuario' : '➕ Nuevo Usuario'}
+            </div>
+            <div className="card-tecno-body">
               <form onSubmit={handleSubmit}>
                 <div className="row">
                   <div className="col-md-6 mb-3">
@@ -401,6 +402,19 @@ function Usuarios() {
               )}
             </div>
           </div>
+        ) : (
+          <div className="card-tecno mb-4">
+            <div className="card-tecno-header">
+              ⚠️ Permisos Insuficientes
+            </div>
+            <div className="card-tecno-body">
+              <div className="alert-tecno alert-tecno-warning">
+                No tienes permisos para crear, editar o eliminar usuarios. Tu rol es de solo lectura.
+                Solo los administradores pueden gestionar usuarios.
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tabla de Usuarios */}
         <div className="card-tecno">
@@ -440,11 +454,13 @@ function Usuarios() {
                           color: 'var(--tecno-black)',
                           fontWeight: '600'
                         }}>Rol</th>
-                        <th style={{ 
-                          borderColor: 'var(--tecno-gray-light)',
-                          color: 'var(--tecno-black)',
-                          fontWeight: '600'
-                        }}>Acciones</th>
+                        {isAdmin() && (
+                          <th style={{ 
+                            borderColor: 'var(--tecno-gray-light)',
+                            color: 'var(--tecno-black)',
+                            fontWeight: '600'
+                          }}>Acciones</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -494,24 +510,25 @@ function Usuarios() {
                               </span>
                             )}
                           </td>
-                          <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
-                            <div className="btn-group" role="group">
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => editarUsuario(usuario)}
-                                title="Editar"
-                                style={{
-                                  backgroundColor: 'var(--warning)',
-                                  color: 'var(--tecno-white)',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  padding: '4px 8px',
-                                  fontSize: '12px',
-                                  marginRight: '4px'
-                                }}
-                              >
-                                ✏️
-                              </button>
+                          {isAdmin() && (
+                            <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
+                              <div className="btn-group" role="group">
+                                <button
+                                  className="btn btn-sm"
+                                  onClick={() => editarUsuario(usuario)}
+                                  title="Editar"
+                                  style={{
+                                    backgroundColor: 'var(--warning)',
+                                    color: 'var(--tecno-white)',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    padding: '4px 8px',
+                                    fontSize: '12px',
+                                    marginRight: '4px'
+                                  }}
+                                >
+                                  ✏️
+                                </button>
                               {/* Botón de cambio de contraseña DESHABILITADO */}
                               {/* <button
                                 className="btn btn-sm"
@@ -546,7 +563,8 @@ function Usuarios() {
                                 🗑️
                               </button>
                             </div>
-                          </td>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
