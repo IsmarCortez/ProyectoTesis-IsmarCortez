@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { isAdmin, isAdminOrEditor } from './utils/auth';
 
 function Clientes() {
   const navigate = useNavigate();
@@ -225,7 +226,12 @@ function Clientes() {
                 {editId ? '✏️ Editando Cliente' : '➕ Nuevo Cliente'}
               </div>
               <div className="card-tecno-body">
-                <form onSubmit={handleSubmit}>
+                {!isAdminOrEditor() && (
+                  <div className="alert-tecno alert-tecno-warning">
+                    ⚠️ No tienes permisos para crear o editar clientes. Tu rol es de solo lectura.
+                  </div>
+                )}
+                <form onSubmit={handleSubmit} style={{ display: isAdminOrEditor() ? 'block' : 'none' }}>
                   <div className="mb-3">
                     <label className="form-label">Nombre *</label>
                     <input type="text" className="form-control" name="nombre_cliente" value={form.nombre_cliente} onChange={handleChange} required />
@@ -348,12 +354,14 @@ function Clientes() {
                           fontWeight: '600',
                           minWidth: '100px'
                         }}>Fecha Registro</th>
-                        <th style={{ 
-                          borderColor: 'var(--tecno-gray-light)',
-                          color: 'var(--tecno-black)',
-                          fontWeight: '600',
-                          minWidth: '120px'
-                        }}>Acciones</th>
+                        {(isAdmin() || isAdminOrEditor()) && (
+                          <th style={{ 
+                            borderColor: 'var(--tecno-gray-light)',
+                            color: 'var(--tecno-black)',
+                            fontWeight: '600',
+                            minWidth: '120px'
+                          }}>Acciones</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -388,39 +396,45 @@ function Clientes() {
                                 new Date(cliente.fecha_registro_cliente).toLocaleDateString('es-GT') : '-'
                               }
                             </td>
-                            <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
-                              <div className="btn-group" role="group">
-                                <button 
-                                  className="btn btn-sm" 
-                                  onClick={() => {console.log('Editar cliente:', cliente); handleEdit(cliente);}}
-                                  style={{
-                                    backgroundColor: 'var(--warning)',
-                                    color: 'var(--tecno-white)',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    padding: '4px 8px',
-                                    fontSize: '12px',
-                                    marginRight: '4px'
-                                  }}
-                                >
-                                  Editar
-                                </button>
-                                <button 
-                                  className="btn btn-sm" 
-                                  onClick={() => handleDelete(cliente.PK_id_cliente)}
-                                  style={{
-                                    backgroundColor: 'var(--danger)',
-                                    color: 'var(--tecno-white)',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    padding: '4px 8px',
-                                    fontSize: '12px'
-                                  }}
-                                >
-                                  Eliminar
-                                </button>
-                              </div>
-                            </td>
+                            {(isAdmin() || isAdminOrEditor()) && (
+                              <td style={{ borderColor: 'var(--tecno-gray-light)' }}>
+                                <div className="btn-group" role="group">
+                                  {isAdminOrEditor() && (
+                                    <button 
+                                      className="btn btn-sm" 
+                                      onClick={() => {console.log('Editar cliente:', cliente); handleEdit(cliente);}}
+                                      style={{
+                                        backgroundColor: 'var(--warning)',
+                                        color: 'var(--tecno-white)',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        padding: '4px 8px',
+                                        fontSize: '12px',
+                                        marginRight: '4px'
+                                      }}
+                                    >
+                                      Editar
+                                    </button>
+                                  )}
+                                  {isAdmin() && (
+                                    <button 
+                                      className="btn btn-sm" 
+                                      onClick={() => handleDelete(cliente.PK_id_cliente)}
+                                      style={{
+                                        backgroundColor: 'var(--danger)',
+                                        color: 'var(--tecno-white)',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        padding: '4px 8px',
+                                        fontSize: '12px'
+                                      }}
+                                    >
+                                      Eliminar
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         ))
                       )}

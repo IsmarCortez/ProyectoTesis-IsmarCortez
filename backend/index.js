@@ -210,6 +210,36 @@ const requireAuth = (req, res, next) => {
   authenticateToken(req, res, next);
 };
 
+// ==================== MIDDLEWARES DE AUTORIZACIÓN POR ROLES ====================
+
+// Middleware para requerir rol de administrador
+const requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Autenticación requerida.' });
+  }
+  
+  if (req.user.rol !== 'admin') {
+    console.log(`❌ Acceso denegado: Usuario ${req.user.email} (rol: ${req.user.rol}) intentó acceder a ${req.path} - Se requiere rol 'admin'`);
+    return res.status(403).json({ message: 'Acceso denegado. Se requiere rol de administrador.' });
+  }
+  
+  next();
+};
+
+// Middleware para requerir rol de administrador o editor
+const requireAdminOrEditor = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Autenticación requerida.' });
+  }
+  
+  if (req.user.rol !== 'admin' && req.user.rol !== 'editor') {
+    console.log(`❌ Acceso denegado: Usuario ${req.user.email} (rol: ${req.user.rol}) intentó acceder a ${req.path} - Se requiere rol 'admin' o 'editor'`);
+    return res.status(403).json({ message: 'Acceso denegado. Se requiere rol de administrador o editor.' });
+  }
+  
+  next();
+};
+
 // ==================== ENDPOINTS PÚBLICOS (ANTES DEL MIDDLEWARE) ====================
 // Estos endpoints NO requieren autenticación y deben estar ANTES del middleware
 
@@ -254,12 +284,14 @@ app.post('/api/login', async (req, res) => {
 
     console.log('🔍 Generando JWT con secret:', process.env.JWT_SECRET ? 'Configurado' : 'Fallback');
     
+    // Incluir el rol en el token JWT
     const token = jwt.sign(
       {
         id: usuario.pk_id_usuarios,
         nombre: usuario.nombre_usuario,
         email: usuario.email_usuario,
         foto: usuario.foto_perfil_usuario,
+        rol: usuario.rol_usuario || 'mecanico', // Incluir rol en el token
       },
       process.env.JWT_SECRET || 'secret_key_default_railway',
       { expiresIn: '8h' }
@@ -271,6 +303,7 @@ app.post('/api/login', async (req, res) => {
         nombre: usuario.nombre_usuario,
         email: usuario.email_usuario,
         foto: usuario.foto_perfil_usuario, // Este debe ser solo el nombre del archivo
+        rol: usuario.rol_usuario || 'mecanico', // Incluir rol en la respuesta
       },
     });
   } catch (error) {
@@ -666,7 +699,7 @@ app.post('/api/actualizar-usuario', upload.single('foto'), async (req, res) => {
 });
 
 // Endpoint para registrar un nuevo cliente
-app.post('/api/clientes', async (req, res) => {
+app.post('/api/clientes', requireAdminOrEditor, async (req, res) => {
   const { nombre_cliente, apellido_cliente, dpi_cliente, NIT, telefono_cliente, correo_cliente, direccion_cliente } = req.body;
   if (!nombre_cliente) {
     return res.status(400).json({ message: 'El nombre del cliente es requerido.' });
@@ -768,7 +801,7 @@ app.get('/api/clientes/nit/:nit', async (req, res) => {
 });
 
 // Endpoint para actualizar un cliente
-app.put('/api/clientes/:id', async (req, res) => {
+app.put('/api/clientes/:id', requireAdminOrEditor, async (req, res) => {
   const { id } = req.params;
   const { nombre_cliente, apellido_cliente, dpi_cliente, NIT, telefono_cliente, correo_cliente, direccion_cliente } = req.body;
   try {
@@ -793,7 +826,7 @@ app.put('/api/clientes/:id', async (req, res) => {
 });
 
 // Endpoint para eliminar un cliente
-app.delete('/api/clientes/:id', async (req, res) => {
+app.delete('/api/clientes/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
     const connection = await mysql.createConnection(dbConfig);
@@ -848,7 +881,7 @@ app.get('/api/vehiculos/buscar-cliente/:dpi', async (req, res) => {
 });
 
 // Endpoint para registrar un nuevo vehículo
-app.post('/api/vehiculos', async (req, res) => {
+app.post('/api/vehiculos', requireAdminOrEditor, async (req, res) => {
   const { 
     placa_vehiculo, 
     marca_vehiculo, 
@@ -903,7 +936,7 @@ app.get('/api/vehiculos/:id', async (req, res) => {
 });
 
 // Endpoint para actualizar un vehículo
-app.put('/api/vehiculos/:id', async (req, res) => {
+app.put('/api/vehiculos/:id', requireAdminOrEditor, async (req, res) => {
   const { id } = req.params;
   const { 
     placa_vehiculo, 
@@ -938,7 +971,7 @@ app.put('/api/vehiculos/:id', async (req, res) => {
 });
 
 // Endpoint para eliminar un vehículo
-app.delete('/api/vehiculos/:id', async (req, res) => {
+app.delete('/api/vehiculos/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
     const connection = await mysql.createConnection(dbConfig);
@@ -973,7 +1006,7 @@ app.get('/api/servicios', async (req, res) => {
 });
 
 // Endpoint para registrar un nuevo servicio
-app.post('/api/servicios', async (req, res) => {
+app.post('/api/servicios', requireAdminOrEditor, async (req, res) => {
   const { servicio, descripcion_servicios } = req.body;
   if (!servicio) {
     return res.status(400).json({ message: 'El nombre del servicio es requerido.' });
@@ -993,7 +1026,7 @@ app.post('/api/servicios', async (req, res) => {
 });
 
 // Endpoint para actualizar un servicio
-app.put('/api/servicios/:id', async (req, res) => {
+app.put('/api/servicios/:id', requireAdminOrEditor, async (req, res) => {
   const { id } = req.params;
   const { servicio, descripcion_servicios } = req.body;
   try {
@@ -1014,7 +1047,7 @@ app.put('/api/servicios/:id', async (req, res) => {
 });
 
 // Endpoint para eliminar un servicio
-app.delete('/api/servicios/:id', async (req, res) => {
+app.delete('/api/servicios/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
     const connection = await mysql.createConnection(dbConfig);
@@ -1049,7 +1082,7 @@ app.get('/api/estados', async (req, res) => {
 });
 
 // Endpoint para registrar un nuevo estado
-app.post('/api/estados', async (req, res) => {
+app.post('/api/estados', requireAdminOrEditor, async (req, res) => {
   const { estado_orden, descripcion_estado } = req.body;
   if (!estado_orden) {
     return res.status(400).json({ message: 'El nombre del estado es requerido.' });
@@ -1069,7 +1102,7 @@ app.post('/api/estados', async (req, res) => {
 });
 
 // Endpoint para actualizar un estado
-app.put('/api/estados/:id', async (req, res) => {
+app.put('/api/estados/:id', requireAdminOrEditor, async (req, res) => {
   const { id } = req.params;
   const { estado_orden, descripcion_estado } = req.body;
   try {
@@ -1090,7 +1123,7 @@ app.put('/api/estados/:id', async (req, res) => {
 });
 
 // Endpoint para eliminar un estado
-app.delete('/api/estados/:id', async (req, res) => {
+app.delete('/api/estados/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
     const connection = await mysql.createConnection(dbConfig);
@@ -1273,7 +1306,7 @@ app.get('/api/ordenes/buscar-vehiculo/:placa', async (req, res) => {
 });
 
 // Endpoint para registrar una nueva orden
-app.post('/api/ordenes', upload.fields([
+app.post('/api/ordenes', requireAdminOrEditor, upload.fields([
   { name: 'imagen_1', maxCount: 1 },
   { name: 'imagen_2', maxCount: 1 },
   { name: 'imagen_3', maxCount: 1 },
@@ -1574,7 +1607,7 @@ app.get('/api/ordenes/:id/pdf', async (req, res) => {
 });
 
 // Endpoint para actualizar una orden
-app.put('/api/ordenes/:id', upload.fields([
+app.put('/api/ordenes/:id', requireAdminOrEditor, upload.fields([
   { name: 'imagen_1', maxCount: 1 },
   { name: 'imagen_2', maxCount: 1 },
   { name: 'imagen_3', maxCount: 1 },
@@ -1824,7 +1857,7 @@ app.put('/api/ordenes/:id', upload.fields([
 });
 
 // Endpoint para eliminar una orden
-app.delete('/api/ordenes/:id', async (req, res) => {
+app.delete('/api/ordenes/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
     const connection = await mysql.createConnection(dbConfig);
@@ -1894,7 +1927,7 @@ app.get('/api/usuarios', async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
     const [rows] = await connection.execute(
-      'SELECT pk_id_usuarios, nombre_usuario, email_usuario, foto_perfil_usuario, pregunta_seguridad_usuario FROM tbl_usuarios ORDER BY nombre_usuario'
+      'SELECT pk_id_usuarios, nombre_usuario, email_usuario, foto_perfil_usuario, pregunta_seguridad_usuario, rol_usuario FROM tbl_usuarios ORDER BY nombre_usuario'
     );
     await connection.end();
     res.json(rows);
@@ -1910,7 +1943,7 @@ app.get('/api/usuarios/:id', async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
     const [rows] = await connection.execute(
-      'SELECT pk_id_usuarios, nombre_usuario, email_usuario, foto_perfil_usuario, pregunta_seguridad_usuario FROM tbl_usuarios WHERE pk_id_usuarios = ?',
+      'SELECT pk_id_usuarios, nombre_usuario, email_usuario, foto_perfil_usuario, pregunta_seguridad_usuario, rol_usuario FROM tbl_usuarios WHERE pk_id_usuarios = ?',
       [id]
     );
     await connection.end();
@@ -1930,7 +1963,7 @@ app.get('/api/usuario/:email', async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
     const [rows] = await connection.execute(
-      'SELECT pk_id_usuarios, nombre_usuario, email_usuario, foto_perfil_usuario, pregunta_seguridad_usuario FROM tbl_usuarios WHERE email_usuario = ?',
+      'SELECT pk_id_usuarios, nombre_usuario, email_usuario, foto_perfil_usuario, pregunta_seguridad_usuario, rol_usuario FROM tbl_usuarios WHERE email_usuario = ?',
       [email]
     );
     await connection.end();
@@ -1945,8 +1978,8 @@ app.get('/api/usuario/:email', async (req, res) => {
 });
 
 // Endpoint para registrar un nuevo usuario
-app.post('/api/usuarios', upload.single('foto'), async (req, res) => {
-  const { nombre_usuario, email_usuario, contrasenia_usuario, pregunta_seguridad_usuario } = req.body;
+app.post('/api/usuarios', requireAdmin, upload.single('foto'), async (req, res) => {
+  const { nombre_usuario, email_usuario, contrasenia_usuario, pregunta_seguridad_usuario, rol_usuario } = req.body;
   
   if (!nombre_usuario || !email_usuario || !contrasenia_usuario) {
     return res.status(400).json({ message: 'Nombre, email y contraseña son requeridos.' });
@@ -1995,11 +2028,20 @@ app.post('/api/usuarios', upload.single('foto'), async (req, res) => {
       }
     }
 
+    // Obtener rol del body (por defecto 'mecanico' si no se proporciona)
+    const rol = rol_usuario || 'mecanico';
+    
+    // Validar que el rol sea válido
+    if (!['admin', 'editor', 'mecanico'].includes(rol)) {
+      await connection.end();
+      return res.status(400).json({ message: 'Rol inválido. Los roles válidos son: admin, editor, mecanico.' });
+    }
+    
     // Insertar nuevo usuario
     const [result] = await connection.execute(
-      `INSERT INTO tbl_usuarios (nombre_usuario, email_usuario, contrasenia_usuario, foto_perfil_usuario, pregunta_seguridad_usuario)
-       VALUES (?, ?, ?, ?, ?)`,
-      [nombre_usuario, email_usuario, hashPassword, foto_perfil_usuario, preguntaSeguridad]
+      `INSERT INTO tbl_usuarios (nombre_usuario, email_usuario, contrasenia_usuario, foto_perfil_usuario, pregunta_seguridad_usuario, rol_usuario)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [nombre_usuario, email_usuario, hashPassword, foto_perfil_usuario, preguntaSeguridad, rol]
     );
     
     await connection.end();
@@ -2015,9 +2057,9 @@ app.post('/api/usuarios', upload.single('foto'), async (req, res) => {
 });
 
 // Endpoint para actualizar un usuario
-app.put('/api/usuarios/:id', upload.single('foto'), async (req, res) => {
+app.put('/api/usuarios/:id', requireAdmin, upload.single('foto'), async (req, res) => {
   const { id } = req.params;
-  const { nombre_usuario, email_usuario, pregunta_seguridad_usuario } = req.body;
+  const { nombre_usuario, email_usuario, pregunta_seguridad_usuario, rol_usuario } = req.body;
   
   if (!nombre_usuario || !email_usuario || !pregunta_seguridad_usuario) {
     return res.status(400).json({ message: 'Nombre, email y pregunta de seguridad son requeridos.' });
@@ -2054,9 +2096,21 @@ app.put('/api/usuarios/:id', upload.single('foto'), async (req, res) => {
       return res.status(409).json({ message: 'El email ya está registrado por otro usuario.' });
     }
 
+    // Validar rol si se proporciona
+    if (rol_usuario && !['admin', 'editor', 'mecanico'].includes(rol_usuario)) {
+      await connection.end();
+      return res.status(400).json({ message: 'Rol inválido. Los roles válidos son: admin, editor, mecanico.' });
+    }
+    
     // Construir query dinámicamente
     let query = 'UPDATE tbl_usuarios SET nombre_usuario = ?, email_usuario = ?, pregunta_seguridad_usuario = ?';
     let params = [nombre_usuario, email_usuario, pregunta_seguridad_usuario];
+    
+    // Agregar rol si se proporciona
+    if (rol_usuario) {
+      query += ', rol_usuario = ?';
+      params.push(rol_usuario);
+    }
     
     // Procesar foto si se subió usando Cloudinary
     if (req.file) {
@@ -2130,7 +2184,7 @@ app.put('/api/usuarios/:id/cambiar-contrasena', async (req, res) => {
 });
 
 // Endpoint para eliminar un usuario
-app.delete('/api/usuarios/:id', async (req, res) => {
+app.delete('/api/usuarios/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
     const connection = await mysql.createConnection(dbConfig);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { isAdmin } from './utils/auth';
 
 function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
@@ -12,7 +13,8 @@ function Usuarios() {
     nombre_usuario: '',
     email_usuario: '',
     contrasenia_usuario: '',
-    pregunta_seguridad_usuario: ''
+    pregunta_seguridad_usuario: '',
+    rol_usuario: 'mecanico' // Valor por defecto
   });
   
   // Estados para edición
@@ -98,6 +100,10 @@ function Usuarios() {
       }
       // Enviar pregunta de seguridad tanto al crear como al editar
       formDataToSend.append('pregunta_seguridad_usuario', formData.pregunta_seguridad_usuario || '');
+      // Enviar rol solo si el usuario es admin
+      if (isAdmin() && formData.rol_usuario) {
+        formDataToSend.append('rol_usuario', formData.rol_usuario);
+      }
       
       if (fotoFile) {
         formDataToSend.append('foto', fotoFile);
