@@ -26,6 +26,21 @@ const Ordenes = () => {
   const [filtroEstado, setFiltroEstado] = useState(null); // null = todas, o pk_id_estado
   const [progresoUpload, setProgresoUpload] = useState(0);
   const [mensajeProgreso, setMensajeProgreso] = useState('');
+  
+  // Estado para guardar las URLs de archivos existentes cuando se edita una orden
+  const [archivosExistentes, setArchivosExistentes] = useState({
+    imagen_1: null,
+    imagen_2: null,
+    imagen_3: null,
+    imagen_4: null,
+    imagen_5: null,
+    imagen_6: null,
+    imagen_7: null,
+    imagen_8: null,
+    imagen_9: null,
+    imagen_10: null,
+    video: null
+  });
 
   const [form, setForm] = useState({
     nit_cliente: '',
@@ -255,6 +270,20 @@ const Ordenes = () => {
       fk_id_estado_orden: '',
       observaciones_orden: '',
       estado_vehiculo: 'Bueno',
+      imagen_1: null,
+      imagen_2: null,
+      imagen_3: null,
+      imagen_4: null,
+      imagen_5: null,
+      imagen_6: null,
+      imagen_7: null,
+      imagen_8: null,
+      imagen_9: null,
+      imagen_10: null,
+      video: null
+    });
+    // Limpiar también los archivos existentes
+    setArchivosExistentes({
       imagen_1: null,
       imagen_2: null,
       imagen_3: null,
@@ -512,6 +541,21 @@ const Ordenes = () => {
       video: null
     });
     
+    // Guardar las URLs de archivos existentes para mostrar indicadores
+    setArchivosExistentes({
+      imagen_1: orden.imagen_1 || null,
+      imagen_2: orden.imagen_2 || null,
+      imagen_3: orden.imagen_3 || null,
+      imagen_4: orden.imagen_4 || null,
+      imagen_5: orden.imagen_5 || null,
+      imagen_6: orden.imagen_6 || null,
+      imagen_7: orden.imagen_7 || null,
+      imagen_8: orden.imagen_8 || null,
+      imagen_9: orden.imagen_9 || null,
+      imagen_10: orden.imagen_10 || null,
+      video: orden.video || null
+    });
+    
     // Configurar autocompletado con información del cliente
     if (orden.NIT === 'CF') {
       setBusquedaCliente('CF - Consumidor Final');
@@ -534,6 +578,92 @@ const Ordenes = () => {
     
     setEditando(true);
     setOrdenId(orden.pk_id_orden);
+  };
+
+  // Función helper para renderizar inputs de archivo con indicadores
+  const renderFileInput = (name, label, accept, isVideo = false) => {
+    const archivoExistente = archivosExistentes[name];
+    const tieneArchivoExistente = archivoExistente && 
+      archivoExistente !== 'sin_imagen.jpg' && 
+      archivoExistente !== 'sin_video.mp4';
+    const urlArchivo = tieneArchivoExistente ? getFileUrl(archivoExistente) : null;
+    const tieneNuevoArchivo = form[name] !== null;
+    
+    return (
+      <div className="col-md-2 mb-3">
+        <label className="form-label d-flex align-items-center gap-2">
+          {label}
+          {tieneArchivoExistente && (
+            <span 
+              className="badge bg-success" 
+              style={{ fontSize: '0.7rem', padding: '2px 6px' }}
+              title="Archivo existente guardado"
+            >
+              ✓
+            </span>
+          )}
+        </label>
+        <input
+          type="file"
+          className="form-control"
+          name={name}
+          onChange={handleInputChange}
+          accept={accept}
+          style={{
+            borderColor: tieneArchivoExistente ? '#28a745' : undefined,
+            borderWidth: tieneArchivoExistente ? '2px' : undefined
+          }}
+        />
+        {tieneArchivoExistente && (
+          <div className="mt-2">
+            <small className="text-muted d-block mb-1">
+              {tieneNuevoArchivo ? (
+                <span className="text-warning">⚠️ Se reemplazará el archivo existente</span>
+              ) : (
+                <span className="text-success">✓ Archivo existente</span>
+              )}
+            </small>
+            {urlArchivo && (
+              <div>
+                {isVideo ? (
+                  <a
+                    href={urlArchivo}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-sm btn-outline-primary"
+                    style={{ fontSize: '0.75rem', padding: '2px 8px' }}
+                  >
+                    🎥 Ver video
+                  </a>
+                ) : (
+                  <a
+                    href={urlArchivo}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="d-inline-block"
+                    style={{ maxWidth: '100%' }}
+                  >
+                    <img
+                      src={urlArchivo}
+                      alt={`Vista previa ${label}`}
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '60px',
+                        objectFit: 'cover',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        border: '1px solid #dee2e6'
+                      }}
+                      title="Click para ver imagen completa"
+                    />
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const eliminarOrden = async (id) => {
@@ -883,119 +1013,28 @@ const Ordenes = () => {
             </div>
 
             {/* Archivos Multimedia */}
+            {editando && Object.values(archivosExistentes).some(archivo => 
+              archivo && archivo !== 'sin_imagen.jpg' && archivo !== 'sin_video.mp4'
+            ) && (
+              <div className="alert alert-info mb-3" style={{ fontSize: '0.9rem' }}>
+                <strong>ℹ️ Información:</strong> Los campos marcados con ✓ tienen archivos existentes. 
+                Si seleccionas un nuevo archivo, reemplazará el existente.
+              </div>
+            )}
             <div className="row">
-              <div className="col-md-2 mb-3">
-                <label className="form-label">Imagen 1</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  name="imagen_1"
-                  onChange={handleInputChange}
-                  accept="image/*"
-                />
-              </div>
-              <div className="col-md-2 mb-3">
-                <label className="form-label">Imagen 2</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  name="imagen_2"
-                  onChange={handleInputChange}
-                  accept="image/*"
-                />
-              </div>
-              <div className="col-md-2 mb-3">
-                <label className="form-label">Imagen 3</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  name="imagen_3"
-                  onChange={handleInputChange}
-                  accept="image/*"
-                />
-              </div>
-              <div className="col-md-2 mb-3">
-                <label className="form-label">Imagen 4</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  name="imagen_4"
-                  onChange={handleInputChange}
-                  accept="image/*"
-                />
-              </div>
-              <div className="col-md-2 mb-3">
-                <label className="form-label">Imagen 5</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  name="imagen_5"
-                  onChange={handleInputChange}
-                  accept="image/*"
-                />
-              </div>
-              <div className="col-md-2 mb-3">
-                <label className="form-label">Imagen 6</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  name="imagen_6"
-                  onChange={handleInputChange}
-                  accept="image/*"
-                />
-              </div>
+              {renderFileInput('imagen_1', 'Imagen 1', 'image/*')}
+              {renderFileInput('imagen_2', 'Imagen 2', 'image/*')}
+              {renderFileInput('imagen_3', 'Imagen 3', 'image/*')}
+              {renderFileInput('imagen_4', 'Imagen 4', 'image/*')}
+              {renderFileInput('imagen_5', 'Imagen 5', 'image/*')}
+              {renderFileInput('imagen_6', 'Imagen 6', 'image/*')}
             </div>
             <div className="row">
-              <div className="col-md-2 mb-3">
-                <label className="form-label">Imagen 7</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  name="imagen_7"
-                  onChange={handleInputChange}
-                  accept="image/*"
-                />
-              </div>
-              <div className="col-md-2 mb-3">
-                <label className="form-label">Imagen 8</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  name="imagen_8"
-                  onChange={handleInputChange}
-                  accept="image/*"
-                />
-              </div>
-              <div className="col-md-2 mb-3">
-                <label className="form-label">Imagen 9</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  name="imagen_9"
-                  onChange={handleInputChange}
-                  accept="image/*"
-                />
-              </div>
-              <div className="col-md-2 mb-3">
-                <label className="form-label">Imagen 10</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  name="imagen_10"
-                  onChange={handleInputChange}
-                  accept="image/*"
-                />
-              </div>
-              <div className="col-md-2 mb-3">
-                <label className="form-label">Video</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  name="video"
-                  onChange={handleInputChange}
-                  accept="video/*"
-                />
-              </div>
+              {renderFileInput('imagen_7', 'Imagen 7', 'image/*')}
+              {renderFileInput('imagen_8', 'Imagen 8', 'image/*')}
+              {renderFileInput('imagen_9', 'Imagen 9', 'image/*')}
+              {renderFileInput('imagen_10', 'Imagen 10', 'image/*')}
+              {renderFileInput('video', 'Video', 'video/*', true)}
             </div>
 
             {/* Indicador de Progreso */}
