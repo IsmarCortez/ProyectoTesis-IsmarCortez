@@ -120,12 +120,14 @@ const processFiles = (files, fieldName) => {
   }
 };
 
+// Soporte Railway (MYSQL*) y variables estándar (DB_*) para distintos entornos
 const dbConfig = {
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQL_ROOT_PASSWORD,
-  database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT || 3306,
+  host: process.env.MYSQLHOST || process.env.DB_HOST,
+  user: process.env.MYSQLUSER || process.env.DB_USER,
+  password: process.env.MYSQL_ROOT_PASSWORD || process.env.DB_PASSWORD,
+  database: process.env.MYSQLDATABASE || process.env.DB_NAME,
+  port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306', 10),
+  connectTimeout: 15000, // 15 segundos para evitar colgar indefinidamente
 };
 
 console.log('🔍 DB Config Railway:', {
@@ -307,7 +309,13 @@ app.post('/api/login', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error en login:', error.message);
+    // Errores de conexión a la base de datos (común en despliegue: host/puerto incorrectos)
+    if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+      return res.status(503).json({
+        message: 'No se pudo conectar con la base de datos. Revisa que DB_HOST, DB_USER, DB_PASSWORD y DB_NAME (o las variables MYSQL* en Railway) estén configuradas y que MySQL esté accesible desde el servidor.',
+      });
+    }
     res.status(500).json({ message: 'Error en el servidor.' });
   }
 });
@@ -2630,9 +2638,7 @@ const PORT = process.env.PORT || 8080;
 console.log('🚀 Iniciando servidor...');
 console.log('🔍 Puerto de aplicación:', PORT);
 console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
-console.log('🔍 DB_HOST:', process.env.DB_HOST);
-console.log('🔍 DB_PORT:', process.env.DB_PORT);
-console.log('🔍 DB_NAME:', process.env.DB_NAME);
+console.log('🔍 DB (resuelto):', { host: dbConfig.host || '(no configurado)', port: dbConfig.port, database: dbConfig.database || '(no configurado)' });
 
 
 // ✅ Endpoint POST eliminado - Gmail API configurado correctamente
